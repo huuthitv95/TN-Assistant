@@ -1,0 +1,7 @@
+{
+  "source": "Owner-supplied tn_app_circle.png, verified byte-for-byte against the supplied Downloads file.",
+  "authorization": "Owner requested this TN circle for all product marks in the welcome and related account screens.",
+  "resource": "android/app/src/independent/res/drawable-nodpi/tn_user_welcome_circle.png",
+  "sha256": "ad098b7777a607c9a90d0805570b8d69f2a2d397fee480f5c65da4d1136249b0",
+  "responsive": "TnWelcomeAppMark centers and proportionally fits the transparent PNG; onboarding replaces the reference product mark while preserving foreground permission/Zalo artwork."
+}

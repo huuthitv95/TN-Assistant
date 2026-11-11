@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <!--Original onboarding dimension qualifiers, re-named for TN; preserve SP accessibility scaling.-->
+    <dimen name="tn_welcome_small_padding">6.8dp</dimen>
+    <dimen name="tn_welcome_divider_height">8.5dp</dimen>
+    <dimen name="tn_welcome_common_padding">13.6dp</dimen>
+    <dimen name="tn_welcome_top_margin">27.2dp</dimen>
+    <dimen name="tn_welcome_image_height_short">127.5dp</dimen>
+    <dimen name="tn_welcome_image_height_tall">170dp</dimen>
+    <dimen name="tn_welcome_image_width_short">204dp</dimen>
+    <dimen name="tn_welcome_image_width_tall">272dp</dimen>
+    <dimen name="tn_welcome_button_width">306dp</dimen>
+    <dimen name="tn_welcome_button_height">61.2dp</dimen>
+    <dimen name="tn_welcome_title_size">30.6sp</dimen>
+    <dimen name="tn_welcome_body_size">18.7sp</dimen>
+</resources>

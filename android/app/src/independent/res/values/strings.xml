@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">TN Assistant</string>
+    <string name="tn_welcome_title">Cài đặt TN Assistant</string>
+    <string name="tn_welcome_description">Bắt đầu cài đặt để kích hoạt Trợ lý giọng nói TN</string>
+    <string name="tn_welcome_start">BẮT ĐẦU</string>
+    <string name="tn_welcome_grant">CẤP QUYỀN</string>
+    <string name="tn_welcome_continue">TIẾP TỤC</string>
+    <string name="tn_welcome_later">ĐỂ SAU</string>
+    <string name="tn_welcome_microphone_title">Cấp quyền micro</string>
+    <string name="tn_welcome_microphone_description">Cho phép TN nghe khi bạn nhấn nút Nói. Bạn có thể nhập lệnh nếu chưa cấp quyền.</string>
+    <string name="tn_welcome_microphone_denied">Chưa cấp quyền micro. TN chưa ghi âm; bạn có thể cấp quyền hoặc để sau.</string>
+    <string name="tn_welcome_location_title">Cấp quyền vị trí</string>
+    <string name="tn_welcome_location_description">Dùng vị trí khi bạn hỏi thời tiết gần đây. Bạn có thể để sau và cấp quyền khi cần.</string>
+    <string name="tn_welcome_location_denied">Chưa cấp quyền vị trí. TN chưa lấy tọa độ; bạn có thể cấp quyền hoặc để sau.</string>
+    <string name="tn_welcome_account_title">Tài khoản TN</string>
+    <string name="tn_welcome_account_description">Đăng nhập hoặc tạo tài khoản để sử dụng TN Assistant</string>
+    <string name="tn_welcome_login">ĐĂNG NHẬP</string>
+    <string name="tn_welcome_register">TẠO TÀI KHOẢN TN</string>
+    <string name="tn_welcome_voice_title">Làm quen với TN</string>
+    <string name="tn_welcome_voice_description">Nhấn Nói rồi đọc “TN ơi, mở bản đồ”. TN chỉ ghi âm sau khi bạn nhấn nút và cấp quyền micro.</string>
+    <string name="tn_welcome_finish_title">Cài đặt hoàn tất</string>
+    <string name="tn_welcome_finish_description">Thiết lập tài khoản đã hoàn tất. Bắt đầu trò chuyện hoặc nhập lệnh cho TN Assistant.</string>
+    <string name="tn_welcome_finish">BẮT ĐẦU SỬ DỤNG</string>
+</resources>

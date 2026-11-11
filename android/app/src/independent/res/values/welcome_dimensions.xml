@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <dimen name="tn_welcome_small_padding">8dp</dimen>
+    <dimen name="tn_welcome_divider_height">10dp</dimen>
+    <dimen name="tn_welcome_common_padding">16dp</dimen>
+    <dimen name="tn_welcome_top_margin">32dp</dimen>
+    <dimen name="tn_welcome_image_height_short">150dp</dimen>
+    <dimen name="tn_welcome_image_height_tall">200dp</dimen>
+    <dimen name="tn_welcome_image_width_short">240dp</dimen>
+    <dimen name="tn_welcome_image_width_tall">320dp</dimen>
+    <dimen name="tn_welcome_button_width">360dp</dimen>
+    <dimen name="tn_welcome_button_height">72dp</dimen>
+    <dimen name="tn_welcome_title_size">36sp</dimen>
+    <dimen name="tn_welcome_body_size">22sp</dimen>
+    <dimen name="tn_welcome_image_width">@dimen/tn_welcome_image_width_short</dimen>
+    <dimen name="tn_welcome_image_height">@dimen/tn_welcome_image_height_short</dimen>
+    <dimen name="tn_welcome_dot_size">6.4dp</dimen>
+    <dimen name="tn_welcome_selected_dot_size">16dp</dimen>
+    <dimen name="tn_welcome_dot_margin">8.8dp</dimen>
+</resources>

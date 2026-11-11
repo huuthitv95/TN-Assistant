@@ -1,0 +1,21 @@
+[Unit]
+Description=TN Assistant 24-hour availability observation
+After=network-online.target tn-assistant.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=tnassistant
+Group=tnassistant
+ExecStart=/usr/bin/python3 /srv/tn-assistant/ops/monitor.py
+Restart=on-failure
+RestartSec=30
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/tn-assistant/ops
+
+[Install]
+WantedBy=multi-user.target

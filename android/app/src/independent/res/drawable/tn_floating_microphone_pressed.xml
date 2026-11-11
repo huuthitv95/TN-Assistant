@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android" android:drawable="@drawable/tn_floating_microphone">
+    <target android:name="mic" android:animation="@animator/tn_floating_micro_press_scale_x" />
+    <target android:name="mic" android:animation="@animator/tn_floating_micro_press_scale_y" />
+    <target android:name="dim" android:animation="@animator/tn_floating_micro_press_dim" />
+</animated-vector>

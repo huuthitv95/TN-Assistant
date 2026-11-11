@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "authorization": "Owner explicitly authorized reuse of original UI images on 2026-10-29. Assets are limited to this C?i ??t banner UI.",
+  "scope": "Rendered banner sign artwork only; TN owns all runtime text, layout, interaction, account data and behavior.",
+  "source_capture": ".runtime/ui130/original-header-banner.reference.png",
+  "source_capture_sha256": "07ce4b3c82a16702ccb373ce60252b8d93f43e77c682e99dc249dcc39cd0c5d1",
+  "files": [
+    {
+      "source": ".runtime/ui130/original-header-banner.reference.png",
+      "target": "android/app/src/independent/res/drawable-nodpi/tn_reference_settings_speed_sign.png",
+      "crop_xyxy": [
+        1140,
+        190,
+        1258,
+        310
+      ],
+      "alpha_mask": "circle inscribed in crop",
+      "sha256": "8efa7a2442cebd4f9ac5cfe52a6bf76ae515c860d22849c496bc510e0a70e0e5",
+      "bytes": 6686
+    },
+    {
+      "source": ".runtime/ui130/original-header-banner.reference.png",
+      "target": "android/app/src/independent/res/drawable-nodpi/tn_reference_settings_camera_sign.png",
+      "crop_xyxy": [
+        1273,
+        190,
+        1391,
+        310
+      ],
+      "alpha_mask": "circle inscribed in crop",
+      "sha256": "1a8714f74c4d520f91e379ea1765faeed65c6684e36fa1a8b48131749556ee4b",
+      "bytes": 6412
+    },
+    {
+      "source": ".runtime/ui130/original-header-banner.reference.png",
+      "target": "android/app/src/independent/res/drawable-nodpi/tn_reference_settings_no_left_turn_sign.png",
+      "crop_xyxy": [
+        1409,
+        190,
+        1527,
+        310
+      ],
+      "alpha_mask": "circle inscribed in crop",
+      "sha256": "2a0d2328b91ae5c590b9fb4391c0a368524f48481f77908b2f8f3242b65ec1ec",
+      "bytes": 6104
+    }
+  ],
+  "verification": "Crops are alpha masked from the owner-authorized screenshot reference; original reference is unmodified."
+}

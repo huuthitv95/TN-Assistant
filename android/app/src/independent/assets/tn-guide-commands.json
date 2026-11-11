@@ -1,0 +1,75 @@
+[
+  {
+    "title": "Tìm đường",
+    "icon": "tn_ic_guide_navigate",
+    "examples": [
+      "Dẫn đường đến chợ Bến Thành",
+      "Chỉ đường đến số 72 Nguyễn Cơ Thạch",
+      "Tìm trạm xăng gần đây"
+    ]
+  },
+  {
+    "title": "Nghe nhạc",
+    "icon": "tn_ic_guide_music",
+    "examples": [
+      "Mở bài Nồng nàn Hà Nội",
+      "Mở nhạc Trữ tình",
+      "Mở nhạc của Mỹ Tâm",
+      "Chuyển bài tiếp theo",
+      "Tắt nhạc"
+    ]
+  },
+  {
+    "title": "Nghe radio",
+    "icon": "tn_ic_radio",
+    "examples": [
+      "Mở radio",
+      "Mở kênh VOV Giao thông",
+      "Mở kênh FM 99.9 MHz"
+    ]
+  },
+  {
+    "title": "Xem video",
+    "icon": "tn_ic_guide_video",
+    "examples": [
+      "Mở video nhạc trẻ",
+      "Mở video bóng đá trên Youtube",
+      "Mở phim hoạt hình trên Youtube"
+    ]
+  },
+  {
+    "title": "Xem truyền hình",
+    "icon": "tn_ic_guide_tv",
+    "examples": [
+      "Mở ứng dụng VTV Go",
+      "Mở kênh VTV1",
+      "Mở kênh HTV7 trên MyTV"
+    ]
+  },
+  {
+    "title": "Tiện ích",
+    "icon": "tn_ic_guide_utilities",
+    "examples": [
+      "Thời tiết hôm nay thế nào?",
+      "Hôm nay ngày mấy âm lịch?",
+      "12 x 15 bằng bao nhiêu?"
+    ]
+  },
+  {
+    "title": "Tin tức",
+    "icon": "tn_ic_guide_news",
+    "examples": [
+      "Tin thời sự hôm nay",
+      "Nghe tin tức bóng đá",
+      "Giá xăng hôm nay bao nhiêu?"
+    ]
+  },
+  {
+    "title": "Hỏi đáp",
+    "icon": "tn_ic_guide_search",
+    "examples": [
+      "Quốc ca được sáng tác năm nào?",
+      "Hành tinh nào lớn nhất trong Hệ Mặt Trời?"
+    ]
+  }
+]

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Match the original settings switch row without changing other controls. -->
+    <style name="TnReferenceSettingsItemTheme" parent="">
+        <item name="android:colorControlHighlight">#33ffffff</item>
+    </style>
+    <style name="TnAssistantOverlayTheme" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:colorAccent">#00D0D9</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:statusBarColor">#001F4E</item>
+        <item name="android:navigationBarColor">#000611</item>
+    </style>
+</resources>

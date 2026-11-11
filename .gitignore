@@ -1,0 +1,59 @@
+# Private runtime and machine-local configuration
+/.runtime/
+**/local.properties
+*.env
+!*.env.example
+*.jks
+*.keystore
+*.pem
+*.pfx
+*.key
+*.dpapi
+
+# Dependency and build outputs
+**/node_modules/
+**/.gradle/
+**/.kotlin/
+**/.cxx/
+**/build/
+**/dist/
+**/coverage/
+**/__pycache__/
+*.py[cod]
+
+# Generated packages and mutable data
+*.apk
+*.aab
+*.apks
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.part
+*.tmp
+*.temp
+*.bak
+*.dmp
+*.log
+hs_err_pid*
+
+# Historical evidence and migration artifacts
+/reports/
+/work/
+/notes/
+/reference/
+/dist/
+**/audit_*
+**/*-audit.*
+**/*_AUDIT.md
+**/premium-audit.json
+**/backup*/
+exports/
+
+# Editor and operating-system state
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini

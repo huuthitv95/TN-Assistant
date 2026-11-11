@@ -1,0 +1,46 @@
+{
+  "authorization": "Owner explicitly authorized reuse of original UI artwork; no original backend, credentials or native runtime is used.",
+  "assets": [
+    {
+      "path": "res/drawable/tn_ic_guide_navigate.xml",
+      "source": "kiki-overview/jadx/resources/res/drawable/ic_guide_navigate.xml",
+      "sha256": "c604eb55dfef0af1508017a6135ef97f2c0f7723124c67c827077fcfc10e9715"
+    },
+    {
+      "path": "res/drawable/tn_ic_guide_music.xml",
+      "source": "kiki-overview/jadx/resources/res/drawable/ic_guide_music.xml",
+      "sha256": "18f84247f5bff4471cc4d8b4ab21c8a6e2db0d4311ee1cb7a8b62dc0c626ea6b"
+    },
+    {
+      "path": "res/drawable/tn_ic_radio.xml",
+      "source": "kiki-overview/jadx/resources/res/drawable/ic_radio.xml",
+      "sha256": "d56c0b12176a7a9ebee37bd1d86ef14dc0fa88c89057bc059cd695b0a38f7723"
+    },
+    {
+      "path": "res/drawable/tn_ic_guide_video.xml",
+      "source": "kiki-overview/jadx/resources/res/drawable/ic_guide_video.xml",
+      "sha256": "cbdaed940fafbaaf37d32bdfdfefc5db4854cd30c238feb7e82920b9326e5337"
+    },
+    {
+      "path": "res/drawable/tn_ic_guide_tv.xml",
+      "source": "kiki-overview/jadx/resources/res/drawable/ic_guide_tv.xml",
+      "sha256": "7ab49e1a129bcd1bc90944b47458dd5e842922029a66f50a30f1242435c81874"
+    },
+    {
+      "path": "res/drawable/tn_ic_guide_utilities.xml",
+      "source": "kiki-overview/jadx/resources/res/drawable/ic_guide_utilities.xml",
+      "sha256": "704f92e290062395b59bda96c331f2a478ed6d1cf853436f3eee708f013150f2"
+    },
+    {
+      "path": "res/drawable/tn_ic_guide_news.xml",
+      "source": "kiki-overview/jadx/resources/res/drawable/ic_guide_news.xml",
+      "sha256": "2948e676764c81235dff11f41ced9309c4a421d07261b7dec8502510b2c8a5d2"
+    },
+    {
+      "path": "res/drawable/tn_ic_guide_search.xml",
+      "source": "kiki-overview/jadx/resources/res/drawable/ic_guide_search.xml",
+      "sha256": "8b20bde20de85b4ad9f1e58a47e977ebef14d5efb4f746a069262480ceb5a5ad"
+    }
+  ],
+  "content_reference": "Original n2 guide fallback and locally displayed command examples; TN commands are dispatched only to the TN backend."
+}

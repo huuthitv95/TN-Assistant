@@ -1,0 +1,35 @@
+[Unit]
+Description=TN Zalo-only Vietnam egress gateway
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=tnzalogateway
+Group=tnzalogateway
+WorkingDirectory=/srv/tn-zalo-gateway
+EnvironmentFile=/etc/tn-assistant/zalo-gateway.env
+ExecStart=/srv/tn-zalo-gateway/zalo-gateway
+Restart=on-failure
+RestartSec=3s
+TimeoutStopSec=15s
+KillSignal=SIGTERM
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+LimitNOFILE=4096
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,30 @@
+[Unit]
+Description=TN Assistant backend
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=tnassistant
+Group=tnassistant
+WorkingDirectory=/srv/tn-assistant/current
+EnvironmentFile=/etc/tn-assistant/tn-assistant.env
+ExecStart=/srv/tn-assistant/current/tn-assistant serve
+Restart=on-failure
+RestartSec=3s
+TimeoutStopSec=15s
+KillSignal=SIGTERM
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+LockPersonality=true
+ReadWritePaths=/var/lib/tn-assistant
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,7 @@
+# Isolated Windows QA generator only; not an APK or VPS runtime dependency.
+flatbuffers==25.12.19
+numpy==2.5.4
+onnxruntime==1.31.1
+packaging==26.3
+piper-tts==1.3.0
+protobuf==7.36.2

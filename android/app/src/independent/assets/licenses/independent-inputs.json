@@ -1,0 +1,192 @@
+{
+  "version": 5,
+  "sources": {
+    "vosk_model": "https://alphacephei.com/vosk/models/vosk-model-small-vn-0.4.zip",
+    "vosk_license": "Apache-2.0",
+    "vosk_archive_sha256": "efe5c8494212110471a79befc48c79da679e5b1fc52a4ffb500222ff86d622e5",
+    "silero_model": "https://raw.githubusercontent.com/snakers4/silero-vad/v5.1.2/src/silero_vad/data/silero_vad.onnx",
+    "silero_license": "MIT",
+    "silero_sha256": "2623a2953f6ff3d2c1e61740c6cdb7168133479b267dfef114a4a3cc5bdd788f",
+    "wake_phrase_accuracy": "not_yet_measured",
+    "onboarding_audio": "TN-authored prompts synthesized through configured original TTS; original APK recordings not copied",
+    "barlow_fonts": "SIL OFL 1.1. Existing Google Fonts copies and exact existing reference Barlow regular/medium/semibold/bold fonts; see licenses/barlow-source.json and barlow-OFL.txt",
+    "app_icon": "User supplied tn_app_icon.png; original pixels preserved",
+    "reference_ui": "Owner-authorized original UI imagery and styles for onboarding, Zalo sign-in chrome, settings and floating controls; see licenses/tn-reference-ui.json and licenses/tn-settings-floating-ui.json.",
+    "welcome_icon": "The in-app blue waveform is cropped from the owner-authorized original onboarding start artwork; the separate user-supplied tn_app_icon.png remains the Android launcher icon.",
+    "antonio_font": "Exact existing reference Antonio Bold font; embedded SIL OFL 1.1 license and copyright retained; see licenses/antonio-source.json and antonio-OFL.txt",
+    "driving_info_config": "TN-authored local configuration defaults; source TN, coverage unknown, max age 300000 ms. No original provider configuration copied.",
+    "zalo_back_arrow": "Owner-authorized original Zalo SDK toolbar back-arrow image; source-density xxxhdpi asset retained exactly."
+  },
+  "files": [
+    {
+      "path": "driving_info_config.json",
+      "sha256": "a174107a74f5bf7ea31a0f82575176b7d3585e3084bdc6dce206031b540edb52",
+      "bytes": 61
+    },
+    {
+      "path": "fonts/barlowmedium.ttf",
+      "sha256": "fb7648a6fada6ed037f1b22e501ac171c0d9f1f92f28cf032ee1a0b83ea1dae0",
+      "bytes": 97776
+    },
+    {
+      "path": "fonts/barlowregular.ttf",
+      "sha256": "cd90f6856cb7cd099b881b6370b330710a8bf9d082b01fb9ff949df01005bd87",
+      "bytes": 98340
+    },
+    {
+      "path": "fonts/barlowsemibold.ttf",
+      "sha256": "4e73c7c492611f36de3eec520c830bb8fd970be7edffa670ae55311995db8562",
+      "bytes": 102548
+    },
+    {
+      "path": "licenses/antonio-OFL.txt",
+      "sha256": "ae9a754b006df720bb6721e7b78c04990df734f87195c6033140fceab60bebf6",
+      "bytes": 4484
+    },
+    {
+      "path": "licenses/antonio-source.json",
+      "sha256": "ad29d04eb9268aed9d977d32e9a26e1ba2330370186fcfb95b6fd1bd73d625d6",
+      "bytes": 1070
+    },
+    {
+      "path": "licenses/barlow-OFL.txt",
+      "sha256": "186d750eb496a4c17a76385f82be6aea2ac1cf2de074a811d63786cf374ea73f",
+      "bytes": 4377
+    },
+    {
+      "path": "licenses/barlow-source.json",
+      "sha256": "92cc61a4d2f3e03e806d8eef88cf004a905bf060f47bf6c50f8b3e59c26dd762",
+      "bytes": 4593
+    },
+    {
+      "path": "licenses/onnxruntime-jni-16k.json",
+      "sha256": "5dd0fba67d04ff89ab5bca791b72bec178d2a3ded97e18448e97147bbded8519",
+      "bytes": 650
+    },
+    {
+      "path": "licenses/onnxruntime-jni-MIT.txt",
+      "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c",
+      "bytes": 1073
+    },
+    {
+      "path": "licenses/onnxruntime-third-party-notices.txt",
+      "sha256": "cf7342f7ba482ef715ae58f5f497a8d3564fa255164175aea324cd293c5701a0",
+      "bytes": 338538
+    },
+    {
+      "path": "licenses/silero.txt",
+      "sha256": "2e63e9a38b6e8fc0c7bc37ce174caca1862870856c6daf5697cfb785e925520b",
+      "bytes": 1075
+    },
+    {
+      "path": "licenses/tn-app-icon.json",
+      "sha256": "391427ec45885dbc6eaa40113016f874cc732788a22470baea4083f2057143e3",
+      "bytes": 613
+    },
+    {
+      "path": "licenses/tn-onboarding-audio.json",
+      "sha256": "99901b52b5427c9334ca2b5e5c2e50cd6302f5a2f48e2d7b0bac695a2de443c3",
+      "bytes": 5414
+    },
+    {
+      "path": "licenses/tn-reference-ui.json",
+      "sha256": "4be449d01a54c6f7d82a579a3510d5ea74a869ffa46ea578ffd59b19397d2b56",
+      "bytes": 11424
+    },
+    {
+      "path": "licenses/tn-settings-banner-ui.json",
+      "sha256": "a7c148fd03dec1c7aeb29a6f06f94ae31388f2324349b0eaabc1a45ce54579d6",
+      "bytes": 1924
+    },
+    {
+      "path": "licenses/tn-settings-floating-ui.json",
+      "sha256": "7090d220c86987ed1276a8bb165e96454ca18072a6c409c1d517d1521c2100ed",
+      "bytes": 34029
+    },
+    {
+      "path": "licenses/tn-welcome-icon.json",
+      "sha256": "68b1a675747b8330d63b65e373616737fc1656b1c3c84d3197fb50e9dccfc8b0",
+      "bytes": 591
+    },
+    {
+      "path": "licenses/vosk.txt",
+      "sha256": "bb618af833c817ab01c1564bd3ec75ba4b4f9cf30910a4a2168e30a674ee8cc6",
+      "bytes": 10173
+    },
+    {
+      "path": "models/silero_vad.onnx",
+      "sha256": "2623a2953f6ff3d2c1e61740c6cdb7168133479b267dfef114a4a3cc5bdd788f",
+      "bytes": 2327524
+    },
+    {
+      "path": "models/vosk-model-small-vn-0.4/am/final.mdl",
+      "sha256": "159cf4fc17401578b7b6ee28e5f913f16a1c9a232fdfecac3168e941ee7fbd4c",
+      "bytes": 9232677
+    },
+    {
+      "path": "models/vosk-model-small-vn-0.4/conf/mfcc.conf",
+      "sha256": "42b1450e80757f2702bd640ff6c0aa4b3809610754f883bac6fd26eea2699107",
+      "bytes": 82
+    },
+    {
+      "path": "models/vosk-model-small-vn-0.4/conf/model.conf",
+      "sha256": "223c8edccb85b8f89a7811cb4ef47d3107b89bf3c5c27f066d5379ca683d4bc2",
+      "bytes": 272
+    },
+    {
+      "path": "models/vosk-model-small-vn-0.4/graph/disambig_tid.int",
+      "sha256": "bb8b4dbcce6377e43846aa7c05fecfbde0a2d1cbeae840ceaa462dfb46466466",
+      "bytes": 65
+    },
+    {
+      "path": "models/vosk-model-small-vn-0.4/graph/Gr.fst",
+      "sha256": "f4b30ffb2888a316d5244b724707bf79ed93e3d91607c893d97cb7a4703ef46a",
+      "bytes": 24998257
+    },
+    {
+      "path": "models/vosk-model-small-vn-0.4/graph/HCLr.fst",
+      "sha256": "42639a7cf8e2be1b74f510af0106e690aa9a7ee73490089e0125ed6f703815db",
+      "bytes": 10567442
+    },
+    {
+      "path": "models/vosk-model-small-vn-0.4/graph/phones/word_boundary.int",
+      "sha256": "a0d228765d6512efbc33fcc7b6f6a3ec274598d08b2e666489358f790e105365",
+      "bytes": 11267
+    },
+    {
+      "path": "models/vosk-model-small-vn-0.4/ivector/final.dubm",
+      "sha256": "e3d7cfd040cf11dabc219332399c5eab1846cb33596d60a764cf89aed4fa91a8",
+      "bytes": 168048
+    },
+    {
+      "path": "models/vosk-model-small-vn-0.4/ivector/final.ie",
+      "sha256": "f88483415363869698b99fef93c349f9b12c40daf4cbe6ba9636069388fe256f",
+      "bytes": 8288887
+    },
+    {
+      "path": "models/vosk-model-small-vn-0.4/ivector/final.mat",
+      "sha256": "6b0f6024877d98feae6055dea684484b55b639f8577cd5283af83eae5f5814b4",
+      "bytes": 22575
+    },
+    {
+      "path": "models/vosk-model-small-vn-0.4/ivector/global_cmvn.stats",
+      "sha256": "bb24266f03bfe29942b72bbbda6dea1e3237912b1dfe90bbcb0a0acbe5984256",
+      "bytes": 538
+    },
+    {
+      "path": "models/vosk-model-small-vn-0.4/ivector/online_cmvn.conf",
+      "sha256": "a2f3571754b64297cb7efb2e7ca3df61995c5a45fcbb97188f90613552bb2dfe",
+      "bytes": 95
+    },
+    {
+      "path": "models/vosk-model-small-vn-0.4/ivector/splice.conf",
+      "sha256": "9f0c5f7c82d18eaf25d8bce470efa9f7741f88411fe428774bc0a9bb69a24756",
+      "bytes": 35
+    },
+    {
+      "path": "models/vosk-model-small-vn-0.4/README",
+      "sha256": "35038e10d5af1ec55d0ac7865ba2bc3904d288a60dfe71cbcd452da8ccfba1ad",
+      "bytes": 125
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "component": "ONNX Runtime Android",
+  "upstream_version": "1.20.0",
+  "upstream_artifact": "com.microsoft.onnxruntime:onnxruntime-android:1.20.0",
+  "upstream_source": "https://github.com/microsoft/onnxruntime/tree/v1.20.0/java/src/main/native",
+  "license": "MIT",
+  "change": "Rebuilt the upstream JNI bridge for arm64-v8a and armeabi-v7a with 16 KB PT_LOAD alignment; JNI exports are checked against upstream. Java classes and libonnxruntime.so are unchanged.",
+  "build_script": "scripts/build_onnxruntime_android_16k.py",
+  "jni_abi_files": [
+    "jni/arm64-v8a/libonnxruntime4j_jni.so",
+    "jni/armeabi-v7a/libonnxruntime4j_jni.so"
+  ]
+}

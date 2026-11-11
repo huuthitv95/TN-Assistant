@@ -1,0 +1,30 @@
+{
+  "name": "TN Assistant",
+  "short_name": "TN Assistant",
+  "lang": "vi",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#21a75e",
+  "theme_color": "#21a75e",
+  "icons": [
+    {
+      "src": "/icons/tn-assistant-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/tn-assistant-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/tn-assistant-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -1,0 +1,561 @@
+{
+  "schema_version": 1,
+  "authorization": "Persistent owner UI reuse instruction recorded in work/AGENTS.md on 2026-10-09, plus owner-authorized UI image reuse recorded in tn-reference-ui.json. Reuse is confined to UI resources; it does not grant model, native library, account, credential or provider rights.",
+  "license": "Owner-authorized reference UI reuse and TN-authored adaptations; no public-domain or open-source license is asserted for original app UI. Font licensing is documented separately in barlow-source.json, antonio-source.json and their SIL OFL 1.1 notices.",
+  "path_base": "android/ paths are relative to TN Assistant; kiki-overview/ paths are relative to its parent work directory.",
+  "scope": "Independent TN user settings, floating visual controls and onboarding dimension resources for Android .122. Runtime Kotlin/Go behavior is outside this asset provenance record.",
+  "files": [
+    {
+      "target": "android/app/src/independent/res/animator/tn_floating_micro_press_dim.xml",
+      "sha256": "5380b20333eff72e0336b0652919e80858aa2a5ad5ede60f83f2ec5dc6e90913",
+      "bytes": 333,
+      "source": "android/app/src/main/res/animator/floating_micro_press_dim.xml",
+      "source_sha256": "5380b20333eff72e0336b0652919e80858aa2a5ad5ede60f83f2ec5dc6e90913",
+      "unchanged_bytes": true
+    },
+    {
+      "target": "android/app/src/independent/res/animator/tn_floating_micro_press_scale_x.xml",
+      "sha256": "3b9d1b44739b8142a15065fb1ba5f002190845b7dc9a45b0a810425f20bafcbf",
+      "bytes": 329,
+      "source": "android/app/src/main/res/animator/floating_micro_press_scale_x.xml",
+      "source_sha256": "3b9d1b44739b8142a15065fb1ba5f002190845b7dc9a45b0a810425f20bafcbf",
+      "unchanged_bytes": true
+    },
+    {
+      "target": "android/app/src/independent/res/animator/tn_floating_micro_press_scale_y.xml",
+      "sha256": "02f8c9877b4796e79718baefa488195036945453f629cdaaa4d29480101c0022",
+      "bytes": 329,
+      "source": "android/app/src/main/res/animator/floating_micro_press_scale_y.xml",
+      "source_sha256": "02f8c9877b4796e79718baefa488195036945453f629cdaaa4d29480101c0022",
+      "unchanged_bytes": true
+    },
+    {
+      "target": "android/app/src/independent/res/animator/tn_floating_premium_rotation.xml",
+      "sha256": "e1fe61540cb240f42480be941826443495ef9a7faf5e1ef3a52a23686fa4afb3",
+      "bytes": 321,
+      "source": "android/app/src/main/res/animator/floating_basic_promotion_rotation.xml",
+      "source_sha256": "e1fe61540cb240f42480be941826443495ef9a7faf5e1ef3a52a23686fa4afb3",
+      "unchanged_bytes": true
+    },
+    {
+      "target": "android/app/src/independent/res/color/tn_floating_mic_stroke.xml",
+      "sha256": "bffc42e2da8a67b8362780c76e1a11dab25d3e7cb0bd242ec14645ec13064a34",
+      "bytes": 422,
+      "source": "android/app/src/main/res/color/floating_mic_stroke.xml",
+      "source_sha256": "bffc42e2da8a67b8362780c76e1a11dab25d3e7cb0bd242ec14645ec13064a34",
+      "unchanged_bytes": true
+    },
+    {
+      "target": "android/app/src/independent/res/color/tn_floating_premium_stroke.xml",
+      "sha256": "e1b04a1ac0eb3862e5f1091a93ba0033598eb62667256e7d484620e8320a10e3",
+      "bytes": 421,
+      "source": "android/app/src/main/res/color/floating_premium_stroke.xml",
+      "source_sha256": "e1b04a1ac0eb3862e5f1091a93ba0033598eb62667256e7d484620e8320a10e3",
+      "unchanged_bytes": true
+    },
+    {
+      "target": "android/app/src/independent/res/drawable-hdpi/tn_floating_close_target.png",
+      "sha256": "9e53a0f0696f1b016b3c446e0f36bc21110494101822590e9a5dc9d77602ca27",
+      "bytes": 2078,
+      "source": "android/app/src/main/res/drawable-hdpi/floating_close_target.png",
+      "source_sha256": "9e53a0f0696f1b016b3c446e0f36bc21110494101822590e9a5dc9d77602ca27",
+      "unchanged_bytes": true,
+      "origin_note": "Existing TN parity copy. HDPI upstream checksum is documented in reports/floating-close-density26/asset-source-check.json; XHDPI matches kiki-overview/jadx/resources/res/drawable-ldrtl-xhdpi/close_button.png. Original PNG bytes are preserved."
+    },
+    {
+      "target": "android/app/src/independent/res/drawable-v24/tn_floating_microphone.xml",
+      "sha256": "a95764353229b6fbf219d606f41b72f3c3761953de57c1a406ab8fa68f5f75e9",
+      "bytes": 1612,
+      "source": "android/app/src/main/res/drawable-v24/mic_view.xml",
+      "source_sha256": "95346d90bb2d5479539dbcd41f8daa3604821b343b94697fd343699a1a1a22cb",
+      "unchanged_bytes": false,
+      "resource_reference_replacements": {
+        "@color/floating_mic_stroke": "@color/tn_floating_mic_stroke"
+      },
+      "original_reference": "kiki-overview/jadx/resources/res/drawable-v24/mic_view.xml",
+      "original_reference_sha256": "ebd0aca2c9cac564cf8795790b2b9a2c2c84b5fadd0b58a0f3a0da3a44a08ffa"
+    },
+    {
+      "target": "android/app/src/independent/res/drawable-xhdpi/tn_floating_close_target.png",
+      "sha256": "c75908fa05e1c269d8644e45546f56eda43861051c7523633b4a4188b4a41b32",
+      "bytes": 2686,
+      "source": "android/app/src/main/res/drawable-xhdpi/floating_close_target.png",
+      "source_sha256": "c75908fa05e1c269d8644e45546f56eda43861051c7523633b4a4188b4a41b32",
+      "unchanged_bytes": true,
+      "origin_note": "Existing TN parity copy. HDPI upstream checksum is documented in reports/floating-close-density26/asset-source-check.json; XHDPI matches kiki-overview/jadx/resources/res/drawable-ldrtl-xhdpi/close_button.png. Original PNG bytes are preserved."
+    },
+    {
+      "target": "android/app/src/independent/res/drawable/tn_floating_admin.xml",
+      "sha256": "cfc3b8f33a4e61cdb474829ab5432f708f14b8a2713e745b951027b4dcf2a13e",
+      "bytes": 708,
+      "source": "android/app/src/main/res/drawable/ic_floating_admin.xml",
+      "source_sha256": "cfc3b8f33a4e61cdb474829ab5432f708f14b8a2713e745b951027b4dcf2a13e",
+      "unchanged_bytes": true,
+      "origin_note": "TN-authored icon from the existing parity implementation; no original APK resource is asserted for this icon."
+    },
+    {
+      "target": "android/app/src/independent/res/drawable/tn_floating_microphone.xml",
+      "sha256": "5f4232a89ef76b35f8d0caa76ce1298321daed9e971908ff7a64a84c26ed5faa",
+      "bytes": 1545,
+      "source": "android/app/src/main/res/drawable/mic_view.xml",
+      "source_sha256": "5f4232a89ef76b35f8d0caa76ce1298321daed9e971908ff7a64a84c26ed5faa",
+      "unchanged_bytes": true,
+      "original_reference": "kiki-overview/jadx/resources/res/drawable/mic_view.xml",
+      "original_reference_sha256": "43599a6155e4309ec1f92a22c56a5f7e2195f2f2142e927d38ddd972437edd21"
+    },
+    {
+      "target": "android/app/src/independent/res/drawable/tn_floating_microphone_pressed.xml",
+      "sha256": "b2f1946898f3a9c59ad5d8824bde00710858d12c299abb23b27755c739d332ba",
+      "bytes": 471,
+      "source": "android/app/src/main/res/drawable/floating_micro_pressed.xml",
+      "source_sha256": "48bf1711d17c21a1fbc352e18c608a637b7d7863e3b63b22e17c98b1b7c063ba",
+      "unchanged_bytes": false,
+      "resource_reference_replacements": {
+        "@drawable/mic_view": "@drawable/tn_floating_microphone",
+        "@animator/floating_micro_press_": "@animator/tn_floating_micro_press_"
+      }
+    },
+    {
+      "target": "android/app/src/independent/res/drawable/tn_floating_premium_crown.xml",
+      "sha256": "82ad037160a15d106b8030302623c42fdc853643c418bbc02a0e73ff6571e213",
+      "bytes": 637,
+      "source": "android/app/src/main/res/drawable/ic_floating_premium_crown.xml",
+      "source_sha256": "82ad037160a15d106b8030302623c42fdc853643c418bbc02a0e73ff6571e213",
+      "unchanged_bytes": true,
+      "origin_note": "TN-authored icon from the existing parity implementation; no original APK resource is asserted for this icon."
+    },
+    {
+      "target": "android/app/src/independent/res/drawable/tn_floating_premium_ring.xml",
+      "sha256": "3ed0de276eb8116dcf89b1c9a1f74cceac1a4ab21572f3b9989ba560b6eb4566",
+      "bytes": 728,
+      "source": "android/app/src/main/res/drawable/ic_speed_limit_base_premium_feature.xml",
+      "source_sha256": "febc365c9b6750a8c2ebad5194176a656091bde36c57df2051fd359ec8d84f89",
+      "unchanged_bytes": false,
+      "resource_reference_replacements": {
+        "@color/floating_premium_stroke": "@color/tn_floating_premium_stroke"
+      },
+      "original_reference": "kiki-overview/jadx/resources/res/drawable/ic_speed_limit_base_premium_feature.xml",
+      "original_reference_sha256": "d0011edef6853ab9e0b6b8f8b470ae5e5b6cda63aa8a10af0be6d15a3b401e6f"
+    },
+    {
+      "target": "android/app/src/independent/res/drawable/tn_floating_premium_ring_animated.xml",
+      "sha256": "7d40c4b0691b82dddd200384268347db714a2cd3fa1d3eb077e056f236fcbb57",
+      "bytes": 287,
+      "source": "android/app/src/main/res/drawable/floating_basic_promotion_animated.xml",
+      "source_sha256": "b762d72f03299c2291771a9d966b28f3e78bea0211e0cf47ec35451812860b6c",
+      "unchanged_bytes": false,
+      "resource_reference_replacements": {
+        "@drawable/ic_speed_limit_base_premium_feature": "@drawable/tn_floating_premium_ring",
+        "@animator/floating_basic_promotion_rotation": "@animator/tn_floating_premium_rotation"
+      }
+    },
+    {
+      "target": "android/app/src/independent/res/drawable/tn_settings_background_btn_ripple_rounded_8dp.xml",
+      "sha256": "4dfa7148772dfd905346a9374615984543a23c06a0531c13a89ce6e09f21a7b1",
+      "bytes": 600,
+      "source": "android/app/src/main/res/drawable/background_btn_ripple_rounded_8dp.xml",
+      "source_sha256": "8f570c1a6278ee613f6a2133a28dfe3ed35035f01a13280df30cb05338854686",
+      "unchanged_bytes": false,
+      "resource_reference_replacements": {
+        "@dimen/_8dp": "8dp"
+      },
+      "original_reference": "kiki-overview/jadx/resources/res/drawable/background_btn_ripple_rounded_8dp.xml",
+      "original_reference_sha256": "8f570c1a6278ee613f6a2133a28dfe3ed35035f01a13280df30cb05338854686"
+    },
+    {
+      "target": "android/app/src/independent/res/drawable/tn_settings_background_section_settings_ripple_rounded.xml",
+      "sha256": "7baaee5b97967b69d5880d3f24fa7e04ca7ffb51cb9f343d4c1605e5daee1dfd",
+      "bytes": 612,
+      "source": "android/app/src/main/res/drawable/background_section_settings_ripple_rounded.xml",
+      "source_sha256": "7baaee5b97967b69d5880d3f24fa7e04ca7ffb51cb9f343d4c1605e5daee1dfd",
+      "unchanged_bytes": true,
+      "original_reference": "kiki-overview/jadx/resources/res/drawable/background_section_settings_ripple_rounded.xml",
+      "original_reference_sha256": "cc7e369543135fa88658c45d6a4ab2fb24b80bd40ef149aac975dd5631baed35"
+    },
+    {
+      "target": "android/app/src/independent/res/drawable/tn_settings_background_section_settings_ripple_rounded_bottom.xml",
+      "sha256": "e3edb80a8dd701ae8ecbc745501b6937e1bbb52fc7e50f1b16755e11d14cc0cf",
+      "bytes": 700,
+      "source": "android/app/src/main/res/drawable/background_section_settings_ripple_rounded_bottom.xml",
+      "source_sha256": "e3edb80a8dd701ae8ecbc745501b6937e1bbb52fc7e50f1b16755e11d14cc0cf",
+      "unchanged_bytes": true,
+      "original_reference": "kiki-overview/jadx/resources/res/drawable/background_section_settings_ripple_rounded_bottom.xml",
+      "original_reference_sha256": "51d0a5ccf00a45ff9ae799a685f14487a7ba23d96b6c2136793865dd893cf118"
+    },
+    {
+      "target": "android/app/src/independent/res/drawable/tn_settings_background_section_settings_ripple_rounded_top.xml",
+      "sha256": "2b13908c7a3cf6454c75adac07d29c0f99b547657b8b8ad08deba46fb11f62c5",
+      "bytes": 688,
+      "source": "android/app/src/main/res/drawable/background_section_settings_ripple_rounded_top.xml",
+      "source_sha256": "2b13908c7a3cf6454c75adac07d29c0f99b547657b8b8ad08deba46fb11f62c5",
+      "unchanged_bytes": true,
+      "original_reference": "kiki-overview/jadx/resources/res/drawable/background_section_settings_ripple_rounded_top.xml",
+      "original_reference_sha256": "364863386ab2267ba6129957272483b0f701aa295eb7e716d8772365a80eda73"
+    },
+    {
+      "target": "android/app/src/independent/res/drawable/tn_settings_badge_basic.xml",
+      "sha256": "e2c0fbb403124ebbe976c7213170477591891204ce3163e5ecc39a27d541ee3b",
+      "bytes": 5292,
+      "source": "android/app/src/main/res/drawable/badge_basic.xml",
+      "source_sha256": "e2c0fbb403124ebbe976c7213170477591891204ce3163e5ecc39a27d541ee3b",
+      "unchanged_bytes": true,
+      "original_reference": "kiki-overview/jadx/resources/res/drawable/badge_basic.xml",
+      "original_reference_sha256": "e2c0fbb403124ebbe976c7213170477591891204ce3163e5ecc39a27d541ee3b"
+    },
+    {
+      "target": "android/app/src/independent/res/drawable/tn_settings_badge_premium.xml",
+      "sha256": "0ea01b39c62f966894bb940d14148b7e2faf2d56ea4a66fafd97e233b1db1874",
+      "bytes": 6848,
+      "source": "android/app/src/main/res/drawable/badge_premium.xml",
+      "source_sha256": "d982ed6a88647b5ba78b3d214fb15ee00a769d03402248fb6e096a725db41e2d",
+      "unchanged_bytes": false,
+      "resource_reference_replacements": {
+        "@drawable/_badge_premium__": "@drawable/tn_settings_badge_premium__"
+      },
+      "original_reference": "kiki-overview/jadx/resources/res/drawable/badge_premium.xml",
+      "original_reference_sha256": "d982ed6a88647b5ba78b3d214fb15ee00a769d03402248fb6e096a725db41e2d"
+    },
+    {
+      "target": "android/app/src/independent/res/drawable/tn_settings_badge_premium__0_res_0x7f080011.xml",
+      "sha256": "1cd8e6072da617f9b63ef6549064920fd465c5f81d1a38f5ac1d2e681bdc2340",
+      "bytes": 478,
+      "source": "android/app/src/main/res/drawable/_badge_premium__0_res_0x7f080011.xml",
+      "source_sha256": "1cd8e6072da617f9b63ef6549064920fd465c5f81d1a38f5ac1d2e681bdc2340",
+      "unchanged_bytes": true,
+      "original_reference": "kiki-overview/jadx/resources/res/drawable/_badge_premium__0_res_0x7f080011.xml",
+      "original_reference_sha256": "1cd8e6072da617f9b63ef6549064920fd465c5f81d1a38f5ac1d2e681bdc2340"
+    },
+    {
+      "target": "android/app/src/independent/res/drawable/tn_settings_badge_premium__1_res_0x7f080012.xml",
+      "sha256": "e122f442cfe7a17c045b34ee4b77fa67ebaf16339f86b392c70541f35e0f1498",
+      "bytes": 479,
+      "source": "android/app/src/main/res/drawable/_badge_premium__1_res_0x7f080012.xml",
+      "source_sha256": "e122f442cfe7a17c045b34ee4b77fa67ebaf16339f86b392c70541f35e0f1498",
+      "unchanged_bytes": true,
+      "original_reference": "kiki-overview/jadx/resources/res/drawable/_badge_premium__1_res_0x7f080012.xml",
+      "original_reference_sha256": "e122f442cfe7a17c045b34ee4b77fa67ebaf16339f86b392c70541f35e0f1498"
+    },
+    {
+      "target": "android/app/src/independent/res/drawable/tn_settings_badge_premium__2_res_0x7f080013.xml",
+      "sha256": "1cd8e6072da617f9b63ef6549064920fd465c5f81d1a38f5ac1d2e681bdc2340",
+      "bytes": 478,
+      "source": "android/app/src/main/res/drawable/_badge_premium__2_res_0x7f080013.xml",
+      "source_sha256": "1cd8e6072da617f9b63ef6549064920fd465c5f81d1a38f5ac1d2e681bdc2340",
+      "unchanged_bytes": true,
+      "original_reference": "kiki-overview/jadx/resources/res/drawable/_badge_premium__2_res_0x7f080013.xml",
+      "original_reference_sha256": "1cd8e6072da617f9b63ef6549064920fd465c5f81d1a38f5ac1d2e681bdc2340"
+    },
+    {
+      "target": "android/app/src/independent/res/drawable/tn_settings_ic_account.xml",
+      "sha256": "90c289503cebbadcf0d396b5e369da5da865322fa31b58e2e828cc3ba1049110",
+      "bytes": 918,
+      "source": "android/app/src/main/res/drawable/ic_account.xml",
+      "source_sha256": "90c289503cebbadcf0d396b5e369da5da865322fa31b58e2e828cc3ba1049110",
+      "unchanged_bytes": true,
+      "original_reference": "kiki-overview/jadx/resources/res/drawable/ic_account.xml",
+      "original_reference_sha256": "90c289503cebbadcf0d396b5e369da5da865322fa31b58e2e828cc3ba1049110"
+    },
+    {
+      "target": "android/app/src/independent/res/drawable/tn_settings_ic_barcode.xml",
+      "sha256": "75fb760edb88cf10d35ce7fa74acb6048218ad0d8c27c83f83d026fd49df5d5d",
+      "bytes": 1817,
+      "source": "android/app/src/main/res/drawable/ic_barcode.xml",
+      "source_sha256": "75fb760edb88cf10d35ce7fa74acb6048218ad0d8c27c83f83d026fd49df5d5d",
+      "unchanged_bytes": true,
+      "original_reference": "kiki-overview/jadx/resources/res/drawable/ic_barcode.xml",
+      "original_reference_sha256": "75fb760edb88cf10d35ce7fa74acb6048218ad0d8c27c83f83d026fd49df5d5d"
+    },
+    {
+      "target": "android/app/src/independent/res/drawable/tn_settings_ic_close.xml",
+      "sha256": "561082858fae04878252e92523e85bc6f5447e78f674c25f5dc0a32d1006af2d",
+      "bytes": 754,
+      "source": "android/app/src/main/res/drawable/ic_close.xml",
+      "source_sha256": "561082858fae04878252e92523e85bc6f5447e78f674c25f5dc0a32d1006af2d",
+      "unchanged_bytes": true,
+      "original_reference": "kiki-overview/jadx/resources/res/drawable/ic_close.xml",
+      "original_reference_sha256": "561082858fae04878252e92523e85bc6f5447e78f674c25f5dc0a32d1006af2d"
+    },
+    {
+      "target": "android/app/src/independent/res/drawable/tn_settings_ic_document.xml",
+      "sha256": "3d9f7b38e04077a967a312caa43ac7877292418083a1acdf0f631ce259af21ba",
+      "bytes": 1460,
+      "source": "android/app/src/main/res/drawable/ic_document.xml",
+      "source_sha256": "3d9f7b38e04077a967a312caa43ac7877292418083a1acdf0f631ce259af21ba",
+      "unchanged_bytes": true,
+      "original_reference": "kiki-overview/jadx/resources/res/drawable/ic_document.xml",
+      "original_reference_sha256": "3d9f7b38e04077a967a312caa43ac7877292418083a1acdf0f631ce259af21ba"
+    },
+    {
+      "target": "android/app/src/independent/res/drawable/tn_settings_ic_header_arrow.xml",
+      "sha256": "c590cc3aa2a0b982ed0015cbe069001be9e53d1490610bf8cbaa78853da15dd2",
+      "bytes": 438,
+      "source": "android/app/src/main/res/drawable/ic_header_arrow.xml",
+      "source_sha256": "c590cc3aa2a0b982ed0015cbe069001be9e53d1490610bf8cbaa78853da15dd2",
+      "unchanged_bytes": true,
+      "original_reference": "kiki-overview/jadx/resources/res/drawable/ic_header_arrow.xml",
+      "original_reference_sha256": "8a972c72cad9a61e9797ba26820b2e51c5cd74839b5a642992dbd5337cbab917"
+    },
+    {
+      "target": "android/app/src/independent/res/drawable/tn_settings_ic_settings_arrow_right.xml",
+      "sha256": "e437cf44bca89707678f64b5c1c6128afb54338f38f9e531e43ca8b7802052fd",
+      "bytes": 412,
+      "source": "android/app/src/main/res/drawable/ic_settings_arrow_right.xml",
+      "source_sha256": "e437cf44bca89707678f64b5c1c6128afb54338f38f9e531e43ca8b7802052fd",
+      "unchanged_bytes": true,
+      "original_reference": "kiki-overview/jadx/resources/res/drawable/ic_settings_arrow_right.xml",
+      "original_reference_sha256": "e437cf44bca89707678f64b5c1c6128afb54338f38f9e531e43ca8b7802052fd"
+    },
+    {
+      "target": "android/app/src/independent/res/drawable/tn_settings_ic_tab_setting.xml",
+      "sha256": "d1f6c130d5f869a51a3a3e050d69bfe47516084a680ea23e5428137a95e7c1bf",
+      "bytes": 5794,
+      "source": "android/app/src/main/res/drawable/ic_tab_setting.xml",
+      "source_sha256": "d1f6c130d5f869a51a3a3e050d69bfe47516084a680ea23e5428137a95e7c1bf",
+      "unchanged_bytes": true,
+      "original_reference": "kiki-overview/jadx/resources/res/drawable/ic_tab_setting.xml",
+      "original_reference_sha256": "d1f6c130d5f869a51a3a3e050d69bfe47516084a680ea23e5428137a95e7c1bf"
+    },
+    {
+      "target": "android/app/src/independent/res/drawable/tn_settings_ic_update.xml",
+      "sha256": "b8963ccfec1243a158fc27ce135e62cd37ccce344c564e64f8318663004db160",
+      "bytes": 1526,
+      "source": "android/app/src/main/res/drawable/ic_update.xml",
+      "source_sha256": "b8963ccfec1243a158fc27ce135e62cd37ccce344c564e64f8318663004db160",
+      "unchanged_bytes": true,
+      "original_reference": "kiki-overview/jadx/resources/res/drawable/ic_update.xml",
+      "original_reference_sha256": "b8963ccfec1243a158fc27ce135e62cd37ccce344c564e64f8318663004db160"
+    },
+    {
+      "target": "android/app/src/independent/res/drawable/tn_settings_ic_warning_circle.xml",
+      "sha256": "967191e3afbc7745a75ba62e8f2544267935ab5d67365e2e575202ef405b3a90",
+      "bytes": 1213,
+      "source": "android/app/src/main/res/drawable/ic_warning_circle.xml",
+      "source_sha256": "967191e3afbc7745a75ba62e8f2544267935ab5d67365e2e575202ef405b3a90",
+      "unchanged_bytes": true,
+      "original_reference": "kiki-overview/jadx/resources/res/drawable/ic_warning_circle.xml",
+      "original_reference_sha256": "967191e3afbc7745a75ba62e8f2544267935ab5d67365e2e575202ef405b3a90"
+    },
+    {
+      "target": "android/app/src/independent/res/drawable/tn_settings_indicator_tab_layout.xml",
+      "sha256": "1739039b4336b5e4c78a2a14efce48989d99a0afda969338a062aa99010e726e",
+      "bytes": 372,
+      "source": "android/app/src/main/res/drawable/indicator_tab_layout.xml",
+      "source_sha256": "1739039b4336b5e4c78a2a14efce48989d99a0afda969338a062aa99010e726e",
+      "unchanged_bytes": true,
+      "original_reference": "kiki-overview/jadx/resources/res/drawable/indicator_tab_layout.xml",
+      "original_reference_sha256": "1739039b4336b5e4c78a2a14efce48989d99a0afda969338a062aa99010e726e"
+    },
+    {
+      "target": "android/app/src/independent/res/values/tn_floating_dimensions.xml",
+      "sha256": "ebb10f8357637c8d035e15587f75da569ea42894a4d555e876c58695d43d8556",
+      "bytes": 131,
+      "source": [
+        "android/app/src/main/res/values/floating_drag.xml",
+        "android/app/src/main/res/values/floating_sign_spacing.xml"
+      ],
+      "derivation": "TN resource names collect existing close-target dimensions with 12dp sign spacing; independent source XML is recorded as generated, not an unchanged original file."
+    },
+    {
+      "target": "android/app/src/independent/res/values-large-mdpi/tn_floating_dimensions.xml",
+      "sha256": "c6a4d2923940ae8510ad3f7f9911c60c756c0c05142d9fb1c54d05b331201881",
+      "bytes": 136,
+      "source": [
+        "android/app/src/main/res/values-large-mdpi/floating_drag.xml",
+        "android/app/src/main/res/values/floating_sign_spacing.xml"
+      ],
+      "derivation": "TN resource names collect existing close-target dimensions with 12dp sign spacing; independent source XML is recorded as generated, not an unchanged original file."
+    },
+    {
+      "target": "android/app/src/independent/res/values-normal-mdpi/tn_floating_dimensions.xml",
+      "sha256": "22c27582a74bbdef7afc1a0e716f69492191729dbdbf35e19bc411212c7db2c3",
+      "bytes": 133,
+      "source": [
+        "android/app/src/main/res/values-normal-mdpi/floating_drag.xml",
+        "android/app/src/main/res/values/floating_sign_spacing.xml"
+      ],
+      "derivation": "TN resource names collect existing close-target dimensions with 12dp sign spacing; independent source XML is recorded as generated, not an unchanged original file."
+    },
+    {
+      "target": "android/app/src/independent/res/drawable/tn_settings_ic_help.xml",
+      "sha256": "d87d0cc9436e7238c7ba6be4c81b33de948df7b83702098eeea2d224b17e4563",
+      "bytes": 1458,
+      "source": "kiki-overview/apktool/res/drawable/zi_zds_ic_help_circle.xml",
+      "source_sha256": "d87d0cc9436e7238c7ba6be4c81b33de948df7b83702098eeea2d224b17e4563",
+      "unchanged_bytes": true
+    },
+    {
+      "target": "android/app/src/independent/res/drawable/tn_settings_badge_beta.xml",
+      "sha256": "f1e65780b4cd3373b13831c48af802a8661923acbd2281670cf4c2ec67744e9a",
+      "bytes": 8713,
+      "source": "kiki-overview/apktool/res/drawable/ic_beta_icon.xml",
+      "source_sha256": "d7c3ed12d44ed50b0d4ba4fea6498d77a4ce864fcd8b99386504a6fb4f48a6c1",
+      "unchanged_bytes": false,
+      "resource_reference_replacements": {
+        "@dimen/_32dp": "32.0dp",
+        "@dimen/_112dp": "112.0dp"
+      }
+    },
+    {
+      "target": "android/app/src/independent/res/drawable/tn_settings_feature_premium.xml",
+      "sha256": "e09225da8e32fba6e4dccdbd5d9c4ab10293e49ba1e8dcc5d35b0e2e324a6447",
+      "bytes": 6506,
+      "source": "kiki-overview/apktool/res/drawable/ic_feature_premium.xml",
+      "source_sha256": "e09225da8e32fba6e4dccdbd5d9c4ab10293e49ba1e8dcc5d35b0e2e324a6447",
+      "unchanged_bytes": true
+    },
+    {
+      "target": "android/app/src/independent/res/drawable/tn_settings_animated_badge_premium.xml",
+      "sha256": "cc36eff36663070430157916b0b56ddfb8664ce8db9404e55a9f88a0f38de768",
+      "bytes": 574,
+      "source": "kiki-overview/apktool/res/drawable/animated_badge_premium.xml",
+      "source_sha256": "734bf9e90a3e326819e3fd42c770a2832cd962e4a0d7d796ac012ed345156a9b",
+      "unchanged_bytes": false,
+      "original_reference": "kiki-overview/apktool/res/drawable/animated_badge_premium.xml",
+      "original_reference_sha256": "734bf9e90a3e326819e3fd42c770a2832cd962e4a0d7d796ac012ed345156a9b",
+      "resource_reference_replacements": {
+        "@drawable/badge_premium": "@drawable/tn_settings_badge_premium",
+        "@drawable/$animated_badge_premium__0": "@animator/tn_settings_badge_premium_translate_0",
+        "@drawable/$animated_badge_premium__1": "@animator/tn_settings_badge_premium_translate_1",
+        "@drawable/$animated_badge_premium__2": "@animator/tn_settings_badge_premium_translate_2"
+      }
+    },
+    {
+      "target": "android/app/src/independent/res/animator/tn_settings_badge_premium_translate_0.xml",
+      "sha256": "64389897a788135fec281d761ba9b49a7d9e2044510dee8aae4cb87e0e24b5ac",
+      "bytes": 305,
+      "source": "kiki-overview/apktool/res/drawable/$animated_badge_premium__0.xml",
+      "source_sha256": "64389897a788135fec281d761ba9b49a7d9e2044510dee8aae4cb87e0e24b5ac",
+      "unchanged_bytes": true,
+      "original_reference": "kiki-overview/apktool/res/drawable/$animated_badge_premium__0.xml",
+      "original_reference_sha256": "64389897a788135fec281d761ba9b49a7d9e2044510dee8aae4cb87e0e24b5ac"
+    },
+    {
+      "target": "android/app/src/independent/res/animator/tn_settings_badge_premium_translate_1.xml",
+      "sha256": "b65c3817c6ee7a715b778b4eceb2cf0a3698398e31ab67b9a088a731d4b6c930",
+      "bytes": 305,
+      "source": "kiki-overview/apktool/res/drawable/$animated_badge_premium__1.xml",
+      "source_sha256": "b65c3817c6ee7a715b778b4eceb2cf0a3698398e31ab67b9a088a731d4b6c930",
+      "unchanged_bytes": true,
+      "original_reference": "kiki-overview/apktool/res/drawable/$animated_badge_premium__1.xml",
+      "original_reference_sha256": "b65c3817c6ee7a715b778b4eceb2cf0a3698398e31ab67b9a088a731d4b6c930"
+    },
+    {
+      "target": "android/app/src/independent/res/animator/tn_settings_badge_premium_translate_2.xml",
+      "sha256": "d8625b08ca809b1c9609cb68be47c3b05ced6d666279c30fa2592d4d9e3456f8",
+      "bytes": 304,
+      "source": "kiki-overview/apktool/res/drawable/$animated_badge_premium__2.xml",
+      "source_sha256": "d8625b08ca809b1c9609cb68be47c3b05ced6d666279c30fa2592d4d9e3456f8",
+      "unchanged_bytes": true,
+      "original_reference": "kiki-overview/apktool/res/drawable/$animated_badge_premium__2.xml",
+      "original_reference_sha256": "d8625b08ca809b1c9609cb68be47c3b05ced6d666279c30fa2592d4d9e3456f8"
+    }
+  ],
+  "onboarding_dimensions": {
+    "reference": "kiki-overview/jadx/resources/res/values*/dimens.xml; TN-named dimensions retain the source numeric values and dp/sp units in matching existing qualifiers. These are generated qualifier files, not byte-for-byte original source copies.",
+    "files": [
+      {
+        "target": "android/app/src/independent/res/values/welcome_dimensions.xml",
+        "sha256": "8ab56846dde6a0b36ed6daa79a780e4989369c47b6703ee01ce0d101630cdb44",
+        "bytes": 1103,
+        "source": "kiki-overview/jadx/resources/res/values/dimens.xml",
+        "source_sha256": "5c7ec72e8eaffc258d58c1b05ce24f6d9ddc83c5266b3d7f227edfda73dea8e1"
+      },
+      {
+        "target": "android/app/src/independent/res/values-h640dp/welcome_dimensions.xml",
+        "sha256": "46b770c70777ecb6ca7123135ef72d9b7015d42f60925d39fdb5e115270d68bc",
+        "bytes": 237,
+        "source": "kiki-overview/jadx/resources/res/values-h640dp/dimens.xml",
+        "source_sha256": "e7002ee0dac335be5b30bcca6b53bc042668793a81d0e09a73ee08958e6ad9ad"
+      },
+      {
+        "target": "android/app/src/independent/res/values-large-mdpi/welcome_dimensions.xml",
+        "sha256": "d74b756dfb9b33a869a537caf180f3ca1440b5f7c22f8a08fcdbacf183647122",
+        "bytes": 239,
+        "source": "kiki-overview/jadx/resources/res/values-large-mdpi/dimens.xml",
+        "source_sha256": "3fd38c5d17eae400a5a270dd8f07d2ab977168c7ec0c7c8deba6346e94ffcaff"
+      },
+      {
+        "target": "android/app/src/independent/res/values-normal-mdpi/welcome_dimensions.xml",
+        "sha256": "638b7b1b3d9ae4ee31e63d3e1a90f8352e1f6f741179ea881adc06d616400b4f",
+        "bytes": 239,
+        "source": "kiki-overview/jadx/resources/res/values-normal-mdpi/dimens.xml",
+        "source_sha256": "9bc02fec3cebd52f89bc8ae37271427595e2882c0dddec240560cca81292f3d0"
+      },
+      {
+        "target": "android/app/src/independent/res/values-sw200dp/welcome_dimensions.xml",
+        "sha256": "ef5adb228f4e8f7236caf493029d4b24f566992fec056e997bb671f65a2fe135",
+        "bytes": 870,
+        "source": "kiki-overview/jadx/resources/res/values-sw200dp/dimens.xml",
+        "source_sha256": "618bdd8c9a7d9ff8ca28bd154402ba6fd3e95c7d11d6eacfd2a5a1a7ddf60835"
+      },
+      {
+        "target": "android/app/src/independent/res/values-sw300dp/welcome_dimensions.xml",
+        "sha256": "7302d5db2a900f7e873778f653171c4ffece6e0154eb9d5ed0c85c479d507d8c",
+        "bytes": 877,
+        "source": "kiki-overview/jadx/resources/res/values-sw300dp/dimens.xml",
+        "source_sha256": "10debb728cf937d565eb3e7137a5c17a2f1851d994ee80b3e88c4e7177f9d07b"
+      },
+      {
+        "target": "android/app/src/independent/res/values-sw300dp-w960dp/welcome_dimensions.xml",
+        "sha256": "7d35cdee6020007f7dd724953864c35e525faedaf5054a5c45c06ad8fa6f398b",
+        "bytes": 875,
+        "source": "kiki-overview/jadx/resources/res/values-sw300dp-w960dp/dimens.xml",
+        "source_sha256": "35e5e5cbe2ee3af15188b33a30646621cb572a023d5f7ca9c9bb7ff13f3ff166"
+      },
+      {
+        "target": "android/app/src/independent/res/values-sw400dp/welcome_dimensions.xml",
+        "sha256": "7d35cdee6020007f7dd724953864c35e525faedaf5054a5c45c06ad8fa6f398b",
+        "bytes": 875,
+        "source": "kiki-overview/jadx/resources/res/values-sw400dp/dimens.xml",
+        "source_sha256": "35e5e5cbe2ee3af15188b33a30646621cb572a023d5f7ca9c9bb7ff13f3ff166"
+      },
+      {
+        "target": "android/app/src/independent/res/values-sw400dp-w1200dp/welcome_dimensions.xml",
+        "sha256": "7205fe6d06f2d493b38521764bee52c81986c9943ed2901b762cb9bc075cf650",
+        "bytes": 866,
+        "source": "kiki-overview/jadx/resources/res/values-sw400dp-w1200dp/dimens.xml",
+        "source_sha256": "67257b3f3892d13097828d34b47ea42a897c6b5ceb9c619c2c8caa97e6b66d16"
+      },
+      {
+        "target": "android/app/src/independent/res/values-sw400dp-w682dp/welcome_dimensions.xml",
+        "sha256": "210b1ffd010a939e98ec8571db1c4caf178a87bd365d51826c8a745b7e724703",
+        "bytes": 879,
+        "source": "kiki-overview/jadx/resources/res/values-sw400dp-w682dp/dimens.xml",
+        "source_sha256": "d5cdf74f7840079f4e32e9b0284d0fd64dc4ed1da25526b666dde48c4b445390"
+      },
+      {
+        "target": "android/app/src/independent/res/values-sw600dp/welcome_dimensions.xml",
+        "sha256": "790309ac612505cf341a41bfc64ca6dab3b20f796def2f49875891e080b73e45",
+        "bytes": 881,
+        "source": "kiki-overview/jadx/resources/res/values-sw600dp/dimens.xml",
+        "source_sha256": "fb9c51b13a0105f6c205be35f60ac75b3e86846152e7b01c1c549c2549630a51"
+      },
+      {
+        "target": "android/app/src/independent/res/values-w1280dp-h480dp/welcome_dimensions.xml",
+        "sha256": "7205fe6d06f2d493b38521764bee52c81986c9943ed2901b762cb9bc075cf650",
+        "bytes": 866,
+        "source": "kiki-overview/jadx/resources/res/values-w1280dp-h480dp/dimens.xml",
+        "source_sha256": "67257b3f3892d13097828d34b47ea42a897c6b5ceb9c619c2c8caa97e6b66d16"
+      },
+      {
+        "target": "android/app/src/independent/res/values-xlarge-mdpi/welcome_dimensions.xml",
+        "sha256": "a0a0b5e19618a68be5a83afd664c0f912d3eb2bee95fe20898189c8789e800c0",
+        "bytes": 231,
+        "source": "kiki-overview/jadx/resources/res/values-xlarge-mdpi/dimens.xml",
+        "source_sha256": "3f0cc9f4381d0bbc051c77f539fb11e9a64aeaa15f1f6b73d6ddc9e65ae33321"
+      }
+    ]
+  },
+  "font_sources": [
+    "barlow-source.json",
+    "antonio-source.json"
+  ],
+  "verification": "Source and target SHA-256 were compared locally; every copied file is either unchanged or differs only by the listed resource reference replacements. Generated dimensions are recorded separately. No assets were fetched and no reference files were modified.",
+  "account_badge_animation": {
+    "release": "Android .167",
+    "source_binding": "kiki-overview/jadx/sources/a3/h.java:126-130,189-224",
+    "source_layout": "kiki-overview/apktool/res/layout-v22/item_settings_zalo_avatar.xml:7",
+    "scope": "Owner-authorized UI-only reuse of the steady Premium gradient animation; native TN view clips the badge to the source 14sp/28sp pill and stops it when hidden or detached. Entitlements remain authoritative TN account data.",
+    "retained_vector": "android/app/src/independent/res/drawable/tn_settings_badge_premium.xml"
+  }
+}

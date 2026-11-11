@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <dimen name="tn_welcome_image_width">@dimen/tn_welcome_image_width_tall</dimen>
+    <dimen name="tn_welcome_image_height">@dimen/tn_welcome_image_height_tall</dimen>
+    <!-- The original switches OnboardingTitle to HeadlineH1 at h640dp. -->
+    <dimen name="tn_welcome_title_size">48sp</dimen>
+</resources>

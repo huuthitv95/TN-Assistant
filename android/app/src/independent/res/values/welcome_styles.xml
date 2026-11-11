@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Scope the reference dark-theme ripple to welcome controls only. -->
+    <style name="TnReferenceWelcomeButtonTheme" parent="">
+        <item name="android:colorControlHighlight">#33ffffff</item>
+    </style>
+</resources>

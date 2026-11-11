@@ -1,0 +1,10 @@
+{
+  "zalo": {
+    "mode": "generic",
+    "secret_env": "TN_ZALO_APP_SECRET",
+    "options": {
+      "app_id": "45723385592397433",
+      "redirect_uri": "https://assistant.tnfastvn.com/v1/auth/zalo/callback"
+    }
+  }
+}

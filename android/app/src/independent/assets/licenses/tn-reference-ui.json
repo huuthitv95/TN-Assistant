@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "authorization": "Owner explicitly authorized reuse of original UI image assets on 2026-10-29: Dung lai rieng anh giao dien goc.",
+  "scope": "Owner-authorized reuse of original UI imagery and visual styling for onboarding, post-login settings, floating controls and Zalo sign-in chrome. In-app waveform marks are cropped from the owner-authorized original onboarding artwork; the separate TN launcher icon remains the user-supplied asset. No model, native library, credential or original provider runtime is included by this UI authorization. The settings account card uses this owner-authorized contact avatar only as its generic profile fallback.",
+  "license": "Owner-authorized reference UI reuse; no public-domain or open-source license is asserted.",
+  "density": "Original drawable, drawable-hdpi, drawable-xhdpi and drawable-xxxhdpi qualifiers are retained. Nine-patch source has its original uncompiled one-pixel control border.",
+  "generated_layouts": [
+    "android/app/src/independent/res/drawable/tn_reference_welcome_background.xml",
+    "android/app/src/independent/res/drawable/tn_reference_welcome_button.xml",
+    "android/app/src/independent/res/drawable/tn_home_background.xml",
+    "android/app/src/independent/res/drawable/tn_home_background_gradient.xml",
+    "android/app/src/independent/res/drawable/tn_home_guide.xml",
+    "android/app/src/independent/res/drawable/tn_home_settings.xml",
+    "android/app/src/independent/res/anim/tn_welcome_illustration_in.xml",
+    "android/app/src/independent/res/values/welcome_styles.xml",
+    "android/app/src/independent/res/values/welcome_dimensions.xml",
+    "android/app/src/independent/res/values-h640dp/welcome_dimensions.xml",
+    "android/app/src/independent/res/values-large-mdpi/welcome_dimensions.xml",
+    "android/app/src/independent/res/values-normal-mdpi/welcome_dimensions.xml",
+    "android/app/src/independent/res/values-sw200dp/welcome_dimensions.xml",
+    "android/app/src/independent/res/values-sw300dp/welcome_dimensions.xml",
+    "android/app/src/independent/res/values-sw300dp-w960dp/welcome_dimensions.xml",
+    "android/app/src/independent/res/values-sw400dp/welcome_dimensions.xml",
+    "android/app/src/independent/res/values-sw400dp-w1200dp/welcome_dimensions.xml",
+    "android/app/src/independent/res/values-sw400dp-w682dp/welcome_dimensions.xml",
+    "android/app/src/independent/res/values-sw600dp/welcome_dimensions.xml",
+    "android/app/src/independent/res/values-w1280dp-h480dp/welcome_dimensions.xml",
+    "android/app/src/independent/res/values-xlarge-mdpi/welcome_dimensions.xml"
+  ],
+  "onboarding_runtime": "TnOnboardingIllustration renders each complete owner-authorized original onboarding image without overlays, preserving the blue waveform, contextual illustrations and Zalo bubble. TnWelcomeAppMark responsively crops the circular waveform from the original start artwork for in-app headers.",
+  "home_runtime": "The independent TN home draws the original three contextual background PNGs under owner authorization, uses a TN-operated microphone capture/waveform and TN command examples, and provides the source-style HƯỚNG DẪN / CÀI ĐẶT controls. Guide and settings behavior is TN-owned; no Kiki account, network, native model, or provider runtime is reused.",
+  "files": [
+    {
+      "source": "kiki-overview/jadx/resources/res/drawable/background_line_horizontal.png",
+      "target": "android/app/src/independent/res/drawable/tn_reference_welcome_divider.png",
+      "sha256": "d6102c28de5b843bf28a49474126ddd13ad688913bff696e149b35d0f909f36f",
+      "bytes": 2199,
+      "unchanged_bytes": true
+    },
+    {
+      "source": "kiki-overview/jadx/resources/res/drawable/background_line_layer2.png",
+      "target": "android/app/src/independent/res/drawable/tn_reference_welcome_glow.png",
+      "sha256": "a4af40e27f65d5aa7992239f9eed47683093cac064acf44313536aa819bdf4d8",
+      "bytes": 12081,
+      "unchanged_bytes": true
+    },
+    {
+      "source": "kiki-overview/jadx/resources/res/drawable/ic_kiki_main_background_bottom_right.png",
+      "target": "android/app/src/independent/res/drawable/tn_reference_welcome_particle_right.png",
+      "sha256": "ae2002151c8302d523ffc5f555f2a647032ac5b082f0a6248c7af6879a778145",
+      "bytes": 1702,
+      "unchanged_bytes": true
+    },
+    {
+      "source": "kiki-overview/jadx/resources/res/drawable-hdpi/activity_bg_bg.png",
+      "target": "android/app/src/independent/res/drawable-hdpi/tn_reference_welcome_bg.png",
+      "sha256": "293fcba8ca64c41fb25934644ef274c7e8258ae8c3601d475afd82bf6e9220a8",
+      "bytes": 513764,
+      "unchanged_bytes": true
+    },
+    {
+      "source": "kiki-overview/jadx/resources/res/drawable-hdpi/activity_bg_particle_left.png",
+      "target": "android/app/src/independent/res/drawable-hdpi/tn_reference_welcome_particle_left.png",
+      "sha256": "c6a7ef8c68ab3767352129b2f5ff560446ec7f507da765e0f32a36871fc8ef09",
+      "bytes": 2282,
+      "unchanged_bytes": true
+    },
+    {
+      "source": "kiki-overview/jadx/resources/res/drawable-xhdpi/ic_onboarding_done.png",
+      "target": "android/app/src/independent/res/drawable-xhdpi/tn_reference_onboarding_done.png",
+      "sha256": "5186fa9093201a4b76a904ccd6184bc16c7a3368210ee120194a119f3ad32da7",
+      "bytes": 95199,
+      "unchanged_bytes": true
+    },
+    {
+      "source": "kiki-overview/jadx/resources/res/drawable-xhdpi/ic_onboarding_mic.png",
+      "target": "android/app/src/independent/res/drawable-xhdpi/tn_reference_onboarding_mic.png",
+      "sha256": "dc38f6cea366b5bb4ed0128421363b8b949bbe8059aa62718cac177fb931713b",
+      "bytes": 96943,
+      "unchanged_bytes": true
+    },
+    {
+      "source": "kiki-overview/jadx/resources/res/drawable-xhdpi/ic_onboarding_music.png",
+      "target": "android/app/src/independent/res/drawable-xhdpi/tn_reference_onboarding_music.png",
+      "sha256": "ee2ae770a3cfb8c3bf0f2de62c969cf6b449cc3722820c22f28673dc961a5fac",
+      "bytes": 95830,
+      "unchanged_bytes": true
+    },
+    {
+      "source": "kiki-overview/jadx/resources/res/drawable-xhdpi/ic_onboard_draw_other_app.png",
+      "target": "android/app/src/independent/res/drawable-xhdpi/tn_reference_onboarding_overlay.png",
+      "sha256": "31f84298f360bfe21516d6d2f5a4a29224317060de531e9a0d53cef8ac02b0f9",
+      "bytes": 79684,
+      "unchanged_bytes": true
+    },
+    {
+      "source": "kiki-overview/jadx/resources/res/drawable-xhdpi/ic_onboarding_start.png",
+      "target": "android/app/src/independent/res/drawable-xhdpi/tn_reference_onboarding_start.png",
+      "sha256": "6d31dda9b9d67cb6da2d0b14a16ba4d489fdd6e05353b2e6353ca0d97607847b",
+      "bytes": 35062,
+      "unchanged_bytes": true
+    },
+    {
+      "source": "kiki-overview/jadx/resources/res/drawable-xhdpi/ic_onboarding_zalo.png",
+      "target": "android/app/src/independent/res/drawable-xhdpi/tn_reference_onboarding_zalo.png",
+      "sha256": "2c553b9f1d76d2f829d6fdd3f396a275df49df3d7d9b4032eee5dbdd1646a752",
+      "bytes": 36699,
+      "unchanged_bytes": true
+    },
+    {
+      "source": "kiki-overview/split-density/res/drawable-xhdpi/btn_login_normal.9.png",
+      "target": "android/app/src/independent/res/drawable-xhdpi/tn_reference_welcome_button_normal.9.png",
+      "sha256": "5902ddf2fa5498a007c4b022ed45f7d160396cfae243860f6726659a9c04f64b",
+      "bytes": 24796,
+      "unchanged_bytes": true
+    },
+    {
+      "source": "kiki-overview/jadx/resources/res/drawable/ic_kiki_main_background_voice_light_bottom.png",
+      "target": "android/app/src/independent/res/drawable/tn_home_artwork_glow.png",
+      "sha256": "88228441922c33899e2ac7869d5c5dce5ee3c1160659577dc4415160c66575e0",
+      "bytes": 4478,
+      "unchanged_bytes": true
+    },
+    {
+      "source": "kiki-overview/jadx/resources/res/drawable/ic_kiki_main_background_bottom_left.png",
+      "target": "android/app/src/independent/res/drawable/tn_home_artwork_left.png",
+      "sha256": "baa263dcbba187892f63e4fb4b42931c04f919182428931e72046137ffb3b5ba",
+      "bytes": 1265,
+      "unchanged_bytes": true
+    },
+    {
+      "source": "kiki-overview/jadx/resources/res/drawable/ic_kiki_main_background_bottom_right.png",
+      "target": "android/app/src/independent/res/drawable/tn_home_artwork_right.png",
+      "sha256": "ae2002151c8302d523ffc5f555f2a647032ac5b082f0a6248c7af6879a778145",
+      "bytes": 1702,
+      "unchanged_bytes": true
+    },
+    {
+      "source": "kiki-overview/jadx/resources/res/drawable/ic_guideline.xml",
+      "target": "android/app/src/independent/res/drawable/tn_home_guide.xml",
+      "sha256": "6115367c1f25aa96bacd35f54f99286f970ea05cc977db08f9c7470d73aa5922",
+      "bytes": 2311,
+      "derived_resource_adjustments": "Resource references are replaced with explicit dimensions for the TN independent source set."
+    },
+    {
+      "source": "kiki-overview/jadx/resources/res/drawable/ic_setting.xml",
+      "target": "android/app/src/independent/res/drawable/tn_home_settings.xml",
+      "sha256": "8285a27c3479955539d50ec49005157bbd2c656142f9c84457de02daaad04362",
+      "bytes": 3160,
+      "derived_resource_adjustments": "Resource references are replaced with explicit dimensions for the TN independent source set."
+    },
+    {
+      "source": "kiki-overview/split-density/res/drawable-xxxhdpi/zalosdk_icon_back_arrow.png",
+      "target": "android/app/src/independent/res/drawable-xxxhdpi/tn_zalo_back_arrow.png",
+      "sha256": "aecddb79729392f669af487bc9a4548a17805d57ff0e975409079a6afc6cd82a",
+      "bytes": 304,
+      "unchanged_bytes": true
+    },
+    {
+      "source": "kiki-overview/apktool/res/drawable/contact_avatar.jpg",
+      "target": "android/app/src/independent/res/drawable-nodpi/tn_profile_avatar.jpg",
+      "sha256": "a00d5fd73782cfe70c4b25cc4aa0edeadffb6a31e24b37ac2f9510647f980fb0",
+      "bytes": 55937,
+      "unchanged_bytes": true,
+      "use": "Generic account profile fallback only; not the TN Assistant app mark."
+    }
+  ],
+  "behavior_reference": {
+    "primary_button": "kiki-overview/jadx/resources/res/drawable/btn_login.xml",
+    "illustration_animation": "kiki-overview/jadx/resources/res/anim/anim_right_in.xml",
+    "click_gate": "kiki-overview/jadx/sources/r3/n0.java and utils/c3.java; 500 ms accepted-click threshold",
+    "notes": "Behavior and theme values reimplemented for TN. No replay/mute/back toolbar in normal welcome stages; no conditional CBL menu without a configured TN equivalent.",
+    "zalo_login_chrome": "The host ActionBar and 48dp Zalo SDK toolbar are measured from the live original app; the xxxhdpi back arrow asset is owner-authorized and kept at its source density."
+  },
+  "dimension_reference": "kiki-overview/jadx/resources/res/values*/dimens.xml: _8dp/_10dp/_16dp/_32dp/_150dp/_200dp/_240dp/_320dp/_360dp/_72dp/_36sp/_22sp are mapped under TN names with matching numeric values and dp/sp units in matching qualifiers; values-h640dp image dimensions and density-qualified dot dimensions retained. Current generated file checksums are in tn-settings-floating-ui.json.",
+  "related_ui_provenance": "licenses/tn-settings-floating-ui.json records the existing UI reuse authorization, copied settings/floating resources and current generated onboarding qualifier XML checksums."
+}

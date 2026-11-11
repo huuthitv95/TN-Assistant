@@ -1,0 +1,58 @@
+# Configuration template for a TN-owned Vietnam egress gateway.
+# This template intentionally has no public/rotating proxy nodes.
+# Replace placeholders only with values issued for infrastructure TN owns or
+# is contractually authorized to use, and only after Zalo permits that route.
+schema_version: 1
+
+gateway:
+  listen: "0.0.0.0:443"
+  purpose: "zalo-oauth-egress"
+  tls:
+    server_certificate_file: "/etc/tn-assistant/gateway/server.pem"
+    server_private_key_file: "/etc/tn-assistant/gateway/server.key"
+    client_ca_file: "/etc/tn-assistant/gateway/client-ca.pem"
+    require_client_certificate: true
+    allowed_client_certificate_sha256:
+      - "REPLACE_WITH_BACKEND_CLIENT_CERT_SHA256"
+
+  # Allow only the Zalo HTTPS hosts used by the backend OAuth/profile flow.
+  # A CONNECT request to any other host or port must fail closed.
+  outbound:
+    allowed_destinations:
+      - hostname: "oauth.zaloapp.com"
+        ports: [443]
+      - hostname: "graph.zalo.me"
+        ports: [443]
+    deny_ip_literal_destinations: true
+    resolve_and_validate_destination_ips: true
+    deny_private_loopback_link_local_and_metadata_ranges: true
+    max_concurrent_tunnels: 32
+    connect_timeout_seconds: 5
+    idle_timeout_seconds: 30
+
+  egress:
+    mode: "direct-from-gateway-host"
+    expected_country: "VN"
+    expected_public_ipv4: "${TN_ZALO_VN_EGRESS_IPV4}"
+    rotate_addresses: false
+    public_proxy_nodes: []
+    fallback_to_other_egress: false
+
+  logging:
+    include_http_paths_or_query_strings: false
+    include_headers_or_payloads: false
+    include_oauth_codes_tokens_or_profile_data: false
+    include_connection_id_status_duration_and_byte_counts: true
+
+backend_client:
+  zalo_transport:
+    mode: "mtls-connect-gateway"
+    gateway_address: "${TN_ZALO_GATEWAY_ADDR}"
+    gateway_server_name: "${TN_ZALO_GATEWAY_SERVER_NAME}"
+    gateway_ca_file: "/etc/tn-assistant/gateway/ca.pem"
+    client_certificate_file: "/etc/tn-assistant/gateway/client.pem"
+    client_private_key_file: "/etc/tn-assistant/gateway/client.key"
+    direct_fallback: false
+    destinations:
+      - "oauth.zaloapp.com:443"
+      - "graph.zalo.me:443"

@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <dimen name="tn_welcome_dot_size">4.26dp</dimen>
+    <dimen name="tn_welcome_selected_dot_size">10.66dp</dimen>
+    <dimen name="tn_welcome_dot_margin">5.86dp</dimen>
+</resources>

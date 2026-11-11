@@ -1,0 +1,105 @@
+{
+  "source": "TN-authored text synthesized using the configured original TTS provider; no original app audio copied",
+  "speaker_id": "5",
+  "files": [
+    {
+      "resource": "tn_setup_start",
+      "text": "Chào mừng bạn đến với Ti En Assistant. Bắt đầu cài đặt để kích hoạt trợ lý giọng nói Ti En. Nhấn Bắt đầu để tiếp tục.",
+      "sha256": "e6a19cb750e91b6c312130e83aee0e324232de3f80d1d8b7b76ef1a59e0ced9b",
+      "bytes": 27936,
+      "duration_seconds": 6.984,
+      "speaker_id": "5",
+      "source": "original_tts_synthesized_TN_text"
+    },
+    {
+      "resource": "tn_setup_permission",
+      "text": "Vui lòng cấp quyền truy cập để Ti En thực hiện các tính năng điều khiển bằng giọng nói. Nhấn Cấp quyền và chọn quyền bạn muốn cho phép. Bạn có thể chọn Để sau.",
+      "sha256": "a8ab423ccfe564d785ea37678bd2f6e41843c9e85eb434e833899fa19fffc7e4",
+      "bytes": 36576,
+      "duration_seconds": 9.144,
+      "speaker_id": "5",
+      "source": "original_tts_synthesized_TN_text"
+    },
+    {
+      "resource": "tn_setup_notification",
+      "text": "Cho phép Ti En điều khiển trình phát nhạc của bạn. Nhấn Cấp quyền, chọn Ti En Assistant và bật quyền truy cập thông báo. Bạn có thể để sau.",
+      "sha256": "53ea10c87fc1b414db1b212b77e8dbda6f3e2445ed90b093f3637b6a233f7f1e",
+      "bytes": 32832,
+      "duration_seconds": 8.208,
+      "speaker_id": "5",
+      "source": "original_tts_synthesized_TN_text"
+    },
+    {
+      "resource": "tn_setup_overlay",
+      "text": "Cho phép Ti En hiển thị trên ứng dụng khác để mở trợ lý khi bạn đang sử dụng ứng dụng khác. Nhấn Cấp quyền để mở cài đặt Android. Tiện ích nổi chỉ bật khi bạn chủ động chọn.",
+      "sha256": "c2b98ba1122d60ea3ae09d4156add0d52cbbd039bf5fee6229b87b87f9455293",
+      "bytes": 42624,
+      "duration_seconds": 10.656,
+      "speaker_id": "5",
+      "source": "original_tts_synthesized_TN_text"
+    },
+    {
+      "resource": "tn_setup_account",
+      "text": "Đăng nhập Ti En để có trải nghiệm cá nhân hóa. Nhấn Tiếp tục, chọn tài khoản Ti En hoặc đăng nhập bằng Zalo.",
+      "sha256": "cf21782c75b746ef34d699a1ed9eaccb8f415061b93963d5195276f75b8cf9fc",
+      "bytes": 27648,
+      "duration_seconds": 6.912,
+      "speaker_id": "5",
+      "source": "original_tts_synthesized_TN_text"
+    },
+    {
+      "resource": "tn_setup_choice",
+      "text": "Chọn cách đăng nhập Ti En Assistant. Bạn có thể dùng tài khoản Ti En, tạo tài khoản mới hoặc đăng nhập bằng Zalo. Nhấn nút tương ứng để tiếp tục.",
+      "sha256": "3d68e199a0c1a86c406fc7b55bc5efc4867d02675e518f4bbf4a90ae95d6f85e",
+      "bytes": 35424,
+      "duration_seconds": 8.856,
+      "speaker_id": "5",
+      "source": "original_tts_synthesized_TN_text"
+    },
+    {
+      "resource": "tn_setup_login",
+      "text": "Nhập tên đăng nhập và mật khẩu tài khoản Ti En của bạn. Nếu chưa có tài khoản, chọn Tạo tài khoản Ti En. Bạn cũng có thể đăng nhập bằng Zalo.",
+      "sha256": "806e368079654e431f213cba70f9e206e36aabeaae28af8897767ddaf0561a15",
+      "bytes": 33408,
+      "duration_seconds": 8.352,
+      "speaker_id": "5",
+      "source": "original_tts_synthesized_TN_text"
+    },
+    {
+      "resource": "tn_setup_register",
+      "text": "Tạo tài khoản Ti En bằng tên đăng nhập, mật khẩu tối thiểu mười ký tự và tên hiển thị. Sau đó nhấn Tạo tài khoản.",
+      "sha256": "e41aaf7776285a3bb14d805db9e403ed178e499c5560cef4daa7d37cd84586a9",
+      "bytes": 28656,
+      "duration_seconds": 7.164,
+      "speaker_id": "5",
+      "source": "original_tts_synthesized_TN_text"
+    },
+    {
+      "resource": "tn_setup_zalo_web",
+      "text": "Liên kết Ti En Assistant với Zalo để cá nhân hóa trải nghiệm của bạn. Dùng Zalo trên điện thoại quét mã trên trang đăng nhập, hoặc chọn cách đăng nhập do Zalo cung cấp. Nếu gặp lỗi, nhấn Thử cách khác.",
+      "sha256": "b56781e05c08a44ccc56ad6eea94bc5b3aa5cc8ce09ffb218ce0b10bc7b6d353",
+      "bytes": 50256,
+      "duration_seconds": 12.564,
+      "speaker_id": "5",
+      "source": "original_tts_synthesized_TN_text"
+    },
+    {
+      "resource": "tn_setup_zalo",
+      "text": "Dùng Zalo quét mã trên màn hình. Đối chiếu mã số, chọn liên kết tài khoản và chấp thuận đăng nhập. Ti En sẽ chờ xác nhận từ bạn.",
+      "sha256": "2aaab60f377030e6b46ba6f73448064b85ced2f1c242dbd8edff0d88506d4d92",
+      "bytes": 31536,
+      "duration_seconds": 7.884,
+      "speaker_id": "5",
+      "source": "original_tts_synthesized_TN_text"
+    },
+    {
+      "resource": "tn_setup_finish",
+      "text": "Cài đặt hoàn tất. Trợ lý giọng nói Ti En đã sẵn sàng. Nhấn Bắt đầu sử dụng để trò chuyện với Ti En.",
+      "sha256": "29140ff5c103ba923b9bbf6e34d099736a3b2f9a015728e17e1e8f8314b930ef",
+      "bytes": 24912,
+      "duration_seconds": 6.228,
+      "speaker_id": "5",
+      "source": "original_tts_synthesized_TN_text"
+    }
+  ]
+}

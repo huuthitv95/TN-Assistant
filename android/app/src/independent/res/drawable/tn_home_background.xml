@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/tn_home_artwork_glow" />
+    <item android:gravity="left|bottom" android:drawable="@drawable/tn_home_artwork_left" android:bottom="-8dp" />
+    <item android:gravity="right|bottom" android:drawable="@drawable/tn_home_artwork_right" android:bottom="-8dp" />
+</layer-list>

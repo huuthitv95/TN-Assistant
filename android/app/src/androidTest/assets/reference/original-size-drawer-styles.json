@@ -1,0 +1,178 @@
+{
+  "provenance": "Read-only observation of original ai.zalo.kiki.car on TNParity30; 2026-11-03; no hooks or entitlement fixtures",
+  "display_width": 1080,
+  "density": 2.625,
+  "font_scale": 1.0,
+  "title": {
+    "id": "nav_drawer_title",
+    "label": "K\u00edch c\u1ee1",
+    "bounds": [
+      261,
+      88,
+      1080,
+      180
+    ],
+    "row_bounds": [
+      0,
+      0,
+      1080,
+      1920
+    ],
+    "text_px": 50,
+    "font_weight": 600,
+    "font_style": 1,
+    "include_font_padding": true,
+    "text_color": -1444865,
+    "line_spacing_multiplier": 1,
+    "padding": [
+      0,
+      13,
+      0,
+      13
+    ],
+    "background": null,
+    "foreground": null,
+    "ripple_color": null,
+    "row_background": "android.graphics.drawable.ColorDrawable",
+    "row_foreground": null,
+    "row_clickable": false
+  },
+  "options": [
+    {
+      "id": "",
+      "label": "To",
+      "bounds": [
+        286,
+        246,
+        971,
+        304
+      ],
+      "row_bounds": [
+        286,
+        208,
+        1055,
+        342
+      ],
+      "text_px": 44,
+      "font_weight": 400,
+      "font_style": 0,
+      "include_font_padding": true,
+      "text_color": -1444865,
+      "line_spacing_multiplier": 1,
+      "padding": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "background": null,
+      "foreground": null,
+      "ripple_color": null,
+      "row_background": null,
+      "row_foreground": null,
+      "row_clickable": true
+    },
+    {
+      "id": "",
+      "label": "Ti\u00eau chu\u1ea9n",
+      "bounds": [
+        286,
+        383,
+        971,
+        441
+      ],
+      "row_bounds": [
+        286,
+        345,
+        1055,
+        479
+      ],
+      "text_px": 44,
+      "font_weight": 400,
+      "font_style": 0,
+      "include_font_padding": true,
+      "text_color": -1444865,
+      "line_spacing_multiplier": 1,
+      "padding": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "background": null,
+      "foreground": null,
+      "ripple_color": null,
+      "row_background": null,
+      "row_foreground": null,
+      "row_clickable": true
+    },
+    {
+      "id": "",
+      "label": "Nh\u1ecf",
+      "bounds": [
+        286,
+        520,
+        971,
+        578
+      ],
+      "row_bounds": [
+        286,
+        482,
+        1055,
+        616
+      ],
+      "text_px": 44,
+      "font_weight": 400,
+      "font_style": 0,
+      "include_font_padding": true,
+      "text_color": -1444865,
+      "line_spacing_multiplier": 1,
+      "padding": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "background": null,
+      "foreground": null,
+      "ripple_color": null,
+      "row_background": null,
+      "row_foreground": null,
+      "row_clickable": true
+    }
+  ],
+  "close": {
+    "id": "btn_close_nav_drawer",
+    "label": "\u0110\u00f3ng",
+    "bounds": [
+      261,
+      1668,
+      1080,
+      1781
+    ],
+    "row_bounds": [
+      261,
+      1668,
+      1080,
+      1781
+    ],
+    "text_px": 35,
+    "font_weight": 400,
+    "font_style": 0,
+    "include_font_padding": true,
+    "text_color": -13115673,
+    "line_spacing_multiplier": 1,
+    "padding": [
+      0,
+      25,
+      0,
+      25
+    ],
+    "background": "android.graphics.drawable.RippleDrawable",
+    "foreground": null,
+    "ripple_color": 872415231,
+    "row_background": "android.graphics.drawable.RippleDrawable",
+    "row_foreground": null,
+    "row_clickable": true
+  }
+}

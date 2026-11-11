@@ -1,0 +1,8 @@
+{
+ "asr":{"mode":"legacy_tn","url":"","stream_url":"","token_env":"TN_ASR_TOKEN","secret_env":"TN_ASR_SECRET","uid":"","client_app_type":"","version":"","header_env":{},"options":{"end_message":"EOS"}},
+ "nlu":{"mode":"legacy_tn","url":"","token_env":"TN_NLU_TOKEN","device_token_env":"TN_NLU_DEVICE_TOKEN","uid":"","header_env":{},"options":{"asr_type":"","nlu_type":"","micro_source":"","car_model_code":"","form_fields":{}}},
+ "tts":{"mode":"legacy_tn","url":"","api_key_env":"TN_TTS_API_KEY","secret_env":"TN_TTS_SECRET","header_env":{},"options":{"encode_type":"hls","speaker_id":"","app_src":"","is_android_box":"false"}},
+ "zalo":{"mode":"legacy_tn","url":"","header_env":{},"options":{}},
+ "traffic":{"mode":"generic","url":"","header_env":{},"options":{}},
+ "wake_word":{"mode":"generic","url":"","header_env":{},"options":{}}
+}

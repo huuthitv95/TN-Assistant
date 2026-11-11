@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <!-- Original applies HeadlineH1 at h640dp; _48sp resolves to 40.8sp at sw600dp. -->
+    <dimen name="tn_welcome_title_size">40.799988sp</dimen>
+</resources>

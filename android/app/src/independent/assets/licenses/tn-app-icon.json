@@ -1,0 +1,14 @@
+{
+    "source":  "User-supplied C:\\Users\\ZGAMESVN\\Downloads\\tn_app_icon.png",
+    "authorization":  "Owner requested responsive use as the Android app launcher icon.",
+    "sha256":  "67f438a99abd80904bb997f267e5cc8dcdc3577ce40285cf2c47cce0054d7af3",
+    "bytes":  654136,
+    "resource":  "res/drawable-nodpi/tn_user_app_icon.png",
+    "adaptive_foreground_inset":  "25%",
+    "dimensions":  [
+                       1024,
+                       1024
+                   ],
+    "pixel_preserving_copy":  true,
+    "legacy_icon":  "The same source image is used by the legacy launcher resource."
+}

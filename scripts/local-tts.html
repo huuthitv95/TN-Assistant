@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kiki · Thử giọng tiếng Việt</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#091b2e;color:#edf5fa;font:16px/1.6 system-ui,sans-serif}main{max-width:760px;margin:48px auto;padding:28px}h1{font-size:32px;line-height:1.25;margin:0 0 12px}p{color:#b3c9d9}label{display:block;margin:22px 0 8px;font-weight:600}textarea,select{width:100%;background:#142c44;color:#edf5fa;border:1px solid #436179;border-radius:8px;padding:12px;font:inherit}textarea{resize:vertical;min-height:150px}button{cursor:pointer;border:0;border-radius:8px;padding:12px 20px;background:#56dce5;color:#08202c;font:600 16px system-ui}button:disabled{opacity:.55;cursor:wait}.samples{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.samples button{padding:8px 12px;background:#203c55;color:#d9eaf4;font-size:14px}audio{width:100%;margin-top:18px}#status{min-height:28px;margin-top:18px}small{color:#98b2c6}#download{color:#56dce5;display:inline-block;margin-top:12px}[hidden]{display:none!important}@media(max-width:600px){main{margin:12px auto;padding:20px}h1{font-size:27px}}
+</style>
+<main><small>KIKI REBUILT · BẢN THỬ LOCAL</small><h1>Thử giọng tiếng Việt</h1>
+<p>Chọn giọng, nhập nội dung và nghe thử. Audio được tạo trên máy này bằng VieNeu-TTS, không gọi API giọng nói cloud.</p>
+<form id="form"><label for="voice">Giọng đọc</label><select id="voice" required></select>
+<label for="text">Nội dung đọc</label><textarea id="text" maxlength="500" required>Xin chào, tôi là trợ lý Kiki. Chúc bạn một chuyến đi an toàn.</textarea>
+<div class="samples"><button type="button" data-sample="welcome">Lời chào</button><button type="button" data-sample="driving">Cảnh báo đường</button><button type="button" data-sample="news">Bản tin mẫu</button></div>
+<button id="generate" type="submit" disabled>Tạo giọng đọc</button></form>
+<div id="status" role="status" aria-live="polite">Đang tải danh sách giọng…</div>
+<audio id="player" controls preload="metadata" hidden></audio><a id="download" hidden download="kiki-local-tts.wav">Tải audio WAV</a>
+<p><small>Bản tin và cảnh báo mẫu chỉ dùng kiểm tra giọng đọc. Nội dung không phải tin tức hoặc dữ liệu đường thực tế.</small></p></main>
+<script>
+const statusEl=document.querySelector('#status'),voice=document.querySelector('#voice'),text=document.querySelector('#text'),generate=document.querySelector('#generate'),player=document.querySelector('#player'),download=document.querySelector('#download');
+let samples=[];
+Promise.all([fetch('/health').then(r=>r.json()),fetch('/api/samples').then(r=>r.json())]).then(([info,data])=>{samples=data;for(const v of info.voices){const option=document.createElement('option');option.value=v.id;option.textContent=v.label;voice.append(option)}const preferred=info.voices.find(v=>v.id==='Thùy Dung');if(preferred)voice.value=preferred.id;generate.disabled=false;statusEl.textContent='Sẵn sàng · '+info.voices.length+' giọng · chạy local trên CPU'}).catch(()=>{statusEl.textContent='Không kết nối được TTS local. Kiểm tra server.'});
+document.querySelectorAll('[data-sample]').forEach(button=>button.onclick=()=>{text.value=samples.find(s=>s.id===button.dataset.sample)?.text||text.value});
+document.querySelector('#form').onsubmit=async event=>{event.preventDefault();generate.disabled=true;statusEl.textContent='Đang tạo audio trên máy của bạn…';try{const response=await fetch('/api/synthesize',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({voice:voice.value,text:text.value.trim()})});const data=await response.json();if(!response.ok)throw Error(data.error);player.src=data.url;player.hidden=false;download.href=data.url;download.hidden=false;statusEl.textContent=data.voice+' · '+data.duration_seconds+' giây audio · tạo trong '+data.generation_seconds+' giây'+(data.cached?' · đã có trong cache':'');await player.play().catch(()=>{statusEl.textContent+=' · nhấn Phát để nghe'})}catch(error){statusEl.textContent='Chưa tạo được audio: '+error.message}finally{generate.disabled=false}};
+</script></html>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/tn_reference_welcome_bg" />
+    <item android:gravity="top|left"
+        android:drawable="@drawable/tn_reference_welcome_particle_left"
+        android:top="-24dp" />
+    <item android:gravity="bottom|right"
+        android:drawable="@drawable/tn_reference_welcome_particle_right"
+        android:bottom="-8dp" />
+</layer-list>

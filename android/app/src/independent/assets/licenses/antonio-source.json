@@ -1,0 +1,19 @@
+{
+  "license": "SIL Open Font License 1.1",
+  "source": "kiki-overview/jadx/resources/res/font/antonio_bold.ttf",
+  "file": "res/font/tn_floating_antonio_bold.ttf",
+  "sha256": "d5c14cb738ecb00f9dc5590450866cf49f94f1bcd673a61aef92123c8fd045d0",
+  "bytes": 37504,
+  "unchanged_bytes": true,
+  "embedded_font_metadata": {
+    "copyright": "Copyright 2013 The Antonio Project Authors (https://github.com/googlefonts/antonioFont)",
+    "version": "Version 1.002",
+    "license": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: http://scripts.sil.org/OFL",
+    "license_url": "http://scripts.sil.org/OFL"
+  },
+  "notice": {
+    "file": "assets/licenses/antonio-OFL.txt",
+    "sha256": "ae9a754b006df720bb6721e7b78c04990df734f87195c6033140fceab60bebf6",
+    "construction": "Copyright line is copied from this exact font name table. The complete shared SIL OFL 1.1 text and introductory license statement are reused from the existing barlow-OFL.txt notice; no network retrieval."
+  }
+}

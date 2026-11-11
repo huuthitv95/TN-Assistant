@@ -1,0 +1,85 @@
+[
+  {
+    "file": "res/font/tn_barlow_regular.ttf",
+    "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/barlow/Barlow-Regular.ttf",
+    "sha256": "95aa02c7c43096e0dd44d787ba6216864a67157e402adab59b35572e0c1577ea",
+    "embedded_font_metadata": {
+      "copyright": "Copyright 2017 The Barlow Project Authors (https://github.com/jpt/barlow)",
+      "version": "Version 1.408",
+      "license": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: http://scripts.sil.org/OFL",
+      "license_url": "http://scripts.sil.org/OFL"
+    }
+  },
+  {
+    "file": "res/font/tn_barlow_semibold.ttf",
+    "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/barlow/Barlow-SemiBold.ttf",
+    "sha256": "86577cb32f8abe3673db53ca0f4221e6856751a4f6730c867e00f720f8bb1fc5",
+    "embedded_font_metadata": {
+      "copyright": "Copyright 2017 The Barlow Project Authors (https://github.com/jpt/barlow)",
+      "version": "Version 1.408",
+      "license": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: http://scripts.sil.org/OFL",
+      "license_url": "http://scripts.sil.org/OFL"
+    }
+  },
+  {
+    "file": "assets/licenses/barlow-OFL.txt",
+    "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/barlow/OFL.txt",
+    "sha256": "186d750eb496a4c17a76385f82be6aea2ac1cf2de074a811d63786cf374ea73f"
+  },
+  {
+    "file": "assets/fonts/barlowregular.ttf",
+    "source": "kiki-overview/jadx/resources/res/font/barlowregular.ttf",
+    "sha256": "cd90f6856cb7cd099b881b6370b330710a8bf9d082b01fb9ff949df01005bd87",
+    "bytes": 98340,
+    "unchanged_bytes": true,
+    "license": "SIL Open Font License 1.1; embedded name-table license and existing assets/licenses/barlow-OFL.txt",
+    "embedded_font_metadata": {
+      "copyright": "Copyright 2017 The Barlow Project Authors (https://github.com/jpt/barlow)",
+      "version": "Version 1.408",
+      "license": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: http://scripts.sil.org/OFL",
+      "license_url": "http://scripts.sil.org/OFL"
+    }
+  },
+  {
+    "file": "assets/fonts/barlowmedium.ttf",
+    "source": "kiki-overview/jadx/resources/res/font/barlowmedium.ttf",
+    "sha256": "fb7648a6fada6ed037f1b22e501ac171c0d9f1f92f28cf032ee1a0b83ea1dae0",
+    "bytes": 97776,
+    "unchanged_bytes": true,
+    "license": "SIL Open Font License 1.1; embedded name-table license and existing assets/licenses/barlow-OFL.txt",
+    "embedded_font_metadata": {
+      "copyright": "Copyright 2017 The Barlow Project Authors (https://github.com/jpt/barlow)",
+      "version": "Version 1.408",
+      "license": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: http://scripts.sil.org/OFL",
+      "license_url": "http://scripts.sil.org/OFL"
+    }
+  },
+  {
+    "file": "assets/fonts/barlowsemibold.ttf",
+    "source": "kiki-overview/jadx/resources/res/font/barlowsemibold.ttf",
+    "sha256": "4e73c7c492611f36de3eec520c830bb8fd970be7edffa670ae55311995db8562",
+    "bytes": 102548,
+    "unchanged_bytes": true,
+    "license": "SIL Open Font License 1.1; embedded name-table license and existing assets/licenses/barlow-OFL.txt",
+    "embedded_font_metadata": {
+      "copyright": "Copyright 2017 The Barlow Project Authors (https://github.com/jpt/barlow)",
+      "version": "Version 1.408",
+      "license": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: http://scripts.sil.org/OFL",
+      "license_url": "http://scripts.sil.org/OFL"
+    }
+  },
+  {
+    "file": "res/font/tn_floating_barlow_bold.ttf",
+    "source": "kiki-overview/jadx/resources/res/font/barlowbold.ttf",
+    "sha256": "6460c3a93fa28555c00cb0a39f95b3b811a933973d83b056855aed2bc9acecde",
+    "bytes": 102468,
+    "unchanged_bytes": true,
+    "license": "SIL Open Font License 1.1; embedded name-table license and existing assets/licenses/barlow-OFL.txt",
+    "embedded_font_metadata": {
+      "copyright": "Copyright 2017 The Barlow Project Authors (https://github.com/jpt/barlow)",
+      "version": "Version 1.408",
+      "license": "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: http://scripts.sil.org/OFL",
+      "license_url": "http://scripts.sil.org/OFL"
+    }
+  }
+]
