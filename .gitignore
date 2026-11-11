@@ -1,8 +1,15 @@
 # Private runtime and machine-local configuration
-/.runtime/
+**/.runtime/
 **/local.properties
 *.env
+.env
+.env.*
 !*.env.example
+!.env.example
+**/signing.properties
+**/admin-password.txt
+*.token
+*.secret
 *.jks
 *.keystore
 *.pem
@@ -25,6 +32,12 @@
 *.apk
 *.aab
 *.apks
+*.xapk
+*.zip
+*.7z
+*.tar
+*.tar.gz
+*.tgz
 *.db
 *.db-shm
 *.db-wal
@@ -39,8 +52,8 @@
 hs_err_pid*
 
 # Historical evidence and migration artifacts
-/reports/
-/work/
+**/reports/
+**/work/
 /notes/
 /reference/
 /dist/
