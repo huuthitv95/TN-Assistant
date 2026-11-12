@@ -274,7 +274,12 @@ export const schemas: Record<string, EntitySchema> = {
         hint: "64 ký tự hex, lấy từ tệp APK.",
       },
       { key: "notes", label: "Ghi chú phát hành", type: "textarea" },
-      { key: "published", label: "Xuất bản cho ứng dụng", type: "boolean", default: false },
+      {
+        key: "published",
+        label: "Xuất bản cho ứng dụng",
+        type: "boolean",
+        default: false,
+      },
     ],
     canDelete: true,
   },
