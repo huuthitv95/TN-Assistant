@@ -1,23 +1,38 @@
-# Đích hỗ trợ của backend rebuild
+# Cấu hình hỗ trợ TN Assistant
 
-Preview .13 đọc `GET /v1/config`, object `support`. Hiện máy chủ local chưa có bốn URL; app hiển thị trạng thái chưa có nội dung. Chưa nghiệm thu quét QR hay tải tài liệu thành công.
+Android đọc object `support` từ `GET /v1/config` khi mở **Trợ giúp → Hướng dẫn và liên hệ hỗ trợ**. Hướng dẫn trong app và email `support@tnfastvn.com` luôn có mặt; các mục dưới đây chỉ mở được khi có URL hợp lệ.
 
-| Field | Màn hình | Yêu cầu |
+| Field | Nội dung | Hiển thị |
 |---|---|---|
-| `faq_url` | Vấn đề thường gặp | HTTPS, host hợp lệ, không username/password trong URL |
-| `contact_url` | Liên hệ hỗ trợ trực tiếp | HTTPS cho kênh hỗ trợ thực của hệ thống mới |
-| `complaints_url` | Quy trình tiếp nhận và xử lý khiếu nại | HTTPS cho tài liệu thực áp dụng cho dịch vụ mới |
-| `vulnerable_customers_url` | Chính sách cho khách hàng dễ tổn thương | HTTPS cho tài liệu thực áp dụng cho dịch vụ mới |
-| `contact_description` | Mô tả liên hệ | Tùy chọn, văn bản thuần, phản ánh cam kết hỗ trợ thực |
+| `faq_url` | Vấn đề thường gặp | QR |
+| `contact_url` | Liên hệ hỗ trợ trực tiếp | QR |
+| `complaints_url` | Quy trình tiếp nhận và xử lý khiếu nại | WebView |
+| `vulnerable_customers_url` | Chính sách cho khách hàng dễ tổn thương | WebView |
+| `facebook_url` | Facebook TN Assistant | QR |
+| `recording_help_url` | Hướng dẫn sửa lỗi micro | QR |
 
-Hai URL đầu tạo QR tại client; hai URL sau tải bằng WebView. Client không gửi token API của rebuild trong header WebView, không có bridge JavaScript và không cho truy cập file/content URI. Khả năng tải lỗi HTTP, redirect, retry, điều hướng và thiết bị Android khác còn cần nghiệm thu. Unit test dùng domain fixture chỉ kiểm tra encoder, không phải URL đang cấu hình.
+Chỉ nhận HTTPS, hostname dạng DNS, cổng mặc định hoặc 443, không user/password trong URL. Không nhận tên localhost/local/internal, IP literal, scheme tùy ý hoặc chuỗi quá 2048 ký tự. Kiểm tra này kiểm tra cú pháp URL, không xác minh địa chỉ DNS của máy chủ. URL chưa có hoặc không hợp lệ hiển thị **Chưa cấu hình**, kèm Đóng/Tải lại cấu hình. Nội dung và URL phải thuộc kênh hỗ trợ mà TN được phép sử dụng; không sao chép danh tính, cam kết hoặc QR của ứng dụng tham chiếu.
 
-Quản trị: dùng phiên admin của **backend riêng** đọc `GET /v1/admin/config`, bổ sung object `support` vào cấu hình hiện có rồi gửi `PUT /v1/admin/config`. PUT thay cả object cấu hình; cần giữ các field hiện có thay vì gửi riêng bốn URL và làm mất cấu hình khác. Không lưu token/password admin vào tài liệu hay command log.
+WebView chỉ điều hướng trong cùng hostname đã cấu hình. JavaScript, file/content access, cửa sổ mới và tải tệp đều bị tắt; không có JavaScript bridge hoặc header xác thực TN. Lỗi mạng, HTTP, TLS, chuyển hướng khác host và timeout 20 giây có trạng thái lỗi/Thử lại. Thử lại tạo browser mới; Đóng/Back hoặc tháo màn hình cài đặt hủy browser và callback cũ. Trang tài liệu nên là HTML tĩnh, sử dụng tài nguyên cùng host; PDF hoặc trang cần JavaScript chưa được hỗ trợ.
 
-Sau khi có đích thật: kiểm tra URL/QR bằng tài khoản thử, tải chính sách thành công, loading/thiếu URL/lỗi mạng/HTTP 4xx–5xx/redirect/retry, Back/X đóng trang và callback sau khi đóng không mở lại tài liệu. Ghi PNG/XML/HTTP status bằng hệ thống riêng và đối chiếu với luồng app gốc; không coi việc sinh QR là bằng chứng hỗ trợ thành công.
+Quản trị đọc `GET /v1/admin/config`, bổ sung các field cần thiết vào `support` rồi `PUT /v1/admin/config` với **toàn bộ cấu hình đã giữ nguyên các field khác**. Không gửi riêng object `support`, vì PUT thay thế toàn bộ cấu hình công khai. Không đưa token/password vào tài liệu hoặc source. Không tự cấu hình URL mẫu khi chưa có nội dung thật.
 
-QR của app gốc giữ trong bằng chứng local riêng, không giải mã/xuất payload hoặc đưa vào tài nguyên rebuild. Không mặc nhiên áp dụng chính sách, danh tính hay cam kết hỗ trợ của bên khác cho backend mới. [Báo cáo .13](reports/support-content-ui/REPORT.md).
+`TnSupportPolicyTest` kiểm tra URL và giới hạn điều hướng. `TnSupportRuntimeTest` kiểm tra giải mã QR từ ảnh được render, trạng thái thiếu cấu hình, retry, cấu hình WebView và đóng/hủy callback trên emulator. Các URL fixture trong test không chứng minh kênh hỗ trợ production hoạt động. Sau khi có URL thật, nghiệm thu quét QR bằng thiết bị đọc mã, nội dung tài liệu, HTTP/redirect, retry và Back/Đóng riêng.
 
-Revision .17 adds optional `support.facebook_url` (HTTPS with a valid host) for the diagnostic footer Facebook QR dialog. Live own URL is absent; missing content is explicit. This fifth destination is separate from the four .13 support pages above. Full config PUT preservation rule still applies; generating a fixture QR is not real support acceptance. [Native review](reports/diagnostics-native-ui/REPORT.md).
+Hướng dẫn hardening WebView: [Android Developers](https://developer.android.com/privacy-and-security/risks/webview-unsafe-file-inclusion).
 
-Revision .20 adds optional `support.recording_help_url` for **Hướng dẫn sửa lỗi** from the -2010 microphone warning. HTTPS/valid host/no credentials only. Client reads GET /v1/config; no live config was changed and current URL is absent. Missing configuration is explicit; final native warning/QR success remains unverified. Preserve the full configuration when PUT.
+## Các trang TN đã triển khai
+
+Năm trang tĩnh nằm trong `admin/public/support` và webroot `/www/wwwroot/tn.assistant/support`:
+
+- FAQ: `https://assistant.tnfastvn.com/support/faq.html`
+- Liên hệ: `https://assistant.tnfastvn.com/support/contact.html`
+- Khiếu nại: `https://assistant.tnfastvn.com/support/complaints.html`
+- Khách hàng dễ tổn thương: `https://assistant.tnfastvn.com/support/accessibility.html`
+- Micro: `https://assistant.tnfastvn.com/support/recording.html`
+
+Facebook chưa cấu hình. Nội dung không cam kết thời gian phản hồi hoặc hoàn tiền chưa được chủ dịch vụ xác nhận. Email là địa chỉ đã có trong source; nhận/gửi thư chưa được nghiệm thu.
+
+`deploy/publish_support.py` kiểm tra manifest và HTTPS trước khi thêm năm URL, sao lưu riêng cấu hình trước/sau, giữ các field khác và không restart API. Khi thiếu bản ghi cấu hình, cần snapshot rõ ràng của `GET /v1/config`; không tự tạo defaults khác. Script chỉ hỗ trợ lần công bố đầu tiên, từ chối thư mục đã tồn tại.
+
+Test live tùy chọn: `TnSupportRuntimeTest#configuredProductionDocumentLoadsWithoutJavascript` với instrumentation argument `support_live=true`. Test chỉ tải HTML, không gọi ASR/TTS; ảnh chụp nằm trong external files của Preview để kiểm tra rồi xóa. Hộp thoại tương thích native của hệ thống, nếu có, được ghi nhận riêng; test tài liệu không chứng minh độ chính xác wake/VAD.

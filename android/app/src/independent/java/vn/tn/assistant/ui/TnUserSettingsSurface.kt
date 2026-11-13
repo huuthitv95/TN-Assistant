@@ -84,6 +84,7 @@ class TnUserSettingsSurface(
     private var detail: String? = null
     private var drawer: View? = null
     private var confirmation: View? = null
+    private var supportDialog: TnSupportDialog? = null
     private var accountName = "Đang tải tài khoản…"
     private var premium: Boolean? = null
     private var administrator = false
@@ -198,6 +199,7 @@ class TnUserSettingsSurface(
         scroll.post { scroll.scrollTo(0, y) }
     }
     fun back(): Boolean {
+        supportDialog?.takeIf { it.isShowing }?.let { it.dismiss(); supportDialog = null; return true }
         confirmation?.let {
             dismissConfirmation()
             if (detail == "Mục đích sử dụng dữ liệu") privacy()
@@ -251,6 +253,7 @@ class TnUserSettingsSurface(
     private fun animationsEnabled(): Boolean =
         android.os.Build.VERSION.SDK_INT < 26 || android.animation.ValueAnimator.areAnimatorsEnabled()
     override fun onDetachedFromWindow() {
+        supportDialog?.dismiss(); supportDialog = null
         contentMotion?.cancel(); backgroundMotion?.cancel(); animate().cancel()
         super.onDetachedFromWindow()
     }
@@ -372,6 +375,19 @@ class TnUserSettingsSurface(
                 description(card, "TN Assistant\nPhiên bản ${BuildConfig.VERSION_NAME}")
                 row(card, "Hướng dẫn sử dụng", "Mở") { action("guide") }
                 row(card, "Liên hệ hỗ trợ", "support@tnfastvn.com") { action("support-email") }
+                val support = response.optJSONObject("support") ?: JSONObject()
+                TnSupportPolicy.pages.forEach { page ->
+                    val address = TnSupportPolicy.url(support.optString(page.key))
+                    row(card, page.title, if (address == null) "Chưa cấu hình" else if (page.qr) "Mã QR" else "Mở") {
+                        if (address == null) {
+                            confirm(page.title, "Chưa có địa chỉ hỗ trợ hợp lệ. Quản trị viên cần bổ sung cấu hình TN.",
+                                "ĐÓNG", "TẢI LẠI", onRight = { action("support") })
+                        } else {
+                            supportDialog?.dismiss()
+                            supportDialog = TnSupportDialog(context, page, address).also { it.show() }
+                        }
+                    }
+                }
             } else {
                 val items = response.optJSONArray("items") ?: response.optJSONArray("products") ?: org.json.JSONArray()
                 if (items.length() == 0) description(card, "Chưa có dữ liệu.")
@@ -808,7 +824,7 @@ internal class TnSettingsConfirmation(
     }
 }
 
-private class TnSettingsChrome(private val context: Context) {
+internal class TnSettingsChrome(private val context: Context) {
     private val config = context.resources.configuration
     private fun layoutFactor(smallest: Int, width: Int): Float = when {
         smallest >= 600 -> .85f

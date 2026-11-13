@@ -29,7 +29,7 @@ DB = Path('/var/lib/tn-assistant/tn-assistant.sqlite')
 WEB = Path('/www/wwwroot/tn.assistant')
 AA_PANEL_WEBROOT = Path('/www/wwwroot/tn.assistant')
 KEEP = {'.well-known', '.htaccess', '.user.ini'}
-OLD_STATIC = KEEP | {'assets', 'fonts', 'icons', 'index.html', 'manifest.webmanifest'}
+OLD_STATIC = KEEP | {'assets', 'fonts', 'icons', 'support', 'index.html', 'manifest.webmanifest'}
 PRESERVED_DATA_TABLES = ('users', 'devices', 'payments', 'entitlements')
 
 

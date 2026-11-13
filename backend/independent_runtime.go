@@ -341,7 +341,7 @@ func (s *Server) runtimeCapabilities() (Object, error) {
 		{"calculator", "AVAILABLE", "tn_owned_runtime"},
 		{"navigation", "CLIENT_VALIDATION_REQUIRED", "android_intent_not_yet_accepted"},
 		{"local_media", "CLIENT_VALIDATION_REQUIRED", "android_mediasession_not_yet_accepted"},
-		{"contacts", "BLOCKED", "tn_contact_resolver_not_implemented"},
+		{"contacts", "CLIENT_VALIDATION_REQUIRED", "android_contact_resolver_requires_permission_and_confirmation"},
 	} {
 		items = append(items, Object{"id": item.id, "status": item.status, "reason": item.reason})
 	}

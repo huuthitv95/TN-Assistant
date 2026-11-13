@@ -60,8 +60,8 @@
     },
     {
       "path": "licenses/onnxruntime-jni-16k.json",
-      "sha256": "5dd0fba67d04ff89ab5bca791b72bec178d2a3ded97e18448e97147bbded8519",
-      "bytes": 650
+      "sha256": "6b561f5a45e86cb05b84c085aa4ce9af6fb67f4707a7dce2fe941f9a11f2321d",
+      "bytes": 700
     },
     {
       "path": "licenses/onnxruntime-jni-MIT.txt",
@@ -82,6 +82,11 @@
       "path": "licenses/tn-app-icon.json",
       "sha256": "391427ec45885dbc6eaa40113016f874cc732788a22470baea4083f2057143e3",
       "bytes": 613
+    },
+    {
+      "path": "licenses/tn-guide-ui.json",
+      "sha256": "ba839efdb0353ee5a6edd463d4f4727b76779c2fb32607f2023fd3bf9721ce29",
+      "bytes": 2171
     },
     {
       "path": "licenses/tn-onboarding-audio.json",
@@ -119,6 +124,11 @@
       "bytes": 2327524
     },
     {
+      "path": "models/vosk-model-small-vn-0.4/README",
+      "sha256": "35038e10d5af1ec55d0ac7865ba2bc3904d288a60dfe71cbcd452da8ccfba1ad",
+      "bytes": 125
+    },
+    {
       "path": "models/vosk-model-small-vn-0.4/am/final.mdl",
       "sha256": "159cf4fc17401578b7b6ee28e5f913f16a1c9a232fdfecac3168e941ee7fbd4c",
       "bytes": 9232677
@@ -134,11 +144,6 @@
       "bytes": 272
     },
     {
-      "path": "models/vosk-model-small-vn-0.4/graph/disambig_tid.int",
-      "sha256": "bb8b4dbcce6377e43846aa7c05fecfbde0a2d1cbeae840ceaa462dfb46466466",
-      "bytes": 65
-    },
-    {
       "path": "models/vosk-model-small-vn-0.4/graph/Gr.fst",
       "sha256": "f4b30ffb2888a316d5244b724707bf79ed93e3d91607c893d97cb7a4703ef46a",
       "bytes": 24998257
@@ -147,6 +152,11 @@
       "path": "models/vosk-model-small-vn-0.4/graph/HCLr.fst",
       "sha256": "42639a7cf8e2be1b74f510af0106e690aa9a7ee73490089e0125ed6f703815db",
       "bytes": 10567442
+    },
+    {
+      "path": "models/vosk-model-small-vn-0.4/graph/disambig_tid.int",
+      "sha256": "bb8b4dbcce6377e43846aa7c05fecfbde0a2d1cbeae840ceaa462dfb46466466",
+      "bytes": 65
     },
     {
       "path": "models/vosk-model-small-vn-0.4/graph/phones/word_boundary.int",
@@ -184,9 +194,9 @@
       "bytes": 35
     },
     {
-      "path": "models/vosk-model-small-vn-0.4/README",
-      "sha256": "35038e10d5af1ec55d0ac7865ba2bc3904d288a60dfe71cbcd452da8ccfba1ad",
-      "bytes": 125
+      "path": "tn-guide-commands.json",
+      "sha256": "d5c6d9e4718ba719147f7f66a433590d298520d8a6637fb2dc47aff7cfc50346",
+      "bytes": 1796
     }
   ]
 }

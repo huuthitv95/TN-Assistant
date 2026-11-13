@@ -11,7 +11,9 @@ TN Assistant is an independent assistant stack composed of a Kotlin Android clie
 - `deploy/`: reproducible deployment configuration and the dedicated Zalo gateway.
 - `scripts/`: active generation, import, voice and wake-word utilities.
 
-This clean import contains the Android 195 source (`26.11.10.195`, version code `26111095`). At import time, the public production client remained Android 194 and the public backend remained API 184; importing this repository does not deploy or restart production.
+The current Android source is 196 (`26.11.13.196`, version code `26111396`). It adds configured support QR/document dialogs and TN-owned help pages. Production publication is a separate verified step; a successful build alone does not establish full original-app parity.
+
+Production 196 was published on 2026-11-13 at `https://assistant.tnfastvn.com/downloads/tn-assistant-preview196.apk` (the filename is a historical convention; its application ID is `vn.tn.assistant`). The production catalog points to 196; the public Preview catalog remains 194. See [support configuration](SUPPORT_CONFIG.md) and [remaining parity work](PARITY_PLAN.md).
 
 ## Prerequisites
 

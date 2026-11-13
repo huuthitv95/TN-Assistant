@@ -515,11 +515,21 @@ func TestIndependentPublicReadyAndAuthenticatedCapabilities(t *testing.T) {
 	requireStatus(t, 401, status, out)
 	status, out = call(t, s, "GET", "/v1/capabilities", str(guest(t, s), "access_token"), nil)
 	requireStatus(t, 200, status, out)
+	contactsFound := false
 	for _, value := range out["items"].([]any) {
 		item := value.(map[string]any)
 		if str(item, "id") == "traffic_violations" && str(item, "status") != "BLOCKED" {
 			t.Fatal(item)
 		}
+		if str(item, "id") == "contacts" {
+			contactsFound = true
+			if str(item, "status") != "CLIENT_VALIDATION_REQUIRED" || str(item, "reason") != "android_contact_resolver_requires_permission_and_confirmation" {
+				t.Fatal("Contact support must describe the Android adapter without claiming device acceptance", item)
+			}
+		}
+	}
+	if !contactsFound || str(basicPhoneDirective("gọi cho Nguyễn An"), "type") != "PhoneCall" {
+		t.Fatal("Contact capability must correspond to a routable, device-confirmed action")
 	}
 	if _, err := openServer(Config{DBPath: filepath.Join(t.TempDir(), "invalid.db"), RuntimeMode: "legacy_tn"}); err == nil {
 		t.Fatal("production legacy mode accepted")

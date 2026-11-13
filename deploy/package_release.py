@@ -39,7 +39,7 @@ def source_files():
     deploy_files = {
         'assistant-proxy-locations.conf', 'deploy_remote.py', 'deploy_ui_release.py', 'install_speech.py', 'migrate_config.py', 'monitor.py', 'readiness_watch.py',
         'package_release.py', 'prepare_speech.py', 'providers.assistant.example.json', 'README.md',
-        'publish_android_preview.py', 'requirements-asr.lock', 'requirements-tts.lock', 'speech_worker.py',
+        'publish_android_preview.py', 'publish_support.py', 'requirements-asr.lock', 'requirements-tts.lock', 'speech_worker.py',
         'tn-assistant.env.example', 'tn-assistant.service', 'tn-assistant-monitor.service',
     }
     selected = set()
@@ -57,11 +57,13 @@ def source_files():
         'backend/migrations', 'admin/src', 'admin/public', 'android/gradle',
         'android/app/src/independent/java', 'android/app/src/independent/assets',
         'android/app/src/independent/res',
+        'android/app/third_party/onnxruntime-jni-1.20.0',
     ):
         selected.update(path for path in (ROOT / tree).rglob('*') if path.is_file())
     selected.add(ROOT / 'android/app/src/independent/AndroidManifest.xml')
     selected.update({ROOT / 'api/openapi.json', ROOT / 'api/CONTRACT.md'})
     selected.add(ROOT / 'scripts/independent_android_assets.py')
+    selected.add(ROOT / 'scripts/build_onnxruntime_android_16k.py')
     for name in deploy_files:
         selected.add(ROOT / 'deploy' / name)
     osm_importer = ROOT / 'scripts/import_osm.py'

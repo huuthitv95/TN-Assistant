@@ -21,6 +21,7 @@ OUTPUT = APP / "libs" / "onnxruntime-android-1.20.0-tn16k.aar"
 ABIS = {
     "arm64-v8a": "aarch64-linux-android21",
     "armeabi-v7a": "armv7a-linux-androideabi21",
+    "x86_64": "x86_64-linux-android21",
 }
 JNI_RE = re.compile(r"\b(Java_[^\s]+|JNI_OnLoad)\s*$")
 
