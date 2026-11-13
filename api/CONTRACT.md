@@ -1,5 +1,38 @@
 # TN Assistant API contract
 
+## Managed road candidates (additive v1)
+
+`POST /v1/driving/area/speedlimit` retains its authenticated Premium check,
+managed-driving enablement and legacy `data` array. Managed responses additionally
+return `road_candidates_version: 1`, `road_candidates_complete` and `road_candidates`.
+Unknown speed limits remain in the candidate array as null/absent `max_speed`;
+omitting them could cause a client to select a nearby road incorrectly.
+
+Each candidate exposes only `id`, `road_group`, `latitude`, `longitude`, `bearing`,
+`name`, `max_speed`, `source`, `source_updated_at`, `license` and optional
+`start_latitude`, `start_longitude`, `end_latitude`, `end_longitude`. Raw OSM tags
+are not public. Segment geometry is directed, 0.1–100 m long, with the indexed
+anchor within 1 m of its midpoint and bearing within 5 degrees of its direction.
+All four endpoint coordinates and a road group are required together. Existing
+point-only rows remain readable, but do not establish which road contains a fix.
+
+The managed query defaults to a 2,500 m radius. An optional numeric `radius_m`
+between 100 and 2,500 selects a smaller query; the foreground viewer requests
+150 m to avoid truncating dense urban areas. The upstream legacy protocol ignores
+this managed-only extension. `road_candidates_complete=false` means a corrupt
+stored row or the 10,000-row scan bound prevented a complete local response.
+`true` describes this database query only; it does **not** prove complete road
+coverage, current signage or an authoritative speed limit. An empty database
+returns an empty array. The legacy upstream protocol does not provide this new
+contract and is not accepted as segment geometry by the Android viewer.
+
+The Android foreground viewer requires a recent, precise moving GPS fix and a
+fresh, unambiguous directed segment with an explicit speed. It clears the sign
+on uncertainty, permission/session loss or unavailable data, and closes its
+location/network session when dismissed or the activity pauses. It does not yet
+implement background warnings, camera alerts or overspeed audio. See
+`PARITY_PLAN.md` for the remaining acceptance scope.
+
 ## Origin, authentication and errors
 
 The production client uses `https://assistant.tnfastvn.com` for dashboard, API and authenticated audio. JSON errors use `{ "error": { "code": "...", "message": "..." } }`. Protected routes require a TN Bearer access token. Access and refresh credentials are never embedded in the mobile package.

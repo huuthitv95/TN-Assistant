@@ -12,6 +12,17 @@ Phạm vi: Android độc lập, đối chiếu reference hiện có trong Kiki_
 
 ## Các bước còn lại
 
+### Dữ liệu đường và màn hình vị trí — đang triển khai
+
+- Backend bổ sung danh sách đoạn đường có hướng, giữ cả giới hạn chưa biết và báo rõ kết quả bị cắt hoặc bản ghi hỏng. Hợp đồng cũ vẫn được giữ.
+- Importer OSM xuất hai đầu đoạn đường và điểm giữa; không nối qua node bị thiếu, không suy đoán giới hạn có điều kiện. Dữ liệu điểm cũ cần nhập lại từ hình học nguồn, không tự dựng đoạn từ các điểm gần nhau.
+- Android có màn hình xem giới hạn theo vị trí khi người dùng chủ động mở và cấp quyền chính xác. Bộ chọn đoạn từ chối vị trí cũ/sai số lớn, hướng không rõ, đường song song, dữ liệu cũ hoặc chưa biết tốc độ. Đóng màn hình hoặc rời activity sẽ dừng phiên.
+- Backend `20261113-road-radius` đã triển khai sau test/vet và staging cô lập. Truy vấn managed hỗ trợ `radius_m` 100–2.500 m; Android dùng 150 m và loại cache khi vị trí ra ngoài vùng có đủ khoảng dự phòng. Health/readiness đạt khi hậu kiểm ngày 14/11/2026, không gọi thêm provider; tài khoản, cấu hình riêng, webroot và APK phát hành được giữ nguyên.
+- VPS đã nhập 268.109 đoạn OSM trong bbox `106.65,10.72,106.75,10.84` tại TP.HCM: 24.955 đoạn có tốc độ rõ ràng, 243.154 đoạn chưa biết; không có camera/biển cấm trong lô này. Nguồn Geofabrik, mốc `2026-11-12T21:23:05Z`, ODbL 1.0. Bản nhập có checksum, backup và kiểm tra các bảng khác không thay đổi. Đây là dữ liệu vùng thử nghiệm, không phải độ phủ toàn quốc.
+- Dữ liệu thật đã qua API backend cô lập (Basic 403, Premium 200, truy vấn 150 m trả đủ 154 ứng viên) và replay bộ đối chiếu Android trên emulator, nhận đúng đoạn `osm-way-605133464-4-0-backward` với giới hạn 30 km/h tại điểm kiểm tra. Đây chưa phải kiểm thử GPS hệ điều hành → API production → UI từ đầu đến cuối.
+- Công tắc production `driving_enabled=false` được giữ nguyên. Android mới chỉ nằm trong source và bản Preview kiểm thử local; APK công khai vẫn .196. Kết quả: 63 unit test, build/lint Preview, 2 test vòng đời/UI, 1 test replay dữ liệu thật và 2 test GPS/quyền; importer có 8 test. Test GPS đi qua `LocationManager` thật trên emulator, hiển thị 30 km/h từ phản hồi replay, dừng cập nhật sau dismiss; thiếu quyền thì không lấy vị trí/gọi mạng. Quyền và mock-location appop được khôi phục sau test. Không quy đổi số test thành phần trăm parity.
+- Còn phải nghiệm thu thu hồi quyền khi đang chạy và tuyến GPS giả lập với API production, mở rộng nguồn, hoàn thiện camera/biển báo/âm thanh/chống lặp và vòng đời cảnh báo nền trước khi bật và phát hành. Màn hình này chưa thay thế tính năng cảnh báo giao thông của app gốc.
+
 | Hạng mục | Điều kiện nghiệm thu |
 |---|---|
 | Cảnh báo giao thông | Nối vị trí và dữ liệu đường vào Android; xử lý quyền, mất GPS, dữ liệu cũ, chống phát lặp; kiểm tra tuyến giả lập Basic/Premium |

@@ -5,7 +5,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
-from import_osm import ROOT, speed, bearing, inside
+from import_osm import ROOT, speed, bearing, inside, road_segments, distance, source_timestamp
 
 class ImportOSMTests(unittest.TestCase):
     def test_explicit_speed_only(self):
@@ -29,6 +29,9 @@ class ImportOSMTests(unittest.TestCase):
 <way id="11" version="1"><nd ref="2"/><nd ref="3"/><tag k="highway" v="residential"/><tag k="maxspeed" v="80"/><tag k="maxspeed:conditional" v="50 @ (wet)"/></way>
 </osm>''',encoding='utf-8')
             output=Path(folder)/'contract.ndjson'
+            source.with_suffix('.osm.source.json').write_text(json.dumps({
+                'url':'https://example.invalid/synthetic-osm-fixture',
+                'last_modified':'Thu, 01 Jan 2026 00:00:00 GMT'}),encoding='utf-8')
             result=subprocess.run([sys.executable,str(ROOT/'scripts/import_osm.py'),'--input',str(source),'--output',str(output)],capture_output=True,text=True,encoding='utf-8')
             self.assertEqual(result.returncode,0,result.stderr)
             rows=[json.loads(line) for line in output.read_text(encoding='utf-8').splitlines()]
@@ -43,5 +46,41 @@ class ImportOSMTests(unittest.TestCase):
             self.assertTrue(camera['direction_unknown'])
             self.assertEqual(camera['type'],'701')
             self.assertTrue(all(r['license']=='ODbL-1.0' for r in rows))
+
+class RoadSegmentsTest(unittest.TestCase):
+    def test_source_timestamp_never_uses_copy_time(self):
+        with self.assertRaises(ValueError): source_timestamp('',{})
+        with self.assertRaises(ValueError): source_timestamp('2999-01-01T00:00:00Z',{})
+        with self.assertRaises(ValueError): source_timestamp('2026-01-01T00:00:00',{})
+        self.assertEqual('2026-01-01T00:00:00+00:00',source_timestamp('',{'last_modified':'Thu, 01 Jan 2026 00:00:00 GMT'}))
+        self.assertEqual('2026-01-01T00:00:00+00:00',source_timestamp('2026-01-01T07:00:00+07:00',{}))
+
+    def test_splits_long_roads_into_directed_midpoint_segments(self):
+        rows = list(road_segments([(10, 106), (10.002, 106)], {'maxspeed': '50'}, 12, 1))
+        self.assertEqual(10, len(rows))
+        self.assertEqual(10, len({r['id'] for r in rows}))
+        for r in rows:
+            start = r['start_latitude'], r['start_longitude']
+            end = r['end_latitude'], r['end_longitude']
+            self.assertLessEqual(distance(start, end), 50.01)
+            self.assertAlmostEqual((start[0]+end[0])/2, r['latitude'])
+            self.assertEqual(50, r['max_speed'])
+
+    def test_reverse_oneway_keeps_backward_speed_and_geometry(self):
+        rows = list(road_segments([(10, 106), (10.0002, 106)],
+                                 {'oneway': '-1', 'maxspeed:backward': '40', 'maxspeed:forward': '90'}, 3, 1))
+        self.assertEqual(1, len(rows))
+        self.assertEqual(40, rows[0]['max_speed'])
+        self.assertAlmostEqual(180, rows[0]['bearing'])
+        self.assertGreater(rows[0]['start_latitude'], rows[0]['end_latitude'])
+
+    def test_missing_nodes_are_not_bridged(self):
+        self.assertEqual([], list(road_segments([(10, 106), None, (10.0002, 106)], {}, 1, 1)))
+
+    def test_conditional_or_unknown_limits_stay_unknown(self):
+        for tags in ({}, {'maxspeed': 'signals'}, {'maxspeed': '50', 'maxspeed:conditional': '30 @ wet'}):
+            self.assertTrue(all(r['max_speed'] is None for r in road_segments([(10,106),(10.0002,106)], tags, 1, 1)))
+
+
 
 if __name__=='__main__':unittest.main()

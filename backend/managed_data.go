@@ -66,6 +66,9 @@ func validateManagedRoad(m Object) error {
 	if len(str(m, "id")) > 160 || strings.ContainsAny(str(m, "id"), "/\\") {
 		return problem(400, "INVALID_MANAGED_DATA", "Invalid road id")
 	}
+	if e := validateManagedSegment(m); e != nil {
+		return e
+	}
 	return managedSource(m)
 }
 func managedPutRoad(tx *sql.Tx, m Object) error {
@@ -265,17 +268,27 @@ func (s *Server) managedDrivingArea(w http.ResponseWriter, r *http.Request, p *P
 	}
 	lat, lon := coords["lat"], coords["lon"]
 	radius := 2500.0
+	if requested, exists := coords["radius_m"]; exists {
+		radius = requested
+	}
 	deltaLat := radius / 110000
 	deltaLon := math.Min(180, radius/(110000*math.Max(0.01, math.Cos(lat*math.Pi/180))))
-	rows, e := s.db.Query(`SELECT roads.rowid,roads.data FROM managed_road_index idx JOIN managed_roads roads ON roads.rowid=idx.id WHERE idx.min_lat<=? AND idx.max_lat>=? AND idx.min_lon<=? AND idx.max_lon>=? LIMIT 10000`, lat+deltaLat, lat-deltaLat, lon+deltaLon, lon-deltaLon)
+	rows, e := s.db.Query(`SELECT roads.rowid,roads.data FROM managed_road_index idx JOIN managed_roads roads ON roads.rowid=idx.id WHERE idx.min_lat<=? AND idx.max_lat>=? AND idx.min_lon<=? AND idx.max_lon>=? LIMIT 10001`, lat+deltaLat, lat-deltaLat, lon+deltaLon, lon-deltaLon)
 	if e != nil {
 		return e
 	}
 	candidates := []Object{}
+	roadCandidates := []Object{}
+	scanned, complete := 0, true
 	missing := 0
 	known := 0
 	sources := map[string]bool{}
 	for rows.Next() {
+		scanned++
+		if scanned > 10000 {
+			complete = false
+			break
+		}
 		var rowid int64
 		var data string
 		if e := rows.Scan(&rowid, &data); e != nil {
@@ -283,7 +296,8 @@ func (s *Server) managedDrivingArea(w http.ResponseWriter, r *http.Request, p *P
 			return e
 		}
 		var m Object
-		if json.Unmarshal([]byte(data), &m) != nil {
+		if json.Unmarshal([]byte(data), &m) != nil || validateManagedRoad(m) != nil {
+			complete = false
 			continue
 		}
 		distance := managedDistance(lat, lon, m["latitude"].(float64), m["longitude"].(float64))
@@ -296,6 +310,11 @@ func (s *Server) managedDrivingArea(w http.ResponseWriter, r *http.Request, p *P
 		}
 		if area == "speedcam" && kind == "road" {
 			continue
+		}
+		if area == "speedlimit" {
+			// Preserve unknown limits and geometry-less records for conservative
+			// matching. The legacy data array remains unchanged for older clients.
+			roadCandidates = append(roadCandidates, managedRoadCandidate(m))
 		}
 		sources[str(m, "source")] = true
 		if m["max_speed"] == nil {
@@ -340,7 +359,13 @@ func (s *Server) managedDrivingArea(w http.ResponseWriter, r *http.Request, p *P
 		sourceList = append(sourceList, source)
 	}
 	sort.Strings(sourceList)
-	send(w, 200, Object{"area": area, "data": candidates, "provider": "managed", "coverage": coverage, "unknown_speed_records": missing, "sources": sourceList, "attribution": "© OpenStreetMap contributors — Open Database License (ODbL) 1.0: https://www.openstreetmap.org/copyright", "radius_m": radius})
+	out := Object{"area": area, "data": candidates, "provider": "managed", "coverage": coverage, "unknown_speed_records": missing, "sources": sourceList, "attribution": "© OpenStreetMap contributors — Open Database License (ODbL) 1.0: https://www.openstreetmap.org/copyright", "radius_m": radius}
+	if area == "speedlimit" {
+		out["road_candidates"] = roadCandidates
+		out["road_candidates_complete"] = complete
+		out["road_candidates_version"] = 1
+	}
+	send(w, 200, out)
 	return nil
 }
 

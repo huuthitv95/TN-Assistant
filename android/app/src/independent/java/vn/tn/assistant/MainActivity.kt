@@ -524,6 +524,7 @@ class MainActivity : Activity() {
 
     override fun onPause() {
         resumed = false
+        userSettings?.pauseRoadMonitor()
         welcomeRevision.incrementAndGet()
         dismissActionConfirmation()
         contactChoiceDialog?.dismiss()
@@ -1324,6 +1325,9 @@ class MainActivity : Activity() {
 
     private fun userSettingsAction(key: String) {
         when (key) {
+            "traffic-location" -> if (Build.VERSION.SDK_INT >= 23) {
+                requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION),REQUEST_TRAFFIC_LOCATION)
+            }
             "zalo" -> beginZalo(fromSettings = true)
             "logout" -> logout()
             "delete-account" -> deleteAccount()
@@ -1988,6 +1992,11 @@ class MainActivity : Activity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
+            REQUEST_TRAFFIC_LOCATION -> {
+                userSettings?.refresh()
+                if (!vn.tn.assistant.driving.TnRoadMonitor.preciseAllowed(this))
+                    userSettings?.loadError("Chưa có quyền vị trí chính xác. Bạn có thể cấp quyền trong Cài đặt Android rồi mở lại mục dữ liệu đường.")
+            }
             REQUEST_CALENDAR, REQUEST_CALL, REQUEST_CONTACTS -> actionPermissionRequest?.takeIf { it.code == requestCode }?.let {
                 actionPermissionRequest = null
                 it.allowed = !it.abandoned && permissions.toSet() == it.permissions &&
@@ -2232,6 +2241,7 @@ class MainActivity : Activity() {
         private const val REQUEST_CALENDAR = 42
         private const val REQUEST_CALL = 43
         private const val REQUEST_CONTACTS = 44
+        private const val REQUEST_TRAFFIC_LOCATION = 45
         private const val REQUEST_SETUP_AUDIO = 30
         private const val REQUEST_SETUP_LOCATION = 31
         private const val SAMPLE_RATE = 16000

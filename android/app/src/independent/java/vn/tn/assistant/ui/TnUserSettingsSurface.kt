@@ -85,6 +85,7 @@ class TnUserSettingsSurface(
     private var drawer: View? = null
     private var confirmation: View? = null
     private var supportDialog: TnSupportDialog? = null
+    private var roadDialog: TnRoadDialog? = null
     private var accountName = "Đang tải tài khoản…"
     private var premium: Boolean? = null
     private var administrator = false
@@ -199,6 +200,7 @@ class TnUserSettingsSurface(
         scroll.post { scroll.scrollTo(0, y) }
     }
     fun back(): Boolean {
+        roadDialog?.takeIf { it.isShowing }?.let { it.dismiss(); roadDialog=null; return true }
         supportDialog?.takeIf { it.isShowing }?.let { it.dismiss(); supportDialog = null; return true }
         confirmation?.let {
             dismissConfirmation()
@@ -253,6 +255,7 @@ class TnUserSettingsSurface(
     private fun animationsEnabled(): Boolean =
         android.os.Build.VERSION.SDK_INT < 26 || android.animation.ValueAnimator.areAnimatorsEnabled()
     override fun onDetachedFromWindow() {
+        pauseRoadMonitor()
         supportDialog?.dismiss(); supportDialog = null
         contentMotion?.cancel(); backgroundMotion?.cancel(); animate().cancel()
         super.onDetachedFromWindow()
@@ -274,6 +277,7 @@ class TnUserSettingsSurface(
         parent.addView(this, LinearLayout.LayoutParams(-1, -2))
     }
     private fun root(index: Int, move: Boolean) {
+        pauseRoadMonitor()
         detail = null; heading.text = "Cài đặt"; heading.gravity = Gravity.START or Gravity.CENTER_VERTICAL
         breadcrumb.visibility = GONE; body.removeAllViews(); anchors.clear()
         groups.indices.forEach { group ->
@@ -332,6 +336,7 @@ class TnUserSettingsSurface(
         parent.setPadding(0, 0, 0, dp(1))
     }
     private fun sub(title: String, build: (LinearLayout) -> Unit) {
+        pauseRoadMonitor()
         detail = title; heading.text = title; heading.gravity = Gravity.CENTER
         breadcrumb.visibility = VISIBLE; body.removeAllViews()
         val card = card(body); build(card); trimDivider(card); scroll.scrollTo(0, 0); requestLayout()
@@ -448,9 +453,15 @@ class TnUserSettingsSurface(
         choice(card, "Cảnh báo giao thông", "traffic_warning_mode", trafficModes, "none")
         choice(card, "Ngưỡng báo vượt tốc độ", "traffic_overspeed_offset", listOf("Dưới giới hạn 5km/h" to "-5", "Bằng tốc độ giới hạn" to "0", "Vượt giới hạn 5km/h" to "5"), "0")
         toggle(card, "Luôn hiện khi dùng bản đồ", "traffic_always_on_map", false)
-        warning(card, "Chỉ hiển thị biển báo khi có dữ liệu đường đã xác minh.")
+        warning(card, "Hiện chỉ hỗ trợ xem giới hạn tham khảo khi mở màn hình. Cảnh báo âm thanh và tự hiện khi dùng bản đồ chưa khả dụng.")
+        row(card,"Xem giới hạn theo vị trí","Chỉ khi mở màn hình này") {
+            if (!vn.tn.assistant.driving.TnRoadMonitor.preciseAllowed(context)) action("traffic-location")
+            else confirm("Xem dữ liệu đường?", "TN dùng vị trí chính xác và gửi tọa độ tới máy chủ TN để lấy dữ liệu đường khi màn hình này mở. Đóng hoặc rời ứng dụng sẽ dừng. Chưa phát cảnh báo tự động.",
+                "ĐỂ SAU","BẮT ĐẦU",onRight={ roadDialog=TnRoadDialog(context).also { it.show() } })
+        }
         description(card, "Nhận cảnh báo khi có biển báo cần chú ý: tốc độ giới hạn, camera giao thông và các biển cấm khác.")
     }
+    fun pauseRoadMonitor() { roadDialog?.dismiss();roadDialog=null }
     private fun wake() = sub("TN ơi") { card ->
         accountError?.let { description(card, it) }
         description(card, vn.tn.assistant.audio.TnWakeService.status(context))

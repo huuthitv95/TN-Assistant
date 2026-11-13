@@ -36,6 +36,15 @@ func (s *Server) drivingArea(w http.ResponseWriter, r *http.Request, principal *
 		}
 		coordinates[key] = value
 	}
+	// A foreground segment matcher needs a small local window in dense cities.
+	// Older clients retain the default 2.5 km query.
+	if raw, exists := m["radius_m"]; exists {
+		value, ok := raw.(float64)
+		if !ok || math.IsNaN(value) || math.IsInf(value, 0) || value < 100 || value > 2500 {
+			return problem(400, "INVALID_RADIUS", "radius_m must be numeric between 100 and 2500")
+		}
+		coordinates["radius_m"] = value
+	}
 	if s.premiumFeatures(str(principal.User, "id"))["driving_info"] != true {
 		return problem(403, "FEATURE_NOT_AVAILABLE", "Gói hiện tại chưa có Cảnh báo giao thông")
 	}
@@ -70,6 +79,9 @@ func (s *Server) drivingArea(w http.ResponseWriter, r *http.Request, principal *
 	form := url.Values{"client_app_type": {p.ClientAppType}, "version_code": {p.Version}, "timestamp": {stamp}, "hash": {md5text(os.Getenv(p.SecretEnv) + md5text(p.ClientAppType+stamp))},
 		"device_id": {os.Getenv(str(p.Options, "device_id_env"))}, "os_version": {"28"}, "device_type": {"ANDROID_CAR_HEAD"}}
 	for key, value := range coordinates {
+		if key == "radius_m" {
+			continue
+		} // Managed-only extension; not an upstream protocol field.
 		form.Set(key, strconv.FormatFloat(value, 'f', -1, 64))
 	}
 	if extra, ok := p.Options["form_fields"].(map[string]any); ok {

@@ -6,6 +6,7 @@ Python environment.
 """
 import argparse
 from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 import hashlib
 import json
 import math
@@ -43,6 +44,42 @@ def bearing(a, b):
     lat1, lon1, lat2, lon2 = map(math.radians, (*a, *b))
     return (math.degrees(math.atan2(math.sin(lon2-lon1)*math.cos(lat2),
             math.cos(lat1)*math.sin(lat2)-math.sin(lat1)*math.cos(lat2)*math.cos(lon2-lon1)))+360)%360
+
+def road_segments(points, tags, way_id, version):
+    """Directed short segments; never connect across missing OSM node locations."""
+    reverse_only=tags.get('oneway')=='-1'
+    one_way=tags.get('oneway') in {'yes','1','true','-1'} or tags.get('junction')=='roundabout'
+    for segment,(a,b) in enumerate(zip(points,points[1:])):
+        if a is None or b is None: continue
+        length=distance(a,b)
+        if length<0.1 or abs(a[1]-b[1])>180: continue
+        steps=max(1,math.ceil(length/50))
+        for offset in range(steps):
+            start=tuple(a[i]+(b[i]-a[i])*offset/steps for i in range(2))
+            end=tuple(a[i]+(b[i]-a[i])*(offset+1)/steps for i in range(2))
+            directions=['backward'] if reverse_only else ['forward'] if one_way else ['forward','backward']
+            for direction in directions:
+                first,last=(start,end) if direction=='forward' else (end,start)
+                value=tags.get('maxspeed:'+direction,tags.get('maxspeed'))
+                limit=None if any(k.startswith('maxspeed') and ':conditional' in k for k in tags) else speed(value)
+                yield dict(id=f'osm-way-{way_id}-{segment}-{offset}-{direction}',kind='road',
+                    latitude=(first[0]+last[0])/2,longitude=(first[1]+last[1])/2,
+                    bearing=bearing(first,last),start_latitude=first[0],start_longitude=first[1],
+                    end_latitude=last[0],end_longitude=last[1],road_group=f'osm-way-{way_id}-{direction}',
+                    name=tags.get('name',tags.get('ref','')),max_speed=limit,osm_way=way_id,osm_version=version,
+                    osm_tags={k:v for k,v in tags.items() if k in {'highway','oneway','junction'} or k.startswith('maxspeed')})
+
+def source_timestamp(header_stamp, provenance):
+    """A local copy's mtime is not evidence of the source dataset's freshness."""
+    if header_stamp:
+        value=datetime.fromisoformat(header_stamp.replace('Z','+00:00'))
+    elif provenance.get('last_modified'):
+        value=parsedate_to_datetime(provenance['last_modified'])
+    else:
+        raise ValueError('Source update time missing: require OSM replication timestamp or downloaded Last-Modified provenance')
+    if value.tzinfo is None or value>datetime.now(timezone.utc):
+        raise ValueError('Source update time must have a timezone and must not be in the future')
+    return value.astimezone(timezone.utc).isoformat()
 
 def download(file):
     file.parent.mkdir(parents=True, exist_ok=True)
@@ -82,7 +119,7 @@ def main():
     reader.close()
     provenance = json.loads(metadata_path.read_text(encoding='utf-8')) if metadata_path.exists() else {}
     extract_source = provenance.get('url', SOURCE)
-    stamp = header.get('osmosis_replication_timestamp') or datetime.fromtimestamp(source.stat().st_mtime, timezone.utc).isoformat()
+    stamp = source_timestamp(header.get('osmosis_replication_timestamp'),provenance)
     bbox = tuple(map(float,args.bbox.split(','))) if args.bbox else None
     if bbox and (len(bbox)!=4 or bbox[0]>bbox[2] or bbox[1]>bbox[3]):
         parser.error('Invalid bbox')
@@ -152,30 +189,13 @@ def main():
             def way(self,way):
                 tags=dict(way.tags)
                 if tags.get('highway') not in DRIVABLE or tags.get('access')=='no' or tags.get('motor_vehicle')=='no':return
-                points=[(n.lat,n.lon) for n in way.nodes if n.location.valid()]
+                points=[(n.lat,n.lon) if n.location.valid() else None for n in way.nodes]
                 if len(points)<2:return
-                if bbox and (max(p[1] for p in points)<bbox[0] or min(p[1] for p in points)>bbox[2]
-                        or max(p[0] for p in points)<bbox[1] or min(p[0] for p in points)>bbox[3]):return
-                reverse_only=tags.get('oneway')=='-1'
-                one_way=tags.get('oneway') in {'yes','1','true','-1'} or tags.get('junction')=='roundabout'
-                if reverse_only:points.reverse()
-                for segment,(a,b) in enumerate(zip(points,points[1:])):
-                    if bbox and (max(a[1],b[1])<bbox[0] or min(a[1],b[1])>bbox[2]
-                            or max(a[0],b[0])<bbox[1] or min(a[0],b[0])>bbox[3]):continue
-                    length=distance(a,b)
-                    if length<0.1:continue
-                    steps=max(1,math.ceil(length/50))
-                    for offset in range(steps+1):
-                        t=offset/steps;lat=a[0]+(b[0]-a[0])*t;lon=a[1]+(b[1]-a[1])*t
-                        directions=[('forward',bearing(a,b))] if one_way else [('forward',bearing(a,b)),('backward',bearing(b,a))]
-                        for direction,course in directions:
-                            original_direction='backward' if reverse_only else direction
-                            value=tags.get('maxspeed:'+original_direction,tags.get('maxspeed'))
-                            limit=None if any(k.startswith('maxspeed') and ':conditional' in k for k in tags) else speed(value)
-                            emit(dict(id=f'osm-way-{way.id}-{segment}-{offset}-{direction}',kind='road',latitude=lat,
-                                longitude=lon,bearing=course,name=tags.get('name',tags.get('ref','')),
-                                max_speed=limit,osm_way=way.id,osm_version=way.version,
-                                osm_tags={k:v for k,v in tags.items() if k in {'highway','oneway','junction'} or k.startswith('maxspeed')}))
+                located=[p for p in points if p is not None]
+                if not located:return
+                if bbox and (max(p[1] for p in located)<bbox[0] or min(p[1] for p in located)>bbox[2]
+                        or max(p[0] for p in located)<bbox[1] or min(p[0] for p in located)>bbox[3]):return
+                for row in road_segments(points,tags,way.id,way.version): emit(row)
         Handler().apply_file(str(source),locations=True,idx='flex_mem')
         flush()
     stats['output_bytes']=output.stat().st_size

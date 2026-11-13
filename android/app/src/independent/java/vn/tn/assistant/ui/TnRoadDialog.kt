@@ -1,0 +1,83 @@
+package vn.tn.assistant.ui
+
+import android.app.Dialog
+import android.content.Context
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
+import android.view.Gravity
+import android.view.View
+import android.view.Window
+import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.TextView
+import vn.tn.assistant.driving.TnRoadMatcher
+import vn.tn.assistant.driving.TnRoadMonitor
+
+/** The first road consumer is explicitly scoped to this visible screen. */
+internal class TnRoadDialog(context: Context,
+    private val start: (((TnRoadMatcher.Result) -> Unit) -> AutoCloseable) = { callback ->
+        TnRoadMonitor(context,callback).also { it.start() }
+    }
+) : Dialog(context) {
+    private val chrome=TnSettingsChrome(context)
+    private var monitor: AutoCloseable?=null
+    private var revision=0
+    private val status=chrome.text("Đang chờ GPS…",24f).apply { tag="tnRoadStatus"; accessibilityLiveRegion=View.ACCESSIBILITY_LIVE_REGION_POLITE }
+    private val sign=chrome.text("—",48f,true).apply {
+        tag="tnRoadSign";gravity=Gravity.CENTER;setTextColor(Color.BLACK)
+        background=GradientDrawable().apply {shape=GradientDrawable.OVAL;setColor(Color.WHITE);setStroke(dp(8),0xffd52a35.toInt())}
+        visibility=View.GONE
+    }
+    private val roadName=chrome.text("",22f)
+    init {
+        requestWindowFeature(Window.FEATURE_NO_TITLE)
+        val content=LinearLayout(context).apply {orientation=LinearLayout.VERTICAL;setPadding(dp(24),dp(20),dp(24),dp(20));setBackgroundColor(0xff00225b.toInt())}
+        content.addView(chrome.text("Giới hạn theo vị trí",30f,true))
+        content.addView(status)
+        content.addView(sign,LinearLayout.LayoutParams(dp(112),dp(112)).apply {gravity=Gravity.CENTER_HORIZONTAL;topMargin=dp(16)})
+        content.addView(roadName)
+        content.addView(chrome.text("Dữ liệu tham khảo; luôn tuân theo biển báo thực tế. Chưa phát cảnh báo tự động hoặc chạy nền.",21f))
+        content.addView(chrome.text("© OpenStreetMap contributors · ODbL 1.0",18f))
+        content.addView(chrome.text("ĐÓNG",24f,true).apply {
+            gravity=Gravity.CENTER;minHeight=dp(48);background=chrome.ripple();isFocusable=true
+            contentDescription="Dừng xem vị trí và đóng";setOnClickListener {dismiss()}
+        })
+        // Short landscape windows and large accessibility fonts must still allow
+        // the user to reach the stop/close action.
+        setContentView(ScrollView(context).apply { isFillViewport=true;addView(content) })
+    }
+    private fun dp(value: Int)=(value*context.resources.displayMetrics.density).toInt()
+    override fun show() {
+        if (isShowing) return
+        super.show();window?.setLayout((context.resources.displayMetrics.widthPixels*.9).toInt(),-2)
+        val attempt=++revision
+        monitor=start { result -> if (isShowing && attempt==revision) render(result) }
+    }
+    private fun render(result: TnRoadMatcher.Result) {
+        val speed=result.road?.speed?.takeIf {result.state=="matched"}
+        sign.visibility=if (speed==null) View.GONE else View.VISIBLE
+        sign.text=if (speed==null) "—" else if (speed%1==0.0) speed.toInt().toString() else speed.toString()
+        sign.contentDescription=if (speed==null) "Chưa xác định giới hạn" else "Giới hạn tham khảo $speed km/h"
+        roadName.text=if (speed==null) "" else result.road?.name.orEmpty()
+        status.text=when(result.state) {
+            "matched" -> "Giới hạn tham khảo theo đoạn đường (km/h)"
+            "permission_required" -> "Cần quyền vị trí chính xác. Đóng màn hình và cấp quyền để thử lại."
+            "session_expired" -> "Phiên TN đã thay đổi hoặc hết hạn. Đóng màn hình và đăng nhập lại."
+            "premium_required" -> "Tài khoản chưa có quyền sử dụng dữ liệu giao thông."
+            "driving_disabled" -> "Dữ liệu giao thông chưa được bật trên máy chủ TN."
+            "gps_disabled" -> "GPS đang tắt hoặc không có trên thiết bị."
+            "waiting_gps" -> "Đang chờ vị trí GPS mới…"
+            "location_unreliable" -> "Vị trí chưa đủ chính xác hoặc đã quá cũ."
+            "direction_unavailable" -> "Chưa xác định được hướng di chuyển đáng tin cậy."
+            "loading" -> "Đang lấy dữ liệu đoạn đường…"
+            "query_outdated" -> "Đang chờ dữ liệu cho vị trí mới…"
+            "ambiguous" -> "Có nhiều đoạn đường phù hợp; chưa xác định giới hạn."
+            "source_stale" -> "Dữ liệu nguồn đã cũ hoặc chưa rõ ngày cập nhật."
+            "limit_unknown" -> "Đoạn đường chưa có giới hạn tốc độ rõ ràng."
+            "geometry_missing" -> "Chưa có hình học đoạn đường đủ tin cậy."
+            "network_unavailable" -> "Chưa kết nối được dữ liệu đường. Sẽ thử lại khi còn mở màn hình."
+            else -> "Chưa có dữ liệu phù hợp để xác định giới hạn."
+        }
+    }
+    override fun dismiss() { revision++;monitor?.close();monitor=null;super.dismiss() }
+}
