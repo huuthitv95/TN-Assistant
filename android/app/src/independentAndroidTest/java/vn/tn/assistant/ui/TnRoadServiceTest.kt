@@ -54,7 +54,7 @@ class TnRoadServiceTest {
             if(Build.VERSION.SDK_INT>=26) {bearingAccuracyDegrees=1f;speedAccuracyMetersPerSecond=1f}
             time=System.currentTimeMillis();elapsedRealtimeNanos=SystemClock.elapsedRealtimeNanos()
         }
-        for (ending in listOf("notification","logout","mode")) {
+        for (ending in listOf("notification","logout","mode","task")) {
             TnIsolatedActivityPreferences(context).use {
                 ActivityScenario.launch(MainActivity::class.java).use {scenario ->
                     var registered=false
@@ -96,6 +96,7 @@ class TnRoadServiceTest {
                         when(ending) {
                             "notification" -> notification.actions.single {it.title=="DỪNG"}.actionIntent.send()
                             "logout" -> instrumentation.runOnMainSync {TnSessionStore.get(context).clear()}
+                            "task" -> scenario.onActivity {it.finishAndRemoveTask()}
                             else -> context.getSharedPreferences("tn-session-v1",Context.MODE_PRIVATE).edit().putString("traffic_warning_mode","none").commit()
                         }
                         await("Trip did not stop after $ending") {!TnRoadService.isRunning()}
@@ -111,7 +112,7 @@ class TnRoadServiceTest {
                             // Clear the marker before bringing ActivityScenario back to foreground.
                             context.getSharedPreferences("tn-session-v1",Context.MODE_PRIVATE).edit().remove("refresh_ciphertext").commit()
                         }
-                        scenario.moveToState(Lifecycle.State.RESUMED)
+                        if(ending!="task") scenario.moveToState(Lifecycle.State.RESUMED)
                         if(registered) manager.removeTestProvider(LocationManager.GPS_PROVIDER)
                     }
                 }
@@ -130,5 +131,67 @@ class TnRoadServiceTest {
                 assertFalse(TnRoadService.start(context));assertFalse(TnRoadService.isRunning())
             }
         }
+    }
+
+    /** The host runner revokes permission or kills this process after READY.
+     * Saved settings stay inside the app sandbox, then a separate invocation restores them.
+     */
+    @Test fun externalTerminationProbe() {
+        val operation=InstrumentationRegistry.getArguments().getString("roadTermination")
+        assumeTrue(operation in setOf("permission","process"))
+        assertTrue(Build.FINGERPRINT.contains("generic") || Build.MODEL.contains("sdk"))
+        assertTrue(TnRoadMonitor.preciseAllowed(context))
+        assertTrue(TnRoadService.notificationsAllowed(context))
+        val prefs=context.getSharedPreferences("tn-session-v1",Context.MODE_PRIVATE)
+        val saved=context.getSharedPreferences("tn-road-test-saved",Context.MODE_PRIVATE)
+        check(saved.all.isEmpty()) {"Restore the previous probe before starting another"}
+        copyPreferences(prefs,saved)
+        check(saved.edit().putBoolean("__tn_road_probe_saved__",true).commit())
+        check(prefs.edit().clear().commit())
+        try {
+            ActivityScenario.launch(MainActivity::class.java).use {scenario ->
+                scenario.onActivity {activity ->
+                    prefs.edit().putString("refresh_ciphertext","instrumentation-only-no-network")
+                        .putString("traffic_warning_mode","display").commit()
+                    TnRoadService.testFetch={_,now ->TnRoadMatcher.Snapshot(emptyList(),false,now)}
+                    assertTrue(TnRoadService.start(activity))
+                }
+                await("Probe service did not start") {TnRoadService.isRunning()}
+                scenario.moveToState(Lifecycle.State.CREATED)
+                val status=android.os.Bundle().apply {putString("road_probe","READY");putInt("road_pid",android.os.Process.myPid())}
+                instrumentation.sendStatus(2,status)
+                SystemClock.sleep(60000)
+                fail("Host did not terminate probe within 60 seconds")
+            }
+        } finally {restoreProbe()}
+    }
+
+    @Test fun restoreAfterExternalTermination() {
+        assumeTrue(InstrumentationRegistry.getArguments().getString("roadTermination")=="restore")
+        restoreProbe()
+        assertFalse(TnRoadService.isRunning())
+    }
+
+    private fun restoreProbe() {
+        instrumentation.runOnMainSync {TnRoadService.stop(context);TnRoadService.testFetch=null}
+        val saved=context.getSharedPreferences("tn-road-test-saved",Context.MODE_PRIVATE)
+        if(saved.getBoolean("__tn_road_probe_saved__",false)) {
+            copyPreferences(saved,context.getSharedPreferences("tn-session-v1",Context.MODE_PRIVATE),"__tn_road_probe_saved__")
+            check(saved.edit().clear().commit())
+        }
+    }
+
+    private fun copyPreferences(from:android.content.SharedPreferences,to:android.content.SharedPreferences,exclude:String?=null) {
+        val editor=to.edit().clear()
+        from.all.forEach {(key,value) -> if(key!=exclude) when(value) {
+            is String -> editor.putString(key,value)
+            is Boolean -> editor.putBoolean(key,value)
+            is Int -> editor.putInt(key,value)
+            is Long -> editor.putLong(key,value)
+            is Float -> editor.putFloat(key,value)
+            is Set<*> -> editor.putStringSet(key,value.filterIsInstance<String>().toSet())
+            else -> error("Unsupported preference type")
+        }}
+        check(editor.commit())
     }
 }
