@@ -18,7 +18,9 @@ import vn.tn.assistant.api.TnVoiceBackendClient
 import vn.tn.assistant.auth.TnSessionStore
 import java.util.concurrent.Executors
 
-/** Explicit, foreground-only location session. No disk cache, microphone or TTS. */
+/** Explicit location session owned by a visible screen or a location FGS.
+ * No disk cache, microphone or TTS.
+ */
 internal class TnRoadMonitor(context: Context, private val show: (TnRoadMatcher.Result) -> Unit,
     private val authorization: (() -> Boolean)? = null,
     private val fetch: ((TnRoadMatcher.Fix, Long) -> TnRoadMatcher.Snapshot)? = null
@@ -48,7 +50,7 @@ internal class TnRoadMonitor(context: Context, private val show: (TnRoadMatcher.
                 }
                 else -> update()
             }
-            main.postDelayed(this,1000)
+            if (!closed) main.postDelayed(this,1000)
         }
     }
 
@@ -84,7 +86,8 @@ internal class TnRoadMonitor(context: Context, private val show: (TnRoadMatcher.
         val result = TnRoadMatcher.match(current,snapshot ?: TnRoadMatcher.Snapshot(emptyList(),false,now),now,System.currentTimeMillis())
         if (result.state in setOf("location_unreliable","direction_unavailable")) { show(result); return }
         show(if (snapshot == null) TnRoadMatcher.Result(failure ?: "loading") else result)
-        if (inFlight || now < nextRequest || !authorized()) return
+        // Consumers may synchronously close this monitor from show().
+        if (closed || inFlight || now < nextRequest || !authorized()) return
         inFlight = true; nextRequest = now+5000
         worker.execute {
             try {

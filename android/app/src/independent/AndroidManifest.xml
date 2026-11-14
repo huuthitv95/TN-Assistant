@@ -13,6 +13,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-feature android:name="android.hardware.microphone" android:required="false" />
@@ -59,6 +60,8 @@
         </provider>
         <service android:name=".audio.TnWakeService" android:exported="false"
             android:foregroundServiceType="microphone" />
+        <service android:name=".driving.TnRoadService" android:exported="false"
+            android:foregroundServiceType="location" />
         <service android:name=".ui.TnFloatingControlService" android:exported="false"
             android:foregroundServiceType="specialUse" android:configChanges="orientation|screenSize">
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"

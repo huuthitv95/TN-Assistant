@@ -1325,6 +1325,14 @@ class MainActivity : Activity() {
 
     private fun userSettingsAction(key: String) {
         when (key) {
+            "traffic-notification" -> {
+                if(Build.VERSION.SDK_INT>=33 && ContextCompat.checkSelfPermission(this,Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)
+                    requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS),REQUEST_TRAFFIC_NOTIFICATION)
+                else runCatching {
+                    startActivity(if(Build.VERSION.SDK_INT>=26) Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE,packageName)
+                        else Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,Uri.parse("package:$packageName")))
+                }
+            }
             "traffic-location" -> if (Build.VERSION.SDK_INT >= 23) {
                 requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION),REQUEST_TRAFFIC_LOCATION)
             }
@@ -1992,6 +2000,11 @@ class MainActivity : Activity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
+            REQUEST_TRAFFIC_NOTIFICATION -> {
+                userSettings?.refresh()
+                if(!vn.tn.assistant.driving.TnRoadService.notificationsAllowed(this))
+                    userSettings?.loadError("Cần bật thông báo TN để xem và dừng chuyến đi. Cảnh báo nền chưa bắt đầu.")
+            }
             REQUEST_TRAFFIC_LOCATION -> {
                 userSettings?.refresh()
                 if (!vn.tn.assistant.driving.TnRoadMonitor.preciseAllowed(this))
@@ -2098,6 +2111,7 @@ class MainActivity : Activity() {
         vn.tn.assistant.api.TnAssistantConversation.shared.retire(sessionStore.actionGeneration())
         TnWakeService.disable(this)
         TnFloatingControlService.disable(this)
+        vn.tn.assistant.driving.TnRoadService.stop(this)
         sessionStore.clear()
         vn.tn.assistant.ui.TnFloatingAccountPlan.clear(this)
     }
@@ -2242,6 +2256,7 @@ class MainActivity : Activity() {
         private const val REQUEST_CALL = 43
         private const val REQUEST_CONTACTS = 44
         private const val REQUEST_TRAFFIC_LOCATION = 45
+        private const val REQUEST_TRAFFIC_NOTIFICATION = 46
         private const val REQUEST_SETUP_AUDIO = 30
         private const val REQUEST_SETUP_LOCATION = 31
         private const val SAMPLE_RATE = 16000

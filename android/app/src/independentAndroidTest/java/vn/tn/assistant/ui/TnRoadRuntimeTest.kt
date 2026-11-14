@@ -20,6 +20,50 @@ class TnRoadRuntimeTest {
     private val road=TnRoadMatcher.Road("fixture","fixture",TnRoadMatcher.Point(10.0,106.0),0.0,
         TnRoadMatcher.Point(9.9998,106.0),TnRoadMatcher.Point(10.0002,106.0),50.0,System.currentTimeMillis(),"Đường kiểm thử")
 
+    @Test fun consumerCanCloseMonitorInsideLoadingCallback() {
+        val instrumentation=InstrumentationRegistry.getInstrumentation()
+        instrumentation.runOnMainSync {
+            lateinit var monitor:TnRoadMonitor
+            monitor=TnRoadMonitor(instrumentation.targetContext,{monitor.close()},authorization={true},fetch={_,_->
+                error("Closed monitor must not start network work")
+            })
+            try {
+                monitor.onLocationChanged(Location("fixture").apply {
+                    latitude=10.0;longitude=106.0;accuracy=5f;bearing=0f;speed=15f
+                    elapsedRealtimeNanos=SystemClock.elapsedRealtimeNanos()
+                    if(android.os.Build.VERSION.SDK_INT>=26) {bearingAccuracyDegrees=1f;speedAccuracyMetersPerSecond=1f}
+                })
+            } finally {monitor.close()}
+        }
+    }
+
+    @Test fun terminalBackendRejectionsStopFurtherLocationRequests() {
+        val instrumentation=InstrumentationRegistry.getInstrumentation()
+        for ((status,code,state) in listOf(Triple(401,"UNAUTHORIZED","session_expired"),
+            Triple(403,"PREMIUM_REQUIRED","premium_required"),Triple(503,"DRIVING_DISABLED","driving_disabled"))) {
+            val rejected=CountDownLatch(1)
+            val requests=java.util.concurrent.atomic.AtomicInteger()
+            lateinit var monitor:TnRoadMonitor
+            fun location()=Location("fixture").apply {
+                latitude=10.0;longitude=106.0;accuracy=5f;bearing=0f;speed=15f
+                elapsedRealtimeNanos=SystemClock.elapsedRealtimeNanos()
+                if(android.os.Build.VERSION.SDK_INT>=26) {bearingAccuracyDegrees=1f;speedAccuracyMetersPerSecond=1f}
+            }
+            instrumentation.runOnMainSync {
+                monitor=TnRoadMonitor(instrumentation.targetContext,{if(it.state==state) rejected.countDown()},authorization={true},fetch={_,_->
+                    requests.incrementAndGet();throw vn.tn.assistant.api.TnServiceFailure(status,code)
+                })
+                monitor.onLocationChanged(location())
+            }
+            try {
+                assertTrue("Missing terminal state $state",rejected.await(5,TimeUnit.SECONDS))
+                instrumentation.runOnMainSync {monitor.onLocationChanged(location())}
+                SystemClock.sleep(100)
+                assertEquals(1,requests.get())
+            } finally {instrumentation.runOnMainSync {monitor.close()}}
+        }
+    }
+
     @Test fun savedOffsetAndModeControlVisibleWarningAndUnknownDataClearsIt() {
         val instrumentation=InstrumentationRegistry.getInstrumentation()
         TnIsolatedActivityPreferences(instrumentation.targetContext).use {

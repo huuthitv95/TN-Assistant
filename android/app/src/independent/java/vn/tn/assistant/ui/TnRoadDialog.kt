@@ -14,16 +14,16 @@ import vn.tn.assistant.driving.TnRoadMatcher
 import vn.tn.assistant.driving.TnRoadMonitor
 import vn.tn.assistant.driving.TnOverspeedPolicy
 import vn.tn.assistant.driving.TnRoadSound
+import vn.tn.assistant.driving.TnRoadService
 
 /** The first road consumer is explicitly scoped to this visible screen. */
 internal class TnRoadDialog(context: Context,
-    private val start: (((TnRoadMatcher.Result) -> Unit) -> AutoCloseable) = { callback ->
-        TnRoadMonitor(context,callback).also { it.start() }
-    }
+    private val start: (((TnRoadMatcher.Result) -> Unit) -> AutoCloseable)? = null
 ) : Dialog(context) {
     private val chrome=TnSettingsChrome(context)
     private var monitor: AutoCloseable?=null
     private var revision=0
+    private var sharedTrip=false
     private val overspeed=TnOverspeedPolicy()
     private var sound:TnRoadSound?=null
     private val alert=chrome.text("",22f,true).apply {tag="tnRoadAlert";accessibilityLiveRegion=View.ACCESSIBILITY_LIVE_REGION_POLITE}
@@ -42,11 +42,11 @@ internal class TnRoadDialog(context: Context,
         content.addView(sign,LinearLayout.LayoutParams(dp(112),dp(112)).apply {gravity=Gravity.CENTER_HORIZONTAL;topMargin=dp(16)})
         content.addView(roadName)
         content.addView(alert)
-        content.addView(chrome.text("Dữ liệu tham khảo; luôn tuân theo biển báo thực tế. Âm báo chỉ hoạt động khi màn hình này mở và đã chọn Âm báo. Giọng nói và chạy nền chưa khả dụng.",21f))
+        content.addView(chrome.text("Dữ liệu tham khảo; luôn tuân theo biển báo thực tế. Khi đã bắt đầu chuyến đi, cảnh báo tiếp tục sau khi đóng màn hình; dừng bằng thông báo TN. Giọng nói chưa khả dụng.",21f))
         content.addView(chrome.text("© OpenStreetMap contributors · ODbL 1.0",18f))
         content.addView(chrome.text("ĐÓNG",24f,true).apply {
             gravity=Gravity.CENTER;minHeight=dp(48);background=chrome.ripple();isFocusable=true
-            contentDescription="Dừng xem vị trí và đóng";setOnClickListener {dismiss()}
+            contentDescription="Đóng màn hình vị trí";setOnClickListener {dismiss()}
         })
         // Short landscape windows and large accessibility fonts must still allow
         // the user to reach the stop/close action.
@@ -57,7 +57,16 @@ internal class TnRoadDialog(context: Context,
         if (isShowing) return
         super.show();window?.setLayout((context.resources.displayMetrics.widthPixels*.9).toInt(),-2)
         val attempt=++revision
-        monitor=start { result -> if (isShowing && attempt==revision) render(result) }
+        val callback:(TnRoadMatcher.Result)->Unit={result -> if (isShowing && attempt==revision) render(result)}
+        if(start!=null) monitor=start.invoke(callback)
+        else {
+            sharedTrip=true
+            monitor=TnRoadService.observeIfRunning(callback)
+            if(monitor==null) {
+                sharedTrip=false
+                monitor=TnRoadMonitor(context,callback).also {it.start()}
+            }
+        }
     }
     private fun render(result: TnRoadMatcher.Result) {
         val speed=result.road?.speed?.takeIf {result.state=="matched"}
@@ -67,6 +76,7 @@ internal class TnRoadDialog(context: Context,
         roadName.text=if (speed==null) "" else result.road?.name.orEmpty()
         status.text=when(result.state) {
             "matched" -> "Giới hạn tham khảo theo đoạn đường (km/h)"
+            "trip_stopped" -> "Chuyến đi đã dừng. Đóng màn hình để bắt đầu lại."
             "permission_required" -> "Cần quyền vị trí chính xác. Đóng màn hình và cấp quyền để thử lại."
             "session_expired" -> "Phiên TN đã thay đổi hoặc hết hạn. Đóng màn hình và đăng nhập lại."
             "premium_required" -> "Tài khoản chưa có quyền sử dụng dữ liệu giao thông."
@@ -94,7 +104,7 @@ internal class TnRoadDialog(context: Context,
             decision.overThreshold -> "Đã đạt ngưỡng cảnh báo tốc độ đã chọn."
             else -> ""
         }
-        if(decision.notify && mode=="sound") {
+        if(decision.notify && mode=="sound" && !sharedTrip) {
             val player=sound ?: TnRoadSound(context).also {sound=it}
             if(!player.play()) alert.text="Đã đạt ngưỡng; chưa phát được âm báo."
         }
