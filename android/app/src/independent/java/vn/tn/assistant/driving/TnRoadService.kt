@@ -19,7 +19,7 @@ import vn.tn.assistant.auth.TnSessionStore
 /** User-started trip. No automatic restart, boot start, or persisted location. */
 class TnRoadService : Service() {
     private var monitor:TnRoadMonitor?=null
-    private var sound:TnRoadSound?=null
+    private var sound:TnRoadAlertAudio?=null
     private val policy=TnOverspeedPolicy()
     private val observers=linkedSetOf<(TnRoadMatcher.Result)->Unit>()
     private var result=TnRoadMatcher.Result("waiting_gps")
@@ -56,7 +56,7 @@ class TnRoadService : Service() {
             if(Build.VERSION.SDK_INT>=29) startForeground(ID,notification,ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
             else startForeground(ID,notification)
             active=true;instance=this
-            sound=TnRoadSound(this)
+            sound=TnRoadAlertAudio(this) {soundUnavailable=true}
             monitor=TnRoadMonitor(this,::update,fetch=if(BuildConfig.DEBUG) testFetch else null)
             monitor?.start()
             if(active) main.post(guard)
@@ -75,12 +75,13 @@ class TnRoadService : Service() {
         }
         result=next
         val offset=preferences.all["traffic_overspeed_offset"]?.toString()?.toIntOrNull() ?: 0
+        val accent=preferences.getString("agent_voice","south").orEmpty()
         val decision=policy.update(next,mode,offset,SystemClock.elapsedRealtime())
-        if(!decision.overThreshold || mode!="sound") {sound?.stop();soundUnavailable=false}
-        if(decision.notify && mode=="sound") soundUnavailable=sound?.play()!=true
+        sound?.retain(decision.overThreshold,mode,accent)
+        if(!decision.overThreshold || mode !in setOf("sound","voice")) soundUnavailable=false
+        if(decision.notify && mode in setOf("sound","voice")) soundUnavailable=sound?.play(mode,accent)!=true
         val text=when {
             soundUnavailable -> "Đã đạt ngưỡng; chưa phát được âm báo."
-            mode=="voice" -> "Giọng nói chưa khả dụng. ${limitText(next)}"
             decision.overThreshold -> "Đã đạt ngưỡng cảnh báo. ${limitText(next)}"
             else -> limitText(next)
         }

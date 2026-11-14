@@ -1,0 +1,32 @@
+{
+  "engine": "VieNeu-TTS-v3-Turbo",
+  "model_pins": {
+    "pnnbao-ump/VieNeu-TTS-v3-Turbo": "61b85e3d937fbbacb387714180e8182823512523",
+    "OpenMOSS-Team/MOSS-Audio-Tokenizer-Nano-ONNX": "ceff0d0749bfb3fa2d61149794ec6feef0d1e1ae"
+  },
+  "packages": {
+    "vieneu": "3.8.3",
+    "onnxruntime": "1.30.0",
+    "sea-g2p": "0.10.0"
+  },
+  "source": "https://huggingface.co/pnnbao-ump/VieNeu-TTS-v3-Turbo",
+  "model_license": "Apache-2.0",
+  "artifacts": [
+    {
+      "path": "android/app/src/independent/res/raw/tn_road_overspeed_south.mp3",
+      "voice": "Thùy Dung",
+      "accent": "south",
+      "text": "Chú ý tốc độ. Bạn đã đạt ngưỡng cảnh báo.",
+      "duration_seconds": 2.4,
+      "sha256": "19e064a9eb4119f416bcda0a54979120bc0d40915c75ebe2b5ca2643b1756a7f"
+    },
+    {
+      "path": "android/app/src/independent/res/raw/tn_road_overspeed_north.mp3",
+      "voice": "Ngọc Huyền",
+      "accent": "north",
+      "text": "Chú ý tốc độ. Bạn đã đạt ngưỡng cảnh báo.",
+      "duration_seconds": 2.64,
+      "sha256": "08e7e676bbf655271c2498e5e7b9387072d4e5d095e7263e0f8763cea5be33ad"
+    }
+  ]
+}

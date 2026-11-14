@@ -13,7 +13,7 @@ import android.widget.TextView
 import vn.tn.assistant.driving.TnRoadMatcher
 import vn.tn.assistant.driving.TnRoadMonitor
 import vn.tn.assistant.driving.TnOverspeedPolicy
-import vn.tn.assistant.driving.TnRoadSound
+import vn.tn.assistant.driving.TnRoadAlertAudio
 import vn.tn.assistant.driving.TnRoadService
 
 /** The first road consumer is explicitly scoped to this visible screen. */
@@ -25,7 +25,8 @@ internal class TnRoadDialog(context: Context,
     private var revision=0
     private var sharedTrip=false
     private val overspeed=TnOverspeedPolicy()
-    private var sound:TnRoadSound?=null
+    private var sound:TnRoadAlertAudio?=null
+    private var audioFailed=false
     private val alert=chrome.text("",22f,true).apply {tag="tnRoadAlert";accessibilityLiveRegion=View.ACCESSIBILITY_LIVE_REGION_POLITE}
     private val status=chrome.text("Đang chờ GPS…",24f).apply { tag="tnRoadStatus"; accessibilityLiveRegion=View.ACCESSIBILITY_LIVE_REGION_POLITE }
     private val sign=chrome.text("—",48f,true).apply {
@@ -42,7 +43,7 @@ internal class TnRoadDialog(context: Context,
         content.addView(sign,LinearLayout.LayoutParams(dp(112),dp(112)).apply {gravity=Gravity.CENTER_HORIZONTAL;topMargin=dp(16)})
         content.addView(roadName)
         content.addView(alert)
-        content.addView(chrome.text("Dữ liệu tham khảo; luôn tuân theo biển báo thực tế. Khi đã bắt đầu chuyến đi, cảnh báo tiếp tục sau khi đóng màn hình; dừng bằng thông báo TN. Giọng nói chưa khả dụng.",21f))
+        content.addView(chrome.text("Dữ liệu tham khảo; luôn tuân theo biển báo thực tế. Khi đã bắt đầu chuyến đi, cảnh báo tiếp tục sau khi đóng màn hình; dừng bằng thông báo TN. Giọng nói cảnh báo dùng giọng miền Nam hoặc miền Bắc đã chọn.",21f))
         content.addView(chrome.text("© OpenStreetMap contributors · ODbL 1.0",18f))
         content.addView(chrome.text("ĐÓNG",24f,true).apply {
             gravity=Gravity.CENTER;minHeight=dp(48);background=chrome.ripple();isFocusable=true
@@ -97,16 +98,20 @@ internal class TnRoadDialog(context: Context,
         val preferences=context.getSharedPreferences("tn-session-v1",Context.MODE_PRIVATE)
         val mode=preferences.getString("traffic_warning_mode","none").orEmpty()
         val offset=preferences.all["traffic_overspeed_offset"]?.toString()?.toIntOrNull() ?: 0
+        val accent=preferences.getString("agent_voice","south").orEmpty()
         val decision=overspeed.update(result,mode,offset,android.os.SystemClock.elapsedRealtime())
-        if(!decision.overThreshold || mode!="sound") sound?.stop()
+        sound?.retain(decision.overThreshold,mode,accent)
+        if(!decision.overThreshold || mode !in setOf("sound","voice")) audioFailed=false
         alert.text=when {
-            mode=="voice" -> "Cảnh báo giọng nói chưa khả dụng."
+            audioFailed -> "Đã đạt ngưỡng; chưa phát được cảnh báo âm thanh."
             decision.overThreshold -> "Đã đạt ngưỡng cảnh báo tốc độ đã chọn."
             else -> ""
         }
-        if(decision.notify && mode=="sound" && !sharedTrip) {
-            val player=sound ?: TnRoadSound(context).also {sound=it}
-            if(!player.play()) alert.text="Đã đạt ngưỡng; chưa phát được âm báo."
+        if(decision.notify && mode in setOf("sound","voice") && !sharedTrip) {
+            val player=sound ?: TnRoadAlertAudio(context) {audioFailed=true}.also {sound=it}
+            player.retain(decision.overThreshold,mode,accent)
+            audioFailed=!player.play(mode,accent)
+            if(audioFailed) alert.text="Đã đạt ngưỡng; chưa phát được cảnh báo âm thanh."
         }
     }
     override fun dismiss() { revision++;monitor?.close();monitor=null;sound?.close();sound=null;overspeed.reset();super.dismiss() }

@@ -454,13 +454,13 @@ class TnUserSettingsSurface(
         choice(card, "Cảnh báo giao thông", "traffic_warning_mode", trafficModes, "none")
         choice(card, "Ngưỡng báo vượt tốc độ", "traffic_overspeed_offset", listOf("Dưới giới hạn 5km/h" to "-5", "Bằng tốc độ giới hạn" to "0", "Vượt giới hạn 5km/h" to "5"), "0")
         toggle(card, "Luôn hiện khi dùng bản đồ", "traffic_always_on_map", false)
-        warning(card, "Giới hạn tham khảo và Âm báo có thể tiếp tục khi chuyển sang bản đồ nếu đã bắt đầu chuyến đi. Giọng nói và tự hiện biển báo trên bản đồ chưa khả dụng.")
+        warning(card, "Giới hạn tham khảo, Âm báo và Giọng nói có thể tiếp tục khi chuyển sang bản đồ nếu đã bắt đầu chuyến đi. Tự hiện biển báo trên bản đồ chưa khả dụng.")
         row(card,"Bắt đầu chuyến đi","Tiếp tục dùng GPS khi chuyển sang ứng dụng khác") {
             if (!vn.tn.assistant.driving.TnRoadMonitor.preciseAllowed(context)) action("traffic-location")
             else if (!vn.tn.assistant.driving.TnRoadService.notificationsAllowed(context)) action("traffic-notification")
             else if (prefs.getString("traffic_warning_mode","none")=="none") {
                 android.widget.Toast.makeText(context,"Hãy chọn chế độ cảnh báo trước khi bắt đầu.",android.widget.Toast.LENGTH_LONG).show()
-            } else confirm("Bắt đầu cảnh báo trên chuyến đi?", "TN tiếp tục gửi vị trí chính xác tới máy chủ TN khi bạn chuyển ứng dụng. Âm báo theo chế độ đã chọn; giới hạn chỉ tham khảo. Dừng từ thông báo TN hoặc nút Dừng chuyến đi. Xoá TN khỏi màn hình ứng dụng gần đây cũng dừng chuyến đi.",
+            } else confirm("Bắt đầu cảnh báo trên chuyến đi?", "TN tiếp tục gửi vị trí chính xác tới máy chủ TN khi bạn chuyển ứng dụng. Âm báo hoặc giọng nói theo chế độ đã chọn; giới hạn chỉ tham khảo. Dừng từ thông báo TN hoặc nút Dừng chuyến đi. Xoá TN khỏi màn hình ứng dụng gần đây cũng dừng chuyến đi.",
                 "ĐỂ SAU","BẮT ĐẦU",onRight={
                     pauseRoadMonitor()
                     val accepted=vn.tn.assistant.driving.TnRoadService.start(context)
@@ -470,7 +470,7 @@ class TnUserSettingsSurface(
         row(card,"Dừng chuyến đi","Dừng GPS và âm báo nền") {vn.tn.assistant.driving.TnRoadService.stop(context)}
         row(card,"Xem giới hạn theo vị trí","Xem trạng thái giới hạn tham khảo") {
             if (!vn.tn.assistant.driving.TnRoadMonitor.preciseAllowed(context)) action("traffic-location")
-            else confirm("Xem dữ liệu đường?", "TN dùng vị trí chính xác và gửi tọa độ tới máy chủ TN; phát âm báo nếu đã chọn Âm báo. Nếu đã bắt đầu chuyến đi, đóng màn hình chỉ đóng phần xem; dừng chuyến đi từ thông báo TN. Nếu chưa bắt đầu chuyến đi, đóng hoặc rời ứng dụng sẽ dừng vị trí.",
+            else confirm("Xem dữ liệu đường?", "TN dùng vị trí chính xác và gửi tọa độ tới máy chủ TN; phát âm báo hoặc giọng nói theo chế độ đã chọn. Nếu đã bắt đầu chuyến đi, đóng màn hình chỉ đóng phần xem; dừng chuyến đi từ thông báo TN. Nếu chưa bắt đầu chuyến đi, đóng hoặc rời ứng dụng sẽ dừng vị trí.",
                 "ĐỂ SAU","BẮT ĐẦU",onRight={ roadDialog=TnRoadDialog(context).also { it.show() } })
         }
         description(card, "Nhận cảnh báo khi có biển báo cần chú ý: tốc độ giới hạn, camera giao thông và các biển cấm khác.")

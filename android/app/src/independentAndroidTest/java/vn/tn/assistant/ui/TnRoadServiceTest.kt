@@ -67,7 +67,9 @@ class TnRoadServiceTest {
                             // Local ownership marker only. Never passed to a network client.
                             context.getSharedPreferences("tn-session-v1",Context.MODE_PRIVATE).edit()
                                 .putString("refresh_ciphertext","instrumentation-only-no-network")
-                                .putString("traffic_warning_mode","sound").putInt("traffic_overspeed_offset",0).commit()
+                                .putString("traffic_warning_mode",if(ending=="notification") "sound" else "voice")
+                                .putString("agent_voice",if(ending=="mode") "north" else "south")
+                                .putInt("traffic_overspeed_offset",0).commit()
                             TnRoadService.testFetch={_,now ->requests.incrementAndGet();TnRoadMatcher.parse(input.getJSONObject("response"),now)}
                             @Suppress("DEPRECATION")
                             manager.addTestProvider(LocationManager.GPS_PROVIDER,false,false,false,false,true,true,true,Criteria.POWER_LOW,Criteria.ACCURACY_FINE)

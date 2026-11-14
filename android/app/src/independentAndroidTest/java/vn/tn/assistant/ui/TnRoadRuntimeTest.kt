@@ -13,12 +13,50 @@ import vn.tn.assistant.MainActivity
 import vn.tn.assistant.driving.TnRoadMatcher
 import vn.tn.assistant.driving.TnRoadMonitor
 import vn.tn.assistant.driving.TnRoadSound
+import vn.tn.assistant.driving.TnRoadAlertAudio
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 class TnRoadRuntimeTest {
     private val road=TnRoadMatcher.Road("fixture","fixture",TnRoadMatcher.Point(10.0,106.0),0.0,
         TnRoadMatcher.Point(9.9998,106.0),TnRoadMatcher.Point(10.0002,106.0),50.0,System.currentTimeMillis(),"Đường kiểm thử")
+
+    @Test fun packagedVoicesPlayBothAccentsAndCancelOnInvalidDataOrModeChange() {
+        val instrumentation=InstrumentationRegistry.getInstrumentation()
+        val errors=java.util.concurrent.atomic.AtomicInteger()
+        TnIsolatedActivityPreferences(instrumentation.targetContext).use {
+            ActivityScenario.launch(MainActivity::class.java).use {scenario ->
+                lateinit var player:TnRoadAlertAudio
+                scenario.onActivity {player=TnRoadAlertAudio(it) {errors.incrementAndGet()}}
+                try {
+                    for(accent in listOf("south","north")) {
+                        scenario.onActivity {
+                            player.retain(true,"voice",accent)
+                            assertTrue(player.play("voice",accent))
+                            assertFalse("Duplicate voice must not queue",player.play("voice",accent))
+                        }
+                        var playing=false
+                        val deadline=SystemClock.elapsedRealtime()+2000
+                        while(!playing && SystemClock.elapsedRealtime()<deadline) {
+                            SystemClock.sleep(25);scenario.onActivity {playing=player.playingVoice}
+                        }
+                        assertTrue("Packaged voice did not start: $accent",playing)
+                        scenario.onActivity {
+                            if(accent=="south") player.retain(false,"voice",accent)
+                            else player.retain(true,"display",accent)
+                            assertFalse(player.playingVoice)
+                            // Closing while preparation is pending cannot start late audio.
+                            player.retain(true,"voice",accent);assertTrue(player.play("voice",accent));player.stop()
+                        }
+                        SystemClock.sleep(250)
+                        scenario.onActivity {assertFalse(player.playingVoice)}
+                    }
+                    scenario.onActivity {player.close();assertFalse(player.play("voice","south"));assertFalse(player.play("sound","south"))}
+                    assertEquals(0,errors.get())
+                } finally {scenario.onActivity {player.close()}}
+            }
+        }
+    }
 
     @Test fun consumerCanCloseMonitorInsideLoadingCallback() {
         val instrumentation=InstrumentationRegistry.getInstrumentation()
