@@ -12,12 +12,56 @@ import org.junit.Test
 import vn.tn.assistant.MainActivity
 import vn.tn.assistant.driving.TnRoadMatcher
 import vn.tn.assistant.driving.TnRoadMonitor
+import vn.tn.assistant.driving.TnRoadSound
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 class TnRoadRuntimeTest {
     private val road=TnRoadMatcher.Road("fixture","fixture",TnRoadMatcher.Point(10.0,106.0),0.0,
         TnRoadMatcher.Point(9.9998,106.0),TnRoadMatcher.Point(10.0002,106.0),50.0,System.currentTimeMillis(),"Đường kiểm thử")
+
+    @Test fun savedOffsetAndModeControlVisibleWarningAndUnknownDataClearsIt() {
+        val instrumentation=InstrumentationRegistry.getInstrumentation()
+        TnIsolatedActivityPreferences(instrumentation.targetContext).use {
+            ActivityScenario.launch(MainActivity::class.java).use { scenario -> scenario.onActivity { activity ->
+                val preferences=activity.getSharedPreferences("tn-session-v1",android.content.Context.MODE_PRIVATE)
+                preferences.edit().putString("traffic_warning_mode","display").putInt("traffic_overspeed_offset",5).commit()
+                lateinit var callback:(TnRoadMatcher.Result)->Unit
+                val dialog=TnRoadDialog(activity) { show -> callback=show;AutoCloseable {} }
+                dialog.show()
+                try {
+                    val alert=descendants(dialog.window!!.decorView).single {it.tag=="tnRoadAlert"} as TextView
+                    fun update(kmh:Double) {callback(TnRoadMatcher.Result("matched",road,
+                        TnRoadMatcher.Fix(10.0,106.0,5.0,0.0,kmh/3.6,SystemClock.elapsedRealtime())))}
+                    update(54.0);assertEquals("",alert.text.toString())
+                    update(55.0);assertTrue(alert.text.contains("ngưỡng"))
+                    callback(TnRoadMatcher.Result("ambiguous"));assertEquals("",alert.text.toString())
+                    preferences.edit().putString("traffic_warning_mode","none").commit()
+                    update(60.0);assertEquals("",alert.text.toString())
+                } finally {dialog.dismiss()}
+            } }
+        }
+    }
+
+    @Test fun localSoundReleasesFocusAndCannotRestartAfterClose() {
+        val instrumentation=InstrumentationRegistry.getInstrumentation()
+        TnIsolatedActivityPreferences(instrumentation.targetContext).use {
+            ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+                lateinit var player:TnRoadSound
+                scenario.onActivity { activity ->
+                    player=TnRoadSound(activity)
+                    try {
+                        assertTrue(player.play());assertFalse(player.play())
+                        player.stop();assertTrue(player.play())
+                    } finally {player.close()}
+                    assertFalse(player.play())
+                }
+                // Wait beyond both scheduled beeps; closing must remain terminal.
+                SystemClock.sleep(1000)
+                scenario.onActivity {assertFalse(player.play());player.close()}
+            }
+        }
+    }
 
     @Test fun missingDataClearsSignAndDismissDiscardsLateCallback() {
         val instrumentation=InstrumentationRegistry.getInstrumentation()

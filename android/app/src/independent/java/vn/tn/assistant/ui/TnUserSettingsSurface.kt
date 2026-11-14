@@ -453,10 +453,10 @@ class TnUserSettingsSurface(
         choice(card, "Cảnh báo giao thông", "traffic_warning_mode", trafficModes, "none")
         choice(card, "Ngưỡng báo vượt tốc độ", "traffic_overspeed_offset", listOf("Dưới giới hạn 5km/h" to "-5", "Bằng tốc độ giới hạn" to "0", "Vượt giới hạn 5km/h" to "5"), "0")
         toggle(card, "Luôn hiện khi dùng bản đồ", "traffic_always_on_map", false)
-        warning(card, "Hiện chỉ hỗ trợ xem giới hạn tham khảo khi mở màn hình. Cảnh báo âm thanh và tự hiện khi dùng bản đồ chưa khả dụng.")
+        warning(card, "Giới hạn tham khảo và Âm báo chỉ hoạt động khi mở màn hình vị trí. Giọng nói và tự hiện khi dùng bản đồ chưa khả dụng.")
         row(card,"Xem giới hạn theo vị trí","Chỉ khi mở màn hình này") {
             if (!vn.tn.assistant.driving.TnRoadMonitor.preciseAllowed(context)) action("traffic-location")
-            else confirm("Xem dữ liệu đường?", "TN dùng vị trí chính xác và gửi tọa độ tới máy chủ TN để lấy dữ liệu đường khi màn hình này mở. Đóng hoặc rời ứng dụng sẽ dừng. Chưa phát cảnh báo tự động.",
+            else confirm("Xem dữ liệu đường?", "TN dùng vị trí chính xác và gửi tọa độ tới máy chủ TN khi màn hình này mở; phát âm báo nếu bạn đã chọn Âm báo. Đóng hoặc rời ứng dụng sẽ dừng.",
                 "ĐỂ SAU","BẮT ĐẦU",onRight={ roadDialog=TnRoadDialog(context).also { it.show() } })
         }
         description(card, "Nhận cảnh báo khi có biển báo cần chú ý: tốc độ giới hạn, camera giao thông và các biển cấm khác.")

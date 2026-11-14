@@ -17,7 +17,7 @@ internal object TnRoadMatcher {
         val start: Point?, val end: Point?, val speed: Double?, val updatedAt: Long?, val name: String)
     data class Snapshot(val roads: List<Road>, val complete: Boolean, val elapsedMs: Long,
         val center: Point? = null, val radius: Double? = null)
-    data class Result(val state: String, val road: Road? = null)
+    data class Result(val state: String, val road: Road? = null, val fix: Fix? = null)
 
     fun parse(response: JSONObject, elapsedMs: Long): Snapshot {
         val input = response.optJSONArray("road_candidates") ?: return Snapshot(emptyList(), false, elapsedMs)
@@ -83,7 +83,7 @@ internal object TnRoadMatcher {
         if (alternatives.any { it.first.group != best.first.group || it.first.speed != best.first.speed }) return Result("ambiguous")
         if (alternatives.any { it.first.updatedAt == null || nowUtc - it.first.updatedAt!! !in 0..90L*86400000 }) return Result("source_stale")
         if (best.first.speed == null) return Result("limit_unknown")
-        return Result("matched",best.first)
+        return Result("matched",best.first,fix)
     }
 
     private fun coordinates(p: Point) = p.lat.isFinite() && p.lon.isFinite() && abs(p.lat)<=90 && abs(p.lon)<=180
