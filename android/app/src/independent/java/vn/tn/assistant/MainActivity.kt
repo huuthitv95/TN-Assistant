@@ -2,6 +2,7 @@ package vn.tn.assistant
 
 import android.Manifest
 import android.app.Activity
+import android.app.NotificationManager
 import android.content.Intent
 import android.content.ComponentName
 import android.app.AlertDialog
@@ -49,6 +50,7 @@ import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.pm.PackageInfoCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -65,6 +67,7 @@ import vn.tn.assistant.audio.TnWakeService
 import vn.tn.assistant.audio.TnWakeUi
 import vn.tn.assistant.auth.TnSessionStore
 import vn.tn.assistant.boot.TnBootWelcomeReceiver
+import vn.tn.assistant.boot.TnBootWelcomePolicy
 import vn.tn.assistant.api.TnSpeechStreamFallback
 import vn.tn.assistant.api.TnVoiceBackendClient
 import vn.tn.assistant.audio.TnSpeechAudioFocus
@@ -167,6 +170,7 @@ class MainActivity : Activity() {
     private var permissionSettingsStep: Int? = null
     private var returnFromSettingsToHome = false
     private var returnToUserSettingsFromPermission = false
+    private var bootWelcomePermissionPending = false
     private var restoredUserSettings: Bundle? = null
     private val narrator by lazy { TnOnboardingNarrator(this) }
     @Volatile private var resumed = false
@@ -364,6 +368,33 @@ class MainActivity : Activity() {
     }
 
     private fun notificationGranted(): Boolean = TnMediaAccessService.hasAccess(this)
+
+    private fun bootWelcomeNotificationsAllowed(): Boolean {
+        val runtimePermissionGranted = Build.VERSION.SDK_INT < 33 || ContextCompat.checkSelfPermission(
+            this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        val channelEnabled = Build.VERSION.SDK_INT < Build.VERSION_CODES.O ||
+            (getSystemService(NOTIFICATION_SERVICE) as NotificationManager)
+                .getNotificationChannel(TnBootWelcomeReceiver.CHANNEL_ID)?.importance != NotificationManager.IMPORTANCE_NONE
+        return TnBootWelcomePolicy.canEnableReminder(
+            Build.VERSION.SDK_INT,
+            runtimePermissionGranted,
+            NotificationManagerCompat.from(this).areNotificationsEnabled(),
+            channelEnabled,
+        )
+    }
+
+    private fun openBootWelcomeNotificationSettings() {
+        val settingsIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+        } else {
+            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))
+        }
+        try {
+            startActivity(settingsIntent)
+        } catch (_: RuntimeException) {
+            Toast.makeText(this, "Hãy bật thông báo cho TN Assistant trong Cài đặt Android để nhận lời chào sau khi khởi động.", Toast.LENGTH_LONG).show()
+        }
+    }
 
     private fun overlayGranted() = Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(this)
     private fun missingSetupPermissions(): List<String> = buildList {
@@ -1254,6 +1285,29 @@ class MainActivity : Activity() {
         val settings = userSettings
         val local = setOf("floating_enabled", "floating_size", "floating_opacity", "video_warning", "record_mode", "playback_mode", TnBootWelcomeReceiver.KEY_ENABLED)
         if (key in local) {
+            if (key == TnBootWelcomeReceiver.KEY_ENABLED && value == true && !bootWelcomeNotificationsAllowed()) {
+                if (Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(
+                        this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                    val previouslyRequested = preferences.getBoolean(
+                        TnBootWelcomeReceiver.KEY_NOTIFICATION_PERMISSION_REQUESTED, false)
+                    if (TnBootWelcomePolicy.shouldRequestNotificationPermission(
+                            previouslyRequested, shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS))) {
+                        bootWelcomePermissionPending = true
+                        preferences.edit().putBoolean(
+                            TnBootWelcomeReceiver.KEY_NOTIFICATION_PERMISSION_REQUESTED, true).apply()
+                        requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQUEST_BOOT_WELCOME_NOTIFICATION)
+                    } else {
+                        settings?.refresh()
+                        settings?.loadError("Thông báo TN đang bị từ chối. Hãy bật trong Cài đặt Android để tiếp tục.")
+                        openBootWelcomeNotificationSettings()
+                    }
+                } else {
+                    settings?.refresh()
+                    settings?.loadError("Để nhận lời chào sau khi khởi động, hãy bật thông báo TN trong Cài đặt Android.")
+                    openBootWelcomeNotificationSettings()
+                }
+                return
+            }
             if (key == "floating_enabled") {
                 if (value == true && !notificationGranted()) {
                     if (settings != null) requestSettingsPermission(2)
@@ -2011,6 +2065,16 @@ class MainActivity : Activity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
+            REQUEST_BOOT_WELCOME_NOTIFICATION -> {
+                val pending = bootWelcomePermissionPending
+                bootWelcomePermissionPending = false
+                if (pending && grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED && bootWelcomeNotificationsAllowed()) {
+                    saveUserSetting(TnBootWelcomeReceiver.KEY_ENABLED, true)
+                } else {
+                    userSettings?.refresh()
+                    userSettings?.loadError("Cần cho phép thông báo TN để bật lời chào sau khi khởi động.")
+                }
+            }
             REQUEST_TRAFFIC_NOTIFICATION -> {
                 userSettings?.refresh()
                 if(!vn.tn.assistant.driving.TnRoadService.notificationsAllowed(this))
@@ -2268,6 +2332,7 @@ class MainActivity : Activity() {
         private const val REQUEST_CONTACTS = 44
         private const val REQUEST_TRAFFIC_LOCATION = 45
         private const val REQUEST_TRAFFIC_NOTIFICATION = 46
+        private const val REQUEST_BOOT_WELCOME_NOTIFICATION = 47
         private const val REQUEST_SETUP_AUDIO = 30
         private const val REQUEST_SETUP_LOCATION = 31
         private const val SAMPLE_RATE = 16000

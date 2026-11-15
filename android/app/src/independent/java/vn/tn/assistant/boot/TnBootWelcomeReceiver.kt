@@ -16,6 +16,17 @@ import vn.tn.assistant.auth.TnSessionStore
  * Android does not allow this target to start media playback from BOOT_COMPLETED.
  */
 internal object TnBootWelcomePolicy {
+    fun shouldRequestNotificationPermission(previouslyRequested: Boolean, shouldShowRationale: Boolean): Boolean =
+        !previouslyRequested || shouldShowRationale
+
+    fun canEnableReminder(
+        sdkInt: Int,
+        runtimeNotificationPermissionGranted: Boolean,
+        appNotificationsEnabled: Boolean,
+        reminderChannelEnabled: Boolean,
+    ): Boolean = (sdkInt < 33 || runtimeNotificationPermissionGranted) &&
+        appNotificationsEnabled && reminderChannelEnabled
+
     fun shouldNotify(
         explicitlyEnabled: Boolean,
         welcomeEnabled: Boolean,
@@ -103,6 +114,7 @@ class TnBootWelcomeReceiver : BroadcastReceiver() {
         const val KEY_ENABLED = "welcome_after_boot"
         const val KEY_LAST_PROMPTED = "welcome_after_boot_last_prompted"
         const val KEY_LAST_PLAYED_DAY = "welcome_last_played_day_device"
+        const val KEY_NOTIFICATION_PERMISSION_REQUESTED = "welcome_after_boot_notification_permission_requested"
         private const val REQUEST_CODE = 4701
         private val LOCK = Any()
     }

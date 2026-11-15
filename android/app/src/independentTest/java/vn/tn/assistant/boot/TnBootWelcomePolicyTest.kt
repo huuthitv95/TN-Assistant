@@ -5,6 +5,20 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class TnBootWelcomePolicyTest {
+    @Test fun enablingReminderRequiresEveryAndroidNotificationGate() {
+        assertTrue(TnBootWelcomePolicy.canEnableReminder(32, false, true, true))
+        assertTrue(TnBootWelcomePolicy.canEnableReminder(33, true, true, true))
+        assertFalse(TnBootWelcomePolicy.canEnableReminder(33, false, true, true))
+        assertFalse(TnBootWelcomePolicy.canEnableReminder(33, true, false, true))
+        assertFalse(TnBootWelcomePolicy.canEnableReminder(33, true, true, false))
+    }
+
+    @Test fun deniedNotificationPermissionEventuallyOpensSystemSettings() {
+        assertTrue(TnBootWelcomePolicy.shouldRequestNotificationPermission(false, false))
+        assertTrue(TnBootWelcomePolicy.shouldRequestNotificationPermission(true, true))
+        assertFalse(TnBootWelcomePolicy.shouldRequestNotificationPermission(true, false))
+    }
+
     private fun allowed(
         optedIn: Boolean = true,
         greeting: Boolean = true,
