@@ -16,8 +16,11 @@ internal class TnNotificationAccessTestScope(private val context: Context, grant
     private val originallyGranted = TnMediaAccessService.hasAccess(context)
 
     init {
-        val avd = runShell("getprop ro.kernel.qemu.avd_name").trim()
-        assumeTrue("Permission mutation is confined to the isolated SDK emulator", Build.FINGERPRINT.contains("generic") && avd == "TNNative166")
+        val avd = runShell("getprop ro.boot.qemu.avd_name").trim().ifBlank {
+            runShell("getprop ro.kernel.qemu.avd_name").trim()
+        }
+        val sdkEmulator = Build.HARDWARE in setOf("ranchu", "goldfish")
+        assumeTrue("Permission mutation is confined to a TN SDK emulator", sdkEmulator && avd in setOf("TNNative166", "TNParity37"))
         set(granted)
     }
 
