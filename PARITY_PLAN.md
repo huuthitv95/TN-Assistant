@@ -7,7 +7,7 @@ Phạm vi: Android độc lập, đối chiếu reference hiện có trong Kiki_
 - Sáu mục hỗ trợ đọc cấu hình VPS: QR đúng URL, hai tài liệu WebView, thiếu cấu hình/lỗi/retry/đóng rõ ràng.
 - Năm trang tĩnh TN: FAQ, liên hệ, khiếu nại, khách hàng dễ tổn thương và micro. Facebook chưa có kênh TN được xác nhận. Email trong source chưa được nghiệm thu nhận/gửi.
 - Backend sửa trạng thái danh bạ thành có bộ xử lý Android nhưng cần quyền và xác nhận; không coi đó là nghiệm thu toàn bộ danh bạ.
-- Hai smoke call thành công ngày 13/11/2026. Không tự gọi thêm provider để giữ readiness xanh; phân biệt hết hạn bằng chứng với dịch vụ lỗi.
+- Hai smoke call ngắn thành công ngày 15/11/2026 qua backend HTTPS sau khi người dùng cho phép: một TTS “TN ready” và một WAV tổng hợp 16 kHz gửi Deepgram. Guest dùng một lần đã xóa; script không giữ transcript, audio hay token. `/v1/health` và `/v1/ready` trả 200 ngay sau đó; ASR/TTS ở `verified_recently` (09:40:52Z/09:40:50Z). Đây là trạng thái tại thời điểm nghiệm thu, không readiness được bảo đảm lâu dài; không có kiểm tra định kỳ gọi quota.
 - Bổ sung rebuild ONNX JNI x86_64 với PT_LOAD 16 KB; kiểm tra exports và nghiệm thu lại trên emulator trước phát hành.
 
 ## Các bước còn lại
@@ -39,6 +39,12 @@ Phạm vi: Android độc lập, đối chiếu reference hiện có trong Kiki_
 - Bản gốc có receiver/service xử lý khởi động. TN thêm lựa chọn riêng, mặc định tắt. Khi người dùng bật, sau `BOOT_COMPLETED` receiver chỉ tạo nhắc nhở nếu còn phiên TN, lời chào được bật, thông báo được phép và lời chào hôm nay chưa phát. Cần chạm thông báo để mở ứng dụng; luồng lời chào hiện có mới gọi giọng nói.
 - Không tự phát âm thanh trong receiver: với target Android hiện tại, Android 15 giới hạn khởi chạy media playback foreground service từ `BOOT_COMPLETED`; Android 17 tiếp tục siết âm thanh phát nền khởi tạo từ boot. Xem [Android 15 behavior changes](https://developer.android.com/about/versions/15/behavior-changes-15) và [Android 17 background audio hardening](https://developer.android.com/about/versions/17/changes/bg-audio).
 - Preview, lint và unit test build đạt; `TnBootWelcomeReceiverTest` đạt trên SDK emulator API 37. Kiểm thử xác nhận đăng ký receiver, tạo thông báo khi đủ điều kiện, chặn lặp trong cùng boot, chặn khi đã phát trong ngày và khi người dùng tắt tùy chọn. Chưa thực hiện reboot emulator thật hoặc chạm thông báo để xác nhận phát âm thanh đầu cuối; chưa xác nhận trên các phiên bản Android khác.
+
+### YouTube và mở liên kết — đang nghiệm thu
+
+- Đối chiếu reference `jadx/sources/y/x.java`: link trực tiếp được ưu tiên; lệnh tìm kiếm mở trang kết quả; `video_id` mở video; resolver API/HTML thử tìm video trước, rồi fallback về tìm kiếm YouTube nếu không có kết quả. TN giữ thêm package cascade `video_package` → YouTube → Android handler HTTPS; resolver miss nay cũng fallback về trang tìm kiếm như app gốc. Link trực tiếp chỉ chấp nhận HTTPS hợp lệ.
+- Chín kiểm tra instrumentation trên SDK emulator API 37 đạt: ưu tiên direct link, truy vấn tiếng Việt, video ID, package đã chọn/YouTube/handler chung, dữ liệu lỗi, resolver API/Kiki/HTML, bộ lọc kết quả và fallback khi resolver không tìm thấy video. Resolver tests dùng fixture và không gọi mạng YouTube.
+- Chưa chạy luồng live assistant/VPS để nhận directive rồi mở liên kết và ghi action receipt; test đó tạo/xóa guest production. Cũng chưa mở app YouTube thật trong nghiệm thu lần này. Vì vậy các ca trên chỉ xác nhận resolver/package routing, chưa xác nhận toàn bộ voice → backend → ứng dụng ngoài.
 
 | Hạng mục | Điều kiện nghiệm thu |
 |---|---|

@@ -96,13 +96,19 @@ class TnYouTubeIntentCascadeRuntimeTest {
         assertNull(TnYouTubeIntentCascade.build(context, JSONObject().put("youtube_search", true)))
     }
 
-    @Test fun originalApiAndHtmlResolversDoNotSilentlyBecomeSearchPageFallbacks() = withVideoPackage("") {
-        assertNull(TnYouTubeIntentCascade.build(context, JSONObject()
-            .put("query", "configured API search")
-            .put("youtube_api", JSONObject().put("url", "https://api.example.com/search"))) { null })
-        assertNull(TnYouTubeIntentCascade.build(context, JSONObject()
-            .put("query", "configured HTML search")
-            .put("query_html", JSONObject().put("offline_type", "youtube"))) { null })
+    @Test fun originalApiAndHtmlResolversFallBackToSearchPageWhenNoVideoIsFound() = withVideoPackage("") {
+        val cases = listOf(
+            "configured API search" to JSONObject().put("youtube_api", JSONObject().put("url", "https://api.example.com/search")),
+            "configured HTML search" to JSONObject().put("query_html", JSONObject().put("offline_type", "youtube")),
+        )
+        cases.forEach { (query, config) ->
+            val intent = TnYouTubeIntentCascade.build(context,
+                JSONObject(config.toString()).put("query", query)) { null }
+            assertNotNull("A resolver miss should fall back to the original YouTube search route", intent)
+            assertEquals("com.google.android.youtube", intent!!.`package`)
+            assertEquals("/results", intent.data?.path)
+            assertEquals(query, intent.data?.getQueryParameter("search_query"))
+        }
     }
 
     @Test fun configuredYoutubeApiPostsSearchAndAppliesOriginalFilters() {

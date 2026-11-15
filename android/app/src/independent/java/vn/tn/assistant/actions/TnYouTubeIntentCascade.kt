@@ -30,7 +30,7 @@ internal object TnYouTubeIntentCascade {
                 Uri.Builder().scheme("https").authority("www.youtube.com").path("/watch")
                     .appendQueryParameter("v", videoId).build()
             }
-            needsOriginalResolver -> configuredResolver(payload) ?: return null
+            needsOriginalResolver -> configuredResolver(payload) ?: searchUri(query) ?: return null
             query.isNotEmpty() && !needsOriginalResolver -> searchUri(query) ?: return null
             else -> return null
         }
