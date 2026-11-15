@@ -54,7 +54,9 @@ class TnRoadServiceTest {
             if(Build.VERSION.SDK_INT>=26) {bearingAccuracyDegrees=1f;speedAccuracyMetersPerSecond=1f}
             time=System.currentTimeMillis();elapsedRealtimeNanos=SystemClock.elapsedRealtimeNanos()
         }
-        for (ending in listOf("notification","logout","mode","task")) {
+        val endings=if(InstrumentationRegistry.getArguments().getString("roadServiceMap")=="true") listOf("map")
+            else listOf("notification","logout","mode","task")
+        for (ending in endings) {
             TnIsolatedActivityPreferences(context).use {
                 ActivityScenario.launch(MainActivity::class.java).use {scenario ->
                     var registered=false
@@ -69,6 +71,7 @@ class TnRoadServiceTest {
                                 .putString("refresh_ciphertext","instrumentation-only-no-network")
                                 .putString("traffic_warning_mode",if(ending=="notification") "sound" else "voice")
                                 .putString("agent_voice",if(ending=="mode") "north" else "south")
+                                .putBoolean("traffic_always_on_map",ending=="map")
                                 .putInt("traffic_overspeed_offset",0).commit()
                             TnRoadService.testFetch={_,now ->requests.incrementAndGet();TnRoadMatcher.parse(input.getJSONObject("response"),now)}
                             @Suppress("DEPRECATION")
@@ -84,8 +87,16 @@ class TnRoadServiceTest {
                             assertTrue("Closing viewer stopped shared trip",TnRoadService.isRunning())
                         }
                         scenario.moveToState(Lifecycle.State.CREATED)
+                        if(ending=="map") {
+                            assertTrue(vn.tn.assistant.driving.TnMapActivityMonitor.hasPermission(context))
+                            assertTrue(TnFloatingControlService.hasPermission(context))
+                            assertFalse(TnFloatingControlService.isHidden(context))
+                            val maps=requireNotNull(context.packageManager.getLaunchIntentForPackage("com.google.android.apps.maps"))
+                            context.startActivity(maps.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+                        }
                         repeat(3) {manager.setTestProviderLocation(LocationManager.GPS_PROVIDER,location());SystemClock.sleep(1100)}
                         await("Background GPS did not match replayed road") {matches>0}
+                        if(ending=="map") await("Trip did not display its real map overlay") {TnRoadService.isMapSignVisible()}
                         assertTrue(requests.get()>0)
                         val notification=notifications.activeNotifications.single {it.id==4601}.notification
                         val text=notification.extras.getCharSequence(Notification.EXTRA_TEXT).toString()
@@ -94,12 +105,13 @@ class TnRoadServiceTest {
                         assertFalse("Background sound failed: $text",text.contains("chưa phát"))
                         assertTrue(notification.flags and Notification.FLAG_FOREGROUND_SERVICE != 0)
                         when(ending) {
-                            "notification" -> notification.actions.single {it.title=="DỪNG"}.actionIntent.send()
+                            "notification","map" -> notification.actions.single {it.title=="DỪNG"}.actionIntent.send()
                             "logout" -> instrumentation.runOnMainSync {TnSessionStore.get(context).clear()}
                             "task" -> scenario.onActivity {it.finishAndRemoveTask()}
                             else -> context.getSharedPreferences("tn-session-v1",Context.MODE_PRIVATE).edit().putString("traffic_warning_mode","none").commit()
                         }
                         await("Trip did not stop after $ending") {!TnRoadService.isRunning()}
+                        assertFalse("Map overlay survived trip stop",TnRoadService.isMapSignVisible())
                         await("Foreground notification remained after $ending") {notifications.activeNotifications.none {it.id==4601}}
                         var before=0
                         instrumentation.runOnMainSync {before=matches}
@@ -112,7 +124,9 @@ class TnRoadServiceTest {
                             // Clear the marker before bringing ActivityScenario back to foreground.
                             context.getSharedPreferences("tn-session-v1",Context.MODE_PRIVATE).edit().remove("refresh_ciphertext").commit()
                         }
-                        if(ending!="task") scenario.moveToState(Lifecycle.State.RESUMED)
+                        // With Maps in front, ActivityScenario cannot resume TN without
+                        // bringing its task forward. close() can destroy the stopped activity.
+                        if(ending !in setOf("task","map")) scenario.moveToState(Lifecycle.State.RESUMED)
                         if(registered) manager.removeTestProvider(LocationManager.GPS_PROVIDER)
                     }
                 }

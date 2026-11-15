@@ -1325,6 +1325,13 @@ class MainActivity : Activity() {
 
     private fun userSettingsAction(key: String) {
         when (key) {
+            "traffic-usage" -> {
+                try {startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS,Uri.parse("package:$packageName")))}
+                catch(_:RuntimeException) {
+                    runCatching {startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))}
+                        .onFailure {android.widget.Toast.makeText(this,"Thiết bị chưa mở được cài đặt quyền truy cập hoạt động.",android.widget.Toast.LENGTH_LONG).show()}
+                }
+            }
             "traffic-notification" -> {
                 if(Build.VERSION.SDK_INT>=33 && ContextCompat.checkSelfPermission(this,Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)
                     requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS),REQUEST_TRAFFIC_NOTIFICATION)

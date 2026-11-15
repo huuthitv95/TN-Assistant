@@ -20,6 +20,7 @@ import vn.tn.assistant.auth.TnSessionStore
 class TnRoadService : Service() {
     private var monitor:TnRoadMonitor?=null
     private var sound:TnRoadAlertAudio?=null
+    private var mapOverlay:TnRoadMapOverlay?=null
     private val policy=TnOverspeedPolicy()
     private val observers=linkedSetOf<(TnRoadMatcher.Result)->Unit>()
     private var result=TnRoadMatcher.Result("waiting_gps")
@@ -57,6 +58,7 @@ class TnRoadService : Service() {
             else startForeground(ID,notification)
             active=true;instance=this
             sound=TnRoadAlertAudio(this) {soundUnavailable=true}
+            mapOverlay=TnRoadMapOverlay(this)
             monitor=TnRoadMonitor(this,::update,fetch=if(BuildConfig.DEBUG) testFetch else null)
             monitor?.start()
             if(active) main.post(guard)
@@ -74,6 +76,7 @@ class TnRoadService : Service() {
             finishTrip();return
         }
         result=next
+        mapOverlay?.update(next)
         val offset=preferences.all["traffic_overspeed_offset"]?.toString()?.toIntOrNull() ?: 0
         val accent=preferences.getString("agent_voice","south").orEmpty()
         val decision=policy.update(next,mode,offset,SystemClock.elapsedRealtime())
@@ -117,7 +120,7 @@ class TnRoadService : Service() {
         active=false
         main.removeCallbacksAndMessages(null)
         if(instance===this) instance=null
-        monitor?.close();monitor=null;sound?.close();sound=null;policy.reset()
+        monitor?.close();monitor=null;sound?.close();sound=null;mapOverlay?.close();mapOverlay=null;policy.reset()
         lastState=reason
         observers.toList().forEach {it(TnRoadMatcher.Result(reason))};observers.clear()
     }
@@ -137,6 +140,7 @@ class TnRoadService : Service() {
         // from intents, preferences or remote configuration.
         internal var testFetch:((TnRoadMatcher.Fix,Long)->TnRoadMatcher.Snapshot)?=null
         fun isRunning()=instance?.active==true
+        internal fun isMapSignVisible()=instance?.mapOverlay?.isVisible==true
         fun status()=if(isRunning()) "Chuyến đi đang hoạt động; dừng từ thông báo TN hoặc nút Dừng chuyến đi." else when(lastState) {
             "driving_disabled" -> "Chuyến đi đã dừng: dữ liệu giao thông chưa được bật trên máy chủ TN."
             "premium_required" -> "Chuyến đi đã dừng: tài khoản chưa có quyền sử dụng dữ liệu giao thông."

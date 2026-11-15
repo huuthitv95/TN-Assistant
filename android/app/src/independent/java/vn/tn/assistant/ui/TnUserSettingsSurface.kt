@@ -454,7 +454,11 @@ class TnUserSettingsSurface(
         choice(card, "Cảnh báo giao thông", "traffic_warning_mode", trafficModes, "none")
         choice(card, "Ngưỡng báo vượt tốc độ", "traffic_overspeed_offset", listOf("Dưới giới hạn 5km/h" to "-5", "Bằng tốc độ giới hạn" to "0", "Vượt giới hạn 5km/h" to "5"), "0")
         toggle(card, "Luôn hiện khi dùng bản đồ", "traffic_always_on_map", false)
-        warning(card, "Giới hạn tham khảo, Âm báo và Giọng nói có thể tiếp tục khi chuyển sang bản đồ nếu đã bắt đầu chuyến đi. Tự hiện biển báo trên bản đồ chưa khả dụng.")
+        if (!TnFloatingControlService.hasPermission(context))
+            warning(card,"Cần quyền hiển thị trên ứng dụng khác để hiện biển tốc độ.","Cấp quyền") {action("overlay")}
+        if (!vn.tn.assistant.driving.TnMapActivityMonitor.hasPermission(context))
+            warning(card,"Cho phép truy cập hoạt động ứng dụng để nhận biết khi mở bản đồ. TN chỉ xử lý trên thiết bị trong chuyến đi, không lưu hoặc gửi lịch sử ứng dụng.","Cấp quyền") {action("traffic-usage")}
+        description(card, "Sau khi bắt đầu chuyến đi, biển tốc độ tham khảo hiện khi dùng Google Maps, Navitel hoặc VietMap và có dữ liệu phù hợp. Kéo biển để đổi vị trí; chạm để mở cài đặt. Âm báo và Giọng nói tiếp tục theo chế độ đã chọn khi chuyển ứng dụng.")
         row(card,"Bắt đầu chuyến đi","Tiếp tục dùng GPS khi chuyển sang ứng dụng khác") {
             if (!vn.tn.assistant.driving.TnRoadMonitor.preciseAllowed(context)) action("traffic-location")
             else if (!vn.tn.assistant.driving.TnRoadService.notificationsAllowed(context)) action("traffic-notification")
