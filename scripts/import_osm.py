@@ -81,6 +81,14 @@ def source_timestamp(header_stamp, provenance):
         raise ValueError('Source update time must have a timezone and must not be in the future')
     return value.astimezone(timezone.utc).isoformat()
 
+def sha256_file(path):
+    """Hash a large file in bounded memory; works on Python 3.10 and newer."""
+    digest = hashlib.sha256()
+    with Path(path).open('rb') as stream:
+        while chunk := stream.read(2 << 20):
+            digest.update(chunk)
+    return digest.hexdigest()
+
 def download(file):
     file.parent.mkdir(parents=True, exist_ok=True)
     checksum = urllib.request.urlopen(SOURCE+'.md5', timeout=30).read(1024).decode().split()[0]
@@ -199,8 +207,7 @@ def main():
         Handler().apply_file(str(source),locations=True,idx='flex_mem')
         flush()
     stats['output_bytes']=output.stat().st_size
-    with output.open('rb') as generated:
-        stats['output_sha256']=hashlib.file_digest(generated,'sha256').hexdigest()
+    stats['output_sha256']=sha256_file(output)
     output.with_suffix(output.suffix+'.summary.json').write_text(json.dumps(stats,ensure_ascii=False,indent=2),encoding='utf-8')
     print(json.dumps(stats,ensure_ascii=True))
 

@@ -1,13 +1,21 @@
 """Importer contract tests; synthetic OSM is explicitly not Vietnam coverage."""
+import hashlib
 import json
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
 import unittest
-from import_osm import ROOT, speed, bearing, inside, road_segments, distance, source_timestamp
+from import_osm import ROOT, speed, bearing, inside, road_segments, distance, source_timestamp, sha256_file
 
 class ImportOSMTests(unittest.TestCase):
+    def test_large_file_hash_helper_uses_a_streaming_sha256(self):
+        with tempfile.TemporaryDirectory(dir=ROOT/'.runtime/managed-data', prefix='hash-contract-') as folder:
+            path=Path(folder)/'sample.bin'
+            content=(b'TN Assistant OSM source\x00'*4096)+b'end'
+            path.write_bytes(content)
+            self.assertEqual(hashlib.sha256(content).hexdigest(), sha256_file(path))
+
     def test_explicit_speed_only(self):
         self.assertEqual(speed('50'),50)
         self.assertEqual(speed('30 mph'),48.28)
