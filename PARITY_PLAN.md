@@ -56,6 +56,10 @@ Phạm vi: Android độc lập, đối chiếu reference hiện có trong Kiki_
 - `TnMediaControlsRuntimeTest` đạt 10/10 trên Android SDK AVD `TNParity37`: lệnh next/previous/pause/resume/replay đi qua Android MediaSession Binder thật; kiểm tra trạng thái sau lệnh, không gửi lặp, không tự chuyển sang player khác khi action bị thiếu, lỗi player, hết session, hủy và quyền Notification Listener bị từ chối. Kiểm thử dùng MediaSession tổng hợp, không phát nhạc hay sửa dữ liệu của app media bên ngoài.
 - Guard của `TnNotificationAccessTestScope` nay nhận diện hai AVD TN cho phép (`TNNative166`, `TNParity37`) qua hardware `ranchu/goldfish`; notification-listener grant chính xác đã được so sánh trước/sau và khôi phục. Chưa nghiệm thu với từng app media thật hoặc xác nhận người dùng có thể bật quyền trong Settings trên mọi phiên bản Android.
 
+### Wake word — còn thiếu kiểm thử âm thanh
+
+- `TnSileroVadRuntimeTest` đạt 1/1 trên `TNParity37`: model ONNX thật khởi động và frame im lặng không bị coi là kết thúc câu. Ca này không kiểm tra nhận diện “TN ơi”. `files/tn-wake-test/manifest.json` không có trên AVD, nên `TnWakeAcousticRuntimeTest` corpus dương/âm/ồn chưa chạy. Không thu âm micro, gọi ASR/TTS hay tiêu quota trong lượt này.
+
 | Hạng mục | Điều kiện nghiệm thu |
 |---|---|
 | Cảnh báo giao thông | Nối vị trí và dữ liệu đường vào Android; xử lý quyền, mất GPS, dữ liệu cũ, chống phát lặp; kiểm tra tuyến giả lập Basic/Premium |
