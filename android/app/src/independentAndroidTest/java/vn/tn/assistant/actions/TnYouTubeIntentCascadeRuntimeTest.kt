@@ -265,7 +265,8 @@ class TnYouTubeIntentCascadeRuntimeTest {
 
     @Test fun liveVpsCommandRunsThroughMainActivityAndOpensItsUrl() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
-        assertEquals("TNNative166", shell("getprop ro.kernel.qemu.avd_name"))
+        val avdName = shell("getprop ro.boot.qemu.avd_name").ifBlank { shell("getprop ro.kernel.qemu.avd_name") }
+        assertTrue("Use a TN Android SDK emulator; found AVD '$avdName'", avdName in setOf("TNNative166", "TNParity37"))
         assertEquals("https://assistant.tnfastvn.com", BuildConfig.API_BASE_URL)
         assertTrue("Unexpected app package: ${context.packageName}", context.packageName in setOf("vn.tn.assistant.preview", "vn.tn.assistant"))
         assertNotNull(context.packageManager.getLaunchIntentForPackage("com.android.chrome"))

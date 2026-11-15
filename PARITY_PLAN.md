@@ -43,15 +43,15 @@ Phạm vi: Android độc lập, đối chiếu reference hiện có trong Kiki_
 ### YouTube và mở liên kết — đang nghiệm thu
 
 - Đối chiếu reference `jadx/sources/y/x.java`: link trực tiếp được ưu tiên; lệnh tìm kiếm mở trang kết quả; `video_id` mở video; resolver API/HTML thử tìm video trước, rồi fallback về tìm kiếm YouTube nếu không có kết quả. TN giữ thêm package cascade `video_package` → YouTube → Android handler HTTPS; resolver miss nay cũng fallback về trang tìm kiếm như app gốc. Link trực tiếp chỉ chấp nhận HTTPS hợp lệ.
-- Chín kiểm tra instrumentation trên SDK emulator API 37 đạt: ưu tiên direct link, truy vấn tiếng Việt, video ID, package đã chọn/YouTube/handler chung, dữ liệu lỗi, resolver API/Kiki/HTML, bộ lọc kết quả và fallback khi resolver không tìm thấy video. Resolver tests dùng fixture và không gọi mạng YouTube.
-- Chưa chạy luồng live assistant/VPS để nhận directive rồi mở liên kết và ghi action receipt; test đó tạo/xóa guest production. Cũng chưa mở app YouTube thật trong nghiệm thu lần này. Vì vậy các ca trên chỉ xác nhận resolver/package routing, chưa xác nhận toàn bộ voice → backend → ứng dụng ngoài.
+- Chín kiểm tra resolver instrumentation trên SDK emulator API 37 đạt: ưu tiên direct link, truy vấn tiếng Việt, video ID, package đã chọn/YouTube/handler chung, dữ liệu lỗi, resolver API/Kiki/HTML, bộ lọc kết quả và fallback khi resolver không tìm thấy video. Các ca resolver dùng fixture, không gọi mạng YouTube. Ca riêng `resolvedYouTubeSearchIntentLaunchesTheInstalledApp` cũng đạt: `ACTION_VIEW` đưa app YouTube đã cài lên foreground; test chỉ xác nhận ứng dụng mở, không kiểm tra kết quả tải/phát video.
+- `liveVpsCommandRunsThroughMainActivityAndOpensItsUrl` đạt trên AVD `TNParity37`: lệnh “Mở https://example.com/watch?v=1” đi qua HTTPS, nhận directive YouTube, mở Chrome và máy chủ chấp nhận action receipt. Guest dùng một lần được xóa trong cleanup. Ca này xác nhận text → backend → Android intent/browser, không ghi âm, gọi ASR/TTS hay phát video. Còn phải nghiệm thu các lệnh media khác và ma trận thiếu app/quyền/lỗi/hủy.
 
 | Hạng mục | Điều kiện nghiệm thu |
 |---|---|
 | Cảnh báo giao thông | Nối vị trí và dữ liệu đường vào Android; xử lý quyền, mất GPS, dữ liệu cũ, chống phát lặp; kiểm tra tuyến giả lập Basic/Premium |
 | Chào khi khởi động | Đã có opt-in và nhắc bằng thông báo sau `BOOT_COMPLETED`; người dùng chạm mới mở app/phát lời chào. Còn nghiệm thu reboot thật, chạm thông báo đến hết luồng phát, process death/logout và đối chiếu hành vi trên nhiều Android |
 | Zalo | Chẩn đoán -501 từ phản hồi thực; triển khai Gateway khi có hạ tầng được cấp quyền; nghiệm thu QR, hủy, hết hạn, retry và đăng nhập thật. Hiện chưa có máy chủ egress Việt Nam |
-| Lệnh/media/maps/danh bạ | Ma trận lệnh từ reference: thành công, thiếu app, nhiều kết quả, từ chối quyền, xác nhận/hủy; kiểm tra tác động thật trên emulator |
+| Lệnh/media/maps/danh bạ | YouTube/link đã qua resolver cascade và text → backend → Chrome; còn ma trận lệnh đầy đủ: thành công, thiếu app, nhiều kết quả, từ chối quyền, xác nhận/hủy và tác động thật trên emulator |
 | Wake/UI/Premium | Âm thanh dương/âm và tiếng ồn; ngừng micro khi logout/mất quyền; các trạng thái UI, entitlement hết hạn, khôi phục process, offline |
 | Phát hành | Signer/package/version, tải trọn APK và checksum, catalog đúng kênh, nâng cấp giữ dữ liệu, rollback và quan sát theo release |
 
