@@ -13,8 +13,7 @@ class TnWakeAcousticRuntimeTest {
     @Test fun actualPackagedModelsRecognizeWakeAndRejectTheNegativeCorpus() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val context = instrumentation.targetContext
-        val folder = File(context.filesDir, "tn-wake-test")
-        assertTrue("Provision the private permitted PCM corpus before running this opt-in class", folder.isDirectory)
+        val folder = corpusFolder(context)
         val manifest = JSONArray(File(folder, "manifest.json").readText())
         val results = JSONArray()
         NativeAudio(context, 1000).use { engine ->
@@ -51,10 +50,11 @@ class TnWakeAcousticRuntimeTest {
     @Test fun diagnosticGrammarProbeForThePermittedCorpus() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val arguments = InstrumentationRegistry.getArguments()
-        val folder = File(context.filesDir, "tn-wake-test")
+        val folder = corpusFolder(context)
         val manifest = JSONArray(File(folder, "manifest.json").readText())
         val results = JSONArray()
         val modelPath = File(context.noBackupFilesDir, "tn-models/vosk-small-vn-0.4-v1")
+        NativeAudio(context, 1000).use { it.init() }
         val grammar = arguments.getString("tnWakeDiagnosticGrammarBase64")
             ?.let { String(android.util.Base64.decode(it, android.util.Base64.NO_WRAP), Charsets.UTF_8) }
             ?: JSONArray(WakePhrase.recognitionGrammar).toString()
@@ -67,29 +67,46 @@ class TnWakeAcousticRuntimeTest {
                 val item = manifest.getJSONObject(index)
                 if (split != null && item.optString("split") != split) continue
                 val bytes = File(folder, item.getString("file")).readBytes()
+                val signal = ByteArray(leadingSilenceMillis * 32 + bytes.size + 32000)
+                System.arraycopy(bytes, 0, signal, leadingSilenceMillis * 32, bytes.size)
                 org.vosk.Recognizer(model, 16000f, grammar).use { decoder ->
                     decoder.setWords(true)
                     decoder.setPartialWords(true)
-                    if (leadingSilenceMillis > 0) {
-                        val silence = ByteArray(leadingSilenceMillis * 32)
-                        decoder.acceptWaveForm(silence, silence.size)
-                    }
                     val observations = JSONArray()
                     var previous = ""
-                    for (offset in bytes.indices step 1024) {
-                        val complete = decoder.acceptWaveForm(bytes.copyOfRange(offset, minOf(offset + 1024, bytes.size)), minOf(1024, bytes.size - offset))
+                    var observedText = ""
+                    var detectedWake = false
+                    for (offset in signal.indices step 1024) {
+                        val frame = signal.copyOfRange(offset, minOf(offset + 1024, signal.size))
+                        val complete = decoder.acceptWaveForm(frame, frame.size)
                         val result = JSONObject(if (complete) decoder.result else decoder.partialResult)
                         val text = result.optString(if (complete) "text" else "partial")
+                        if (text.isNotBlank()) observedText = text
+                        detectedWake = detectedWake || WakePhrase.matches(text)
                         if (text != previous) { observations.put(result); previous = text }
                     }
                     results.put(JSONObject().put("file", item.getString("file"))
                         .put("leading_silence_ms", leadingSilenceMillis)
-                        .put("observations", observations).put("decoded", JSONObject(decoder.finalResult)))
+                        .put("observations", observations).put("decoded", JSONObject(decoder.finalResult))
+                        .put("observed_text", observedText).put("detected_wake", detectedWake))
                 }
             }
         }
         File(context.cacheDir, "tn167-wake-diagnostic.json").writeText(results.toString(2))
         val selectedCount = (0 until manifest.length()).count { split == null || manifest.getJSONObject(it).optString("split") == split }
         assertEquals(selectedCount, results.length())
+    }
+
+    private fun corpusFolder(context: android.content.Context): File {
+        val folder = File(context.filesDir, "tn-wake-test")
+        val isComplete = runCatching {
+            val entries = JSONArray(File(folder, "manifest.json").readText())
+            entries.length() > 0 && (0 until entries.length()).all { index ->
+                val name = entries.getJSONObject(index).getString("file")
+                File(folder, name).let { it.isFile && it.parentFile == folder }
+            }
+        }.getOrDefault(false)
+        assertTrue("Provision the private corpus with scripts/provision_wake_eval.py", isComplete)
+        return folder
     }
 }

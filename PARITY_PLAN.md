@@ -56,9 +56,11 @@ Phạm vi: Android độc lập, đối chiếu reference hiện có trong Kiki_
 - `TnMediaControlsRuntimeTest` đạt 10/10 trên Android SDK AVD `TNParity37`: lệnh next/previous/pause/resume/replay đi qua Android MediaSession Binder thật; kiểm tra trạng thái sau lệnh, không gửi lặp, không tự chuyển sang player khác khi action bị thiếu, lỗi player, hết session, hủy và quyền Notification Listener bị từ chối. Kiểm thử dùng MediaSession tổng hợp, không phát nhạc hay sửa dữ liệu của app media bên ngoài.
 - Guard của `TnNotificationAccessTestScope` nay nhận diện hai AVD TN cho phép (`TNNative166`, `TNParity37`) qua hardware `ranchu/goldfish`; notification-listener grant chính xác đã được so sánh trước/sau và khôi phục. Chưa nghiệm thu với từng app media thật hoặc xác nhận người dùng có thể bật quyền trong Settings trên mọi phiên bản Android.
 
-### Wake word — còn thiếu kiểm thử âm thanh
+### Wake word — chưa đạt cổng âm học
 
-- `TnSileroVadRuntimeTest` đạt 1/1 trên `TNParity37`: model ONNX thật khởi động và frame im lặng không bị coi là kết thúc câu. Ca này không kiểm tra nhận diện “TN ơi”. `files/tn-wake-test/manifest.json` không có trên AVD, nên `TnWakeAcousticRuntimeTest` corpus dương/âm/ồn chưa chạy. Không thu âm micro, gọi ASR/TTS hay tiêu quota trong lượt này.
+- `TnSileroVadRuntimeTest` đạt 1/1 trên `TNParity37`: model ONNX thật khởi động và frame im lặng không bị coi là kết thúc câu. Ca này không kiểm tra nhận diện “TN ơi”.
+- Đánh giá offline ngày 15/11/2026 trên `TNParity37` (API 37) dùng 75 PCM tổng hợp bằng Piper cục bộ, một giọng VAIS-1000, gồm 15 mẫu dương và 60 mẫu âm ở ba tốc độ. `TnWakeAcousticRuntimeTest` thất bại: detector thật trên APK nhận 4/15 mẫu dương và không kích hoạt mẫu âm nào. Probe Vosk theo grammar hiện tại cũng nhận 4/15 mẫu dương, không kích hoạt mẫu âm nào. Kết quả tổng hợp không thay thế giọng người, nhưng đủ cho thấy wake word chưa đáng tin cậy; tính năng hiện mặc định tắt và không mở rộng sang các cụm gọi phổ biến như “em ơi”.
+- Thêm `scripts/provision_wake_eval.py` để kiểm checksum rồi nạp corpus riêng vào app Preview trên SDK emulator. Mẫu và model sinh chỉ nằm trong `.runtime`; không thu micro, gọi Deepgram/TTS, gửi âm thanh lên VPS hoặc commit audio.
 
 | Hạng mục | Điều kiện nghiệm thu |
 |---|---|
@@ -66,7 +68,7 @@ Phạm vi: Android độc lập, đối chiếu reference hiện có trong Kiki_
 | Chào khi khởi động | Đã có opt-in và nhắc bằng thông báo sau `BOOT_COMPLETED`; người dùng chạm mới mở app/phát lời chào. Còn nghiệm thu reboot thật, chạm thông báo đến hết luồng phát, process death/logout và đối chiếu hành vi trên nhiều Android |
 | Zalo | Chẩn đoán -501 từ phản hồi thực; triển khai Gateway khi có hạ tầng được cấp quyền; nghiệm thu QR, hủy, hết hạn, retry và đăng nhập thật. Hiện chưa có máy chủ egress Việt Nam |
 | Lệnh/media/maps/danh bạ | YouTube/link, MapDirection tại MainActivity, 5 lệnh media qua MediaSession Binder và contact tổng hợp đã nghiệm thu trên emulator; còn ma trận lệnh đầy đủ: thiếu app, từ chối quyền, xác nhận/hủy, media app thật, Maps qua backend và danh bạ đầu cuối |
-| Wake/UI/Premium | Âm thanh dương/âm và tiếng ồn; ngừng micro khi logout/mất quyền; các trạng thái UI, entitlement hết hạn, khôi phục process, offline |
+| Wake/UI/Premium | Cải thiện wake model/grammar theo dữ liệu được phép; hiện synthetic gate đạt 4/15 dương, 0/60 false wake; cần đa giọng, tiếng ồn và mẫu giọng người được phép. Còn ngừng micro khi logout/mất quyền; các trạng thái UI, entitlement hết hạn, khôi phục process, offline |
 | Phát hành | Signer/package/version, tải trọn APK và checksum, catalog đúng kênh, nâng cấp giữ dữ liệu, rollback và quan sát theo release |
 
 ## Cổng hoàn thành
