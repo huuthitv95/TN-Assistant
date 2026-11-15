@@ -296,6 +296,7 @@ class TnUserSettingsSurface(
                     if (!prefs.getBoolean("floating_enabled", false)) warning(section, "Tính năng chỉ hỗ trợ khi Tiện ích nổi được bật")
                     row(section, "TN ơi", if (prefs.getBoolean("wake_word_enabled", false)) "Bật" else "Tắt", rootUtility = true, badge = R.drawable.tn_settings_badge_beta) { wake() }
                     toggle(section, "Lời chào khởi động", "welcome_enabled", true)
+                    toggle(section, "Nhắc lời chào sau khi khởi động thiết bị", "welcome_after_boot", false)
                 }
                 2 -> appRow(section, "Ứng dụng bản đồ mặc định", "map_package", maps, "com.google.android.apps.maps")
                 3 -> {

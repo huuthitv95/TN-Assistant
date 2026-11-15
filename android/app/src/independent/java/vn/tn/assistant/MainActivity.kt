@@ -64,6 +64,7 @@ import vn.tn.assistant.audio.TnRecordingSessionGate
 import vn.tn.assistant.audio.TnWakeService
 import vn.tn.assistant.audio.TnWakeUi
 import vn.tn.assistant.auth.TnSessionStore
+import vn.tn.assistant.boot.TnBootWelcomeReceiver
 import vn.tn.assistant.api.TnSpeechStreamFallback
 import vn.tn.assistant.api.TnVoiceBackendClient
 import vn.tn.assistant.audio.TnSpeechAudioFocus
@@ -197,7 +198,7 @@ class MainActivity : Activity() {
             )
         }.getOrNull()
         val launchSource = activationSource(intent)
-        welcomeLaunchEligible = launchSource == "launcher"
+        welcomeLaunchEligible = launchSource == "launcher" || launchSource == "boot_welcome"
         restoredUserSettings = savedInstanceState?.getBundle("tn_settings_ui")
         window.statusBarColor = Color.rgb(0, 8, 23)
         window.navigationBarColor = Color.rgb(0, 8, 23)
@@ -1138,7 +1139,8 @@ class MainActivity : Activity() {
                 val text = message?.takeIf { it.isNotBlank() && it.length <= 500 } ?: return@execute
                 val playbackActive = { active() && preferences.getBoolean("welcome_enabled", true) }
                 if (playbackActive() && playSpeech(text, accessToken ?: token, playbackActive) && playbackActive()) {
-                    preferences.edit().putString(playedKey, day).commit()
+                    preferences.edit().putString(playedKey, day)
+                        .putString(TnBootWelcomeReceiver.KEY_LAST_PLAYED_DAY, day).commit()
                 }
             } catch (_: Exception) {
                 // A greeting failure must leave the daily mark empty and the assistant usable.
@@ -1250,7 +1252,7 @@ class MainActivity : Activity() {
     private fun saveUserSetting(key: String, value: Any) {
         if (key == "wake_word_enabled") { setWakeEnabled(value == true); return }
         val settings = userSettings
-        val local = setOf("floating_enabled", "floating_size", "floating_opacity", "video_warning", "record_mode", "playback_mode")
+        val local = setOf("floating_enabled", "floating_size", "floating_opacity", "video_warning", "record_mode", "playback_mode", TnBootWelcomeReceiver.KEY_ENABLED)
         if (key in local) {
             if (key == "floating_enabled") {
                 if (value == true && !notificationGranted()) {
@@ -1394,7 +1396,7 @@ class MainActivity : Activity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent); setIntent(intent)
         welcomeRevision.incrementAndGet()
-        welcomeLaunchEligible = activationSource(intent) == "launcher"
+        welcomeLaunchEligible = activationSource(intent) in setOf("launcher", "boot_welcome")
         if (accessToken.isNullOrBlank()) return
         val source = activationSource(intent)
         val floatingAction = intent.getBooleanExtra(TnFloatingControlService.EXTRA_OPEN_PLAN, false) ||
@@ -1403,9 +1405,11 @@ class MainActivity : Activity() {
         handleFloatingIntent()
         if (!floatingAction && intent.action == Intent.ACTION_MAIN) renderHome()
         recordEvent("app_activated", source)
+        maybeStartWelcome()
     }
 
     private fun activationSource(intent: Intent?): String = when {
+        intent?.getBooleanExtra(TnBootWelcomeReceiver.EXTRA_BOOT_WELCOME, false) == true -> "boot_welcome"
         intent?.getBooleanExtra(TnFloatingControlService.EXTRA_OPEN_PLAN, false) == true -> "floating_plan"
         intent?.getBooleanExtra(TnFloatingControlService.EXTRA_OPEN_TRAFFIC, false) == true -> "floating_traffic"
         intent?.getBooleanExtra(TnFloatingControlService.EXTRA_OPEN_ASSISTANT, false) == true -> "floating_assistant"

@@ -21,4 +21,8 @@
     <string name="tn_welcome_finish_title">Cài đặt hoàn tất</string>
     <string name="tn_welcome_finish_description">Thiết lập tài khoản đã hoàn tất. Bắt đầu trò chuyện hoặc nhập lệnh cho TN Assistant.</string>
     <string name="tn_welcome_finish">BẮT ĐẦU SỬ DỤNG</string>
+    <string name="tn_boot_welcome_channel">Lời chào sau khởi động</string>
+    <string name="tn_boot_welcome_channel_description">Thông báo để mở TN Assistant và nghe lời chào hằng ngày sau khi thiết bị khởi động.</string>
+    <string name="tn_boot_welcome_title">TN Assistant đã khởi động</string>
+    <string name="tn_boot_welcome_message">Chạm để mở TN và nghe lời chào hôm nay.</string>
 </resources>
