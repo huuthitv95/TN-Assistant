@@ -1,7 +1,9 @@
 package vn.tn.assistant.ui
 
 import android.content.Context
+import android.content.Intent
 import androidx.test.core.app.ActivityScenario
+import androidx.lifecycle.Lifecycle
 import androidx.test.platform.app.InstrumentationRegistry
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
@@ -18,15 +20,15 @@ import java.net.InetAddress
 import java.net.ServerSocket
 import java.net.Socket
 import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
-/** Cancellation after TTS must not fetch the stale signed audio URL. */
+/** Leaving the real launcher activity during TTS must not fetch or mark stale welcome audio. */
 class TnWelcomeCancellationRuntimeTest {
-    @Test fun canceledPlaybackStopsBeforeAudioDownload() {
+    @Test fun leavingActivityDuringTtsSkipsAudioDownloadAndDailyMark() {
         assertEquals("This loopback-only test must use the debug backend", "http://127.0.0.1:8088", BuildConfig.API_BASE_URL)
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val context = instrumentation.targetContext
@@ -34,44 +36,47 @@ class TnWelcomeCancellationRuntimeTest {
         val store = TnSessionStore.get(context)
         val fixture = LocalFixtureServer()
         var scenario: ActivityScenario<MainActivity>? = null
-        val executor = Executors.newSingleThreadExecutor()
+        lateinit var activity: MainActivity
+        val preferences = context.getSharedPreferences("tn-session-v1", Context.MODE_PRIVATE)
+        val playedKey = "tn_welcome_last_played_day_" + MessageDigest.getInstance("SHA-256")
+            .digest("fixture-user".toByteArray(Charsets.UTF_8)).joinToString("") {
+                (it.toInt() and 0xff).toString(16).padStart(2, '0')
+            }
         try {
             fixture.start()
             store.clear()
             store.accept(JSONObject().put("access_token", "fixture-access").put("refresh_token", "fixture-refresh"))
-            context.getSharedPreferences("tn-session-v1", Context.MODE_PRIVATE).edit()
+            preferences.edit()
                 .putBoolean("tn_welcome_completed_v2", true)
-                .putBoolean("welcome_enabled", false)
+                .putBoolean("welcome_enabled", true)
                 .putString("device_id", "welcome-cancellation-fixture")
                 .commit()
 
-            scenario = ActivityScenario.launch(MainActivity::class.java)
-            lateinit var activity: MainActivity
+            val launcher = Intent(context, MainActivity::class.java)
+                .setAction(Intent.ACTION_MAIN)
+                .addCategory(Intent.CATEGORY_LAUNCHER)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            scenario = ActivityScenario.launch(launcher)
             scenario!!.onActivity { activity = it }
-            val active = AtomicBoolean(true)
-            val playSpeech = MainActivity::class.java.getDeclaredMethod(
-                "playSpeech", String::class.java, String::class.java, Function0::class.java,
-            ).apply { isAccessible = true }
-            val activeCheck: () -> Boolean = { active.get() }
-            val playback = executor.submit<Boolean> {
-                playSpeech.invoke(activity, "TN ready", "fixture-access", activeCheck) as Boolean
-            }
-
             assertTrue("Playback never reached the local /v1/tts fixture", fixture.ttsStarted.await(10, TimeUnit.SECONDS))
-            active.set(false)
+            scenario!!.moveToState(Lifecycle.State.CREATED)
             fixture.releaseTts.countDown()
-            val result = runCatching { playback.get(10, TimeUnit.SECONDS) }
-            assertTrue("Canceled playback must return without downloading audio", result.isSuccess)
-            assertFalse("Canceled playback must not start", result.getOrThrow())
+            awaitWelcomeWorker(activity)
             assertEquals("A stale HTTPS audio URL was requested after cancellation", 0, fixture.audioTlsAttempts.get())
+            assertFalse("Canceled launcher welcome wrote a daily completion mark", preferences.contains(playedKey))
         } finally {
             fixture.releaseTts.countDown()
             runCatching { scenario?.close() }
-            executor.shutdownNow()
             fixture.close()
             store.clear()
             isolated.close()
         }
+    }
+
+    private fun awaitWelcomeWorker(activity: MainActivity) {
+        val executor = MainActivity::class.java.getDeclaredField("welcomeWorker")
+            .apply { isAccessible = true }.get(activity) as java.util.concurrent.ExecutorService
+        executor.submit { }.get(10, TimeUnit.SECONDS)
     }
 
     private class LocalFixtureServer : AutoCloseable {
@@ -118,13 +123,17 @@ class TnWelcomeCancellationRuntimeTest {
                 val path = request?.getOrNull(1)?.substringBefore('?')
                 if (path == "/v1/tts") {
                     ttsStarted.countDown()
-                    releaseTts.await(10, TimeUnit.SECONDS)
+                    releaseTts.await(30, TimeUnit.SECONDS)
                 }
                 val payload = when (path) {
                     "/v1/auth/refresh" -> JSONObject().put("access_token", "fixture-access")
                         .put("refresh_token", "fixture-refresh").toString()
                     "/v1/me" -> JSONObject().put("user", JSONObject().put("id", "fixture-user")).toString()
-                    "/v1/settings" -> JSONObject().put("welcome_enabled", false).toString()
+                    "/v1/settings" -> JSONObject().put("welcome_enabled", true).toString()
+                    "/v1/welcome/rule" -> JSONObject().put("status", 0).put("data", JSONObject()
+                        .put("onboardMessages", org.json.JSONArray().put(JSONObject()
+                            .put("id", "tn.welcome.ready.v1").put("action", "SPEAK_ONLY")
+                            .put("message", "TN ready")))).toString()
                     "/v1/tts" -> JSONObject().put("url", "https://127.0.0.1:8088/v1/tts/audio/fixture").toString()
                     else -> "{}"
                 }.toByteArray(StandardCharsets.UTF_8)
