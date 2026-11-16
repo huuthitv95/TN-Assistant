@@ -1847,6 +1847,7 @@ class MainActivity : Activity() {
     private fun playSpeech(text: String, token: String, active: () -> Boolean): Boolean {
         if (text.isBlank() || !active()) return false
         val response = api("/v1/tts", JSONObject().put("text", text), token)
+        if (!active()) return false
         val file = apiAudio(response.optString("url"), token)
         val player = MediaPlayer()
         val completed = CountDownLatch(1)
