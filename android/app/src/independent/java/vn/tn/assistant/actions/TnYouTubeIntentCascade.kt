@@ -6,9 +6,8 @@ import android.net.Uri
 import org.json.JSONObject
 
 /** Builds the original app's direct-link/search/video routes and resolves them
- * through the selected video app, YouTube, then Android's HTTPS handlers. */
+ * through the selected app, the original video-client order, then HTTPS handlers. */
 internal object TnYouTubeIntentCascade {
-    private const val YOUTUBE_PACKAGE = "com.google.android.youtube"
     private val videoIdPattern = Regex("^[A-Za-z0-9_-]{11}$")
 
     fun build(
@@ -37,8 +36,7 @@ internal object TnYouTubeIntentCascade {
 
         val selected = context.getSharedPreferences("tn-session-v1", Context.MODE_PRIVATE)
             .getString("video_package", "").orEmpty().trim()
-        val packageCascade = listOf(selected, YOUTUBE_PACKAGE).filter(String::isNotBlank).distinct()
-        for (packageName in packageCascade) {
+        for (packageName in TnVideoPackageCascade.candidates(selected)) {
             val candidate = viewIntent(target).setPackage(packageName)
             if (candidate.resolveActivity(context.packageManager) != null) return candidate
         }
