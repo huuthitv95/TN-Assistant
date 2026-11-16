@@ -26,6 +26,7 @@ import vn.tn.assistant.MainActivity
 import vn.tn.assistant.R
 import vn.tn.assistant.api.TnVoiceBackendClient
 import vn.tn.assistant.auth.TnSessionStore
+import vn.tn.assistant.audio.tn.TnWakeTurnPolicy
 import vn.tn.assistant.audio.tn.WakeCommandWindow
 import vn.tn.assistant.audio.tn.WakePhrase
 import vn.tn.assistant.ui.TnFloatingControlService
@@ -207,12 +208,12 @@ class TnWakeService : Service() {
     }
 
     private fun process(utterance: WakeCommandWindow.Utterance): Boolean {
-        if (!enabled()) return false
+        if (!canProcessTurn()) return false
         val transcript = backend.pcm(utterance.pcm).optString("text").trim()
-        if (!enabled()) return false
+        if (!canProcessTurn()) return false
         val text = if (utterance.requiresWakePrefix) WakePhrase.commandAfterConfirmedWake(transcript) ?: return false else transcript
         if (text.isBlank()) return true // A wake alone waits for the next spoken command.
-        main.post { if (enabled()) TnWakeUi.transcript(text) }
+        main.post { if (canProcessTurn()) TnWakeUi.transcript(text) }
         val device = prefs.getString("device_id", null) ?: throw IOException("Thiếu định danh thiết bị TN")
         val owner = loginOwner ?: return false
         val payload = vn.tn.assistant.api.TnAssistantConversation.shared.request(text,
@@ -224,9 +225,11 @@ class TnWakeService : Service() {
             if (location == null) throw IOException("Mở TN để cấp quyền vị trí trước khi hỏi thời tiết.")
             payload.put("lat", location.latitude).put("lon", location.longitude)
         }
+        if (!canProcessTurn()) return false
         val response = backend.json("/v1/assistant/text", payload)
+        if (!canProcessTurn()) return false
         if (response.optBoolean("replayed")) return true
-        val turnActive = { enabled() && !cancelCapture.get() && !forcedCapture.get() }
+        val turnActive = { canProcessTurn() && !cancelCapture.get() && !forcedCapture.get() }
         val needsConfirmation = response.optBoolean("confirmation_required")
         if (needsConfirmation && !vn.tn.assistant.actions.TnActionConfirmation.shared.offer(response, owner, turnActive))
             throw IOException("Chưa nhận được thông tin xác nhận hợp lệ. Vui lòng gửi lại yêu cầu.")
@@ -307,6 +310,7 @@ class TnWakeService : Service() {
 
     private fun enabled() = active.get() && consented(this) && !Thread.currentThread().isInterrupted &&
         loginOwner?.let { TnSessionStore.get(this).ownsActions(it) } == true
+    private fun canProcessTurn() = TnWakeTurnPolicy.canProcess(enabled(), microphoneAllowed(this))
     private fun update(text: String, listening: Boolean) {
         message = text
         listeningForCommand = listening
