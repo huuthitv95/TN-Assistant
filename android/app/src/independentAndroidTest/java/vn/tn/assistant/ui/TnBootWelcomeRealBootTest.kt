@@ -2,6 +2,7 @@ package vn.tn.assistant.ui
 
 import android.Manifest
 import android.app.NotificationManager
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.SystemClock
@@ -9,7 +10,9 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.test.platform.app.InstrumentationRegistry
 import org.json.JSONObject
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import vn.tn.assistant.MainActivity
@@ -25,6 +28,51 @@ class TnBootWelcomeRealBootTest {
         assertTrue("Use a clean AVD notification channel so cleanup preserves prior state",
             context.getSystemService(NotificationManager::class.java)
                 .getNotificationChannel(TnBootWelcomeReceiver.CHANNEL_ID) == null)
+    }
+
+    @Test fun loggedOutDeviceDoesNotReceiveBootWelcomeReminder() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val context = instrumentation.targetContext
+        assertTrue(context.packageName == "vn.tn.assistant.preview")
+        val permissionOriginallyGranted = Build.VERSION.SDK_INT < 33 ||
+            context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        if (!permissionOriginallyGranted && Build.VERSION.SDK_INT >= 33) {
+            instrumentation.uiAutomation.grantRuntimePermission(context.packageName, Manifest.permission.POST_NOTIFICATIONS)
+        }
+        assertNotificationsEnabled(context)
+        val notifications = NotificationManagerCompat.from(context)
+        val manager = context.getSystemService(NotificationManager::class.java)
+        assertNull("The boot reminder must not already be active", notifications.activeNotifications.singleOrNull {
+            it.id == TnBootWelcomeReceiver.NOTIFICATION_ID
+        })
+        assertNull("Use the preflight-isolated boot channel", manager.getNotificationChannel(TnBootWelcomeReceiver.CHANNEL_ID))
+
+        TnIsolatedActivityPreferences(context).use {
+            val preferences = context.getSharedPreferences("tn-session-v1", 0)
+            val session = TnSessionStore.get(context)
+            try {
+                session.clear()
+                assertTrue(preferences.edit()
+                    .putBoolean(TnBootWelcomeReceiver.KEY_ENABLED, true)
+                    .putBoolean("welcome_enabled", true)
+                    .remove(TnBootWelcomeReceiver.KEY_LAST_PLAYED_DAY)
+                    .remove(TnBootWelcomeReceiver.KEY_LAST_PROMPTED)
+                    .commit())
+                assertFalse("Logout must leave no authenticated session", session.hasSession())
+
+                TnBootWelcomeReceiver().onReceive(context, Intent(Intent.ACTION_BOOT_COMPLETED))
+
+                assertNull("A logged-out Preview device must not receive a boot reminder",
+                    notifications.activeNotifications.singleOrNull { it.id == TnBootWelcomeReceiver.NOTIFICATION_ID })
+                assertNull("A logged-out boot must not be marked as prompted",
+                    preferences.getString(TnBootWelcomeReceiver.KEY_LAST_PROMPTED, null))
+                assertNull("A logged-out boot must not create its notification channel",
+                    manager.getNotificationChannel(TnBootWelcomeReceiver.CHANNEL_ID))
+            } finally {
+                notifications.cancel(TnBootWelcomeReceiver.NOTIFICATION_ID)
+                manager.deleteNotificationChannel(TnBootWelcomeReceiver.CHANNEL_ID)
+            }
+        }
     }
 
     @Test fun stageOneTimeSessionAndBootWelcomeOptInForHostReboot() {
