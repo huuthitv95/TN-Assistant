@@ -102,7 +102,9 @@ class TnBootWelcomeRealBootTest {
         assertNotificationsEnabled(context)
 
         val manager = NotificationManagerCompat.from(context)
-        val deadline = SystemClock.elapsedRealtime() + 20_000
+        // API 37's emulator can deliver BOOT_COMPLETED manifest receivers more than a minute
+        // after sys.boot_completed becomes 1 while its Google app receivers drain.
+        val deadline = SystemClock.elapsedRealtime() + 180_000
         var notification: android.app.Notification? = null
         while (SystemClock.elapsedRealtime() < deadline) {
             notification = manager.activeNotifications.singleOrNull {

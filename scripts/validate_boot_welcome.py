@@ -92,7 +92,7 @@ def main():
 
     def instrumentation(method):
         result = adb('shell', 'am', 'instrument', '-w', '-r', '-e', 'class',
-                     TEST_CLASS + '#' + method, TEST_COMPONENT, timeout=90).decode('utf-8', errors='replace')
+                     TEST_CLASS + '#' + method, TEST_COMPONENT, timeout=240).decode('utf-8', errors='replace')
         if 'OK (1 test)' not in result or 'FAILURES!!!' in result:
             raise RuntimeError('Boot acceptance instrumentation failed: ' + method)
 
