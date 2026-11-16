@@ -113,10 +113,14 @@ class TnRoadRuntimeTest {
                 dialog.show()
                 try {
                     val alert=descendants(dialog.window!!.decorView).single {it.tag=="tnRoadAlert"} as TextView
-                    fun update(kmh:Double) {callback(TnRoadMatcher.Result("matched",road,
-                        TnRoadMatcher.Fix(10.0,106.0,5.0,0.0,kmh/3.6,SystemClock.elapsedRealtime())))}
-                    update(54.0);assertEquals("",alert.text.toString())
-                    update(55.0);assertTrue(alert.text.contains("ngưỡng"))
+                    fun update(kmh:Double) {
+                        SystemClock.sleep(5)
+                        callback(TnRoadMatcher.Result("matched",road,
+                            TnRoadMatcher.Fix(10.0,106.0,5.0,0.0,kmh/3.6,SystemClock.elapsedRealtime())))
+                    }
+                    update(55.0);assertEquals("",alert.text.toString()) // Strictly above limit + offset.
+                    update(57.0);assertTrue("Expected warning above the +5 km/h offset, got '${alert.text}'",alert.text.contains("ngưỡng"))
+                    update(57.0);assertTrue(alert.text.contains("ngưỡng"))
                     callback(TnRoadMatcher.Result("ambiguous"));assertEquals("",alert.text.toString())
                     preferences.edit().putString("traffic_warning_mode","none").commit()
                     update(60.0);assertEquals("",alert.text.toString())
