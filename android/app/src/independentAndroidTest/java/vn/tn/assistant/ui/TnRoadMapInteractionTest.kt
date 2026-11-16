@@ -162,4 +162,74 @@ class TnRoadMapInteractionTest {
             }
         }
     }
+
+    @Test fun revokingOverlayPermissionDetachesTheSpeedSign() {
+        assumeTrue(InstrumentationRegistry.getArguments().getString("roadMap") == "granted")
+        assertTrue(android.os.Build.FINGERPRINT.contains("generic") || android.os.Build.MODEL.contains("sdk"))
+        assertTrue("Google Maps must be installed", context.packageManager.getLaunchIntentForPackage("com.google.android.apps.maps") != null)
+        val info = automation.serviceInfo
+        val oldFlags = info.flags
+        val floating = TnFloatingControlService.settings(context)
+        val foregroundKey = "tn_assistant_foreground_suppresses_overlay"
+        val saved = floating.all.filterKeys { it in setOf(foregroundKey, TnFloatingControlService.KEY_HIDDEN) }
+        val main = Handler(Looper.getMainLooper())
+        var overlay: TnRoadMapOverlay? = null
+        val tick = object : Runnable {
+            override fun run() {
+                overlay?.update(matched())
+                main.postDelayed(this, 500)
+            }
+        }
+        TnOverlayAppOpTestScope(context, "allow").use {
+            TnUsageStatsAppOpTestScope(context, "allow").use {
+                TnIsolatedActivityPreferences(context).use {
+                    try {
+                        info.flags = oldFlags or AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS
+                        automation.serviceInfo = info
+                        assertTrue(TnFloatingControlService.hasPermission(context))
+                        assertTrue(TnMapActivityMonitor.hasPermission(context))
+                        instrumentation.runOnMainSync {
+                            floating.edit().putBoolean(foregroundKey, false)
+                                .putBoolean(TnFloatingControlService.KEY_HIDDEN, false).commit()
+                            context.getSharedPreferences("tn-session-v1", Context.MODE_PRIVATE).edit()
+                                .putBoolean("traffic_always_on_map", true)
+                                .putString("traffic_warning_mode", "display").commit()
+                            overlay = TnRoadMapOverlay(context)
+                            main.post(tick)
+                            context.startActivity(requireNotNull(context.packageManager.getLaunchIntentForPackage("com.google.android.apps.maps"))
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                        }
+                        waitFor("Map sign was not visible before permission revocation") {
+                            var visible = false
+                            instrumentation.runOnMainSync { visible = overlay?.isVisible == true }
+                            visible && bounds()?.isEmpty == false
+                        }
+                        TnOverlayAppOpTestScope(context, "ignore").use {
+                            assertFalse("Overlay app-op should be revoked", TnFloatingControlService.hasPermission(context))
+                            waitFor("Revoking overlay access did not remove the sign") {
+                                var attached = false
+                                instrumentation.runOnMainSync { attached = overlay?.isVisible == true }
+                                !attached && bounds() == null
+                            }
+                            SystemClock.sleep(1200)
+                            assertNull("A later poll restored the sign without overlay access", bounds())
+                        }
+                        assertTrue("The scoped test grant should be restored", TnFloatingControlService.hasPermission(context))
+                    } finally {
+                        instrumentation.runOnMainSync {
+                            main.removeCallbacksAndMessages(null)
+                            overlay?.close()
+                            context.startActivity(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                        }
+                        info.flags = oldFlags
+                        automation.serviceInfo = info
+                        val editor = floating.edit().remove(foregroundKey).remove(TnFloatingControlService.KEY_HIDDEN)
+                        saved.forEach { (key, value) -> editor.putBoolean(key, value as Boolean) }
+                        editor.commit()
+                    }
+                }
+            }
+        }
+    }
 }
