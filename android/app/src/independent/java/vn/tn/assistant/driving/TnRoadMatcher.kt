@@ -47,16 +47,17 @@ internal object TnRoadMatcher {
     }
 
     fun match(fix: Fix, snapshot: Snapshot, nowElapsed: Long, nowUtc: Long): Result {
-        if (!coordinates(Point(fix.lat,fix.lon)) || !fix.accuracy.isFinite() || fix.accuracy !in 0.0..20.0 ||
-            nowElapsed - fix.elapsedMs !in 0..10000) return Result("location_unreliable")
-        if (fix.bearing == null || !fix.bearing.isFinite() || fix.bearing !in 0.0..<360.0 ||
-            fix.speedMps == null || !fix.speedMps.isFinite() || fix.speedMps !in 2.0..70.0) return Result("direction_unavailable")
-        if (!snapshot.complete || nowElapsed - snapshot.elapsedMs !in 0..15000) return Result("data_unavailable")
         val point = Point(fix.lat,fix.lon)
+        val locationFix = fix.takeIf { coordinates(point) }
+        if (locationFix == null || !fix.accuracy.isFinite() || fix.accuracy !in 0.0..20.0 ||
+            nowElapsed - fix.elapsedMs !in 0..10000) return Result("location_unreliable",fix=locationFix)
+        if (fix.bearing == null || !fix.bearing.isFinite() || fix.bearing !in 0.0..<360.0 ||
+            fix.speedMps == null || !fix.speedMps.isFinite() || fix.speedMps !in 2.0..70.0) return Result("direction_unavailable",fix=locationFix)
+        if (!snapshot.complete || nowElapsed - snapshot.elapsedMs !in 0..15000) return Result("data_unavailable",fix=locationFix)
         // Leave enough margin for a segment's midpoint and a parallel unknown
         // road. A cached query cannot establish coverage after the car leaves it.
         if (snapshot.center != null && (snapshot.radius == null || !snapshot.radius.isFinite() ||
-                distance(point,snapshot.center) > snapshot.radius-100)) return Result("query_outdated")
+                distance(point,snapshot.center) > snapshot.radius-100)) return Result("query_outdated",fix=locationFix)
         val candidates = mutableListOf<Pair<Road,Double>>()
         var uncertain = false
         for (road in snapshot.roads) {
@@ -74,20 +75,21 @@ internal object TnRoadMatcher {
             val crossTrack = distanceToSegment(point,start,end) ?: continue
             if (crossTrack <= max(8.0,fix.accuracy)) candidates += road to crossTrack
         }
-        if (uncertain) return Result("geometry_missing")
-        if (candidates.isEmpty()) return Result("no_matching_road")
+        if (uncertain) return Result("geometry_missing",fix=locationFix)
+        if (candidates.isEmpty()) return Result("no_matching_road",fix=locationFix)
         val best = candidates.minBy { it.second }
         // Two nearby roads, or conflicting speeds on one road, are ambiguous
         // even when the nearest point has a valid limit. Unknowns participate.
         val alternatives = candidates.filter { it.second <= best.second + max(5.0,fix.accuracy) }
-        if (alternatives.any { it.first.group != best.first.group || it.first.speed != best.first.speed }) return Result("ambiguous")
-        if (alternatives.any { it.first.updatedAt == null || nowUtc - it.first.updatedAt!! !in 0..90L*86400000 }) return Result("source_stale")
-        if (best.first.speed == null) return Result("limit_unknown")
+        if (alternatives.any { it.first.group != best.first.group || it.first.speed != best.first.speed }) return Result("ambiguous",fix=locationFix)
+        if (alternatives.any { it.first.updatedAt == null || nowUtc - it.first.updatedAt!! !in 0..90L*86400000 }) return Result("source_stale",fix=locationFix)
+        if (best.first.speed == null) return Result("limit_unknown",fix=locationFix)
         return Result("matched",best.first,fix)
     }
 
     private fun coordinates(p: Point) = p.lat.isFinite() && p.lon.isFinite() && abs(p.lat)<=90 && abs(p.lon)<=180
     private fun angle(a: Double,b: Double): Double { val delta=abs(a-b)%360; return min(delta,360-delta) }
+    internal fun distanceMeters(a: Point,b: Point): Double = distance(a,b)
     private fun distance(a: Point,b: Point): Double {
         val x=(b.lon-a.lon)*PI/180*cos((a.lat+b.lat)*PI/360)
         val y=(b.lat-a.lat)*PI/180

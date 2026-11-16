@@ -24,6 +24,14 @@ class TnRoadMatcherTest {
         for (f in listOf(fix.copy(bearing=null),fix.copy(speedMps=0.0),fix.copy(bearing=360.0)))
             assertEquals("direction_unavailable",match(listOf(road),f).state)
     }
+    @Test fun unmatchedResultsKeepOnlyValidCoordinatesForDistanceAccounting() {
+        assertEquals(fix,match(emptyList(),fix).fix)
+        val missingSpeed=match(emptyList(),fix.copy(speedMps=null)).fix
+        assertEquals(fix.lat,missingSpeed?.lat ?: Double.NaN,0.0)
+        assertEquals(fix.lon,missingSpeed?.lon ?: Double.NaN,0.0)
+        assertNull(missingSpeed?.speedMps)
+        assertNull(match(emptyList(),fix.copy(lat=91.0)).fix)
+    }
     @Test fun nearbyUnknownRoadCannotBeDiscardedInFavorOfKnownSpeed() {
         assertEquals("ambiguous",match(listOf(road,road.copy(id="unknown",group="parallel",speed=null))).state)
         assertEquals("limit_unknown",match(listOf(road.copy(speed=null))).state)
