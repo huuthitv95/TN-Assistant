@@ -33,6 +33,7 @@ class ImportOSMTests(unittest.TestCase):
 <node id="1" lat="10.0" lon="106.0" version="1"/>
 <node id="2" lat="10.001" lon="106.0" version="1"/>
 <node id="3" lat="10.002" lon="106.0" version="1"><tag k="highway" v="speed_camera"/></node>
+<node id="4" lat="10.003" lon="106.0" version="1"><tag k="traffic_sign" v="VN:130"/></node>
 <way id="10" version="1"><nd ref="1"/><nd ref="2"/><tag k="highway" v="residential"/><tag k="maxspeed" v="50"/></way>
 <way id="11" version="1"><nd ref="2"/><nd ref="3"/><tag k="highway" v="residential"/><tag k="maxspeed" v="80"/><tag k="maxspeed:conditional" v="50 @ (wet)"/></way>
 </osm>''',encoding='utf-8')
@@ -64,7 +65,25 @@ class ImportOSMTests(unittest.TestCase):
             self.assertTrue(all(r['kind']=='road' and r['max_speed'] is not None for r in speed_rows))
             filtered_stats=json.loads(filtered.with_suffix('.ndjson.summary.json').read_text(encoding='utf-8'))
             self.assertEqual(filtered_stats['omitted_unknown_speed'],len(conditional))
-            self.assertEqual(filtered_stats['omitted_non_road'],1)
+            self.assertEqual(filtered_stats['omitted_non_road'],2)
+
+            hazards=Path(folder)/'hazards.ndjson'
+            result=subprocess.run([sys.executable,str(ROOT/'scripts/import_osm.py'),'--input',str(source),
+                '--output',str(hazards),'--hazards-only'],capture_output=True,text=True,encoding='utf-8')
+            self.assertEqual(result.returncode,0,result.stderr)
+            hazard_rows=[json.loads(line) for line in hazards.read_text(encoding='utf-8').splitlines()]
+            self.assertEqual({'camera','sign'},{row['kind'] for row in hazard_rows})
+            self.assertEqual({'701','130'},{row['type'] for row in hazard_rows})
+            self.assertTrue(all(row['max_speed'] is None for row in hazard_rows))
+            hazard_stats=json.loads(hazards.with_suffix('.ndjson.summary.json').read_text(encoding='utf-8'))
+            self.assertEqual((0,1,1,0,2),(hazard_stats['roads'],hazard_stats['camera'],hazard_stats['sign'],
+                hazard_stats['known_speed'],hazard_stats['unknown_speed']))
+
+            conflicting_modes=subprocess.run([sys.executable,str(ROOT/'scripts/import_osm.py'),'--input',str(source),
+                '--output',str(hazards),'--hazards-only','--known-speed-only'],
+                capture_output=True,text=True,encoding='utf-8')
+            self.assertNotEqual(conflicting_modes.returncode,0)
+            self.assertIn('are separate extract modes',conflicting_modes.stderr)
 
 class RoadSegmentsTest(unittest.TestCase):
     def test_source_timestamp_never_uses_copy_time(self):

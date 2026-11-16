@@ -34,6 +34,28 @@ def fixture_row(identifier, offset=0.0):
     }
 
 
+def fixture_point(identifier, kind, type_code, source_updated_at, max_speed=None):
+    row = {
+        "id": identifier,
+        "kind": kind,
+        "latitude": 10.7769,
+        "longitude": 106.7009,
+        "bearing": 0.0,
+        "direction_unknown": True,
+        "name": "Fixture hazard",
+        "type": type_code,
+        "osm_node": 1,
+        "osm_version": 1,
+        "osm_tags": {"highway": "speed_camera"} if kind == "camera" else {"traffic_sign": "VN:130"},
+        "source": "https://download.geofabrik.de/asia/vietnam-latest.osm.pbf",
+        "source_updated_at": source_updated_at,
+        "license": "ODbL-1.0",
+    }
+    if max_speed is not None:
+        row["max_speed"] = max_speed
+    return row
+
+
 class ImportOsmProductionTest(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -101,6 +123,56 @@ class ImportOsmProductionTest(unittest.TestCase):
             self.assertIs(config["driving_enabled"], False)
         finally:
             connection.close()
+
+    def test_supported_hazard_points_import_without_enabling_driving(self):
+        source_updated_at = self.rows[0]["source_updated_at"]
+        rows = [
+            fixture_point("osm-node-3", "camera", "701", source_updated_at),
+            fixture_point("osm-node-4", "sign", "130", source_updated_at, 30),
+        ]
+        raw = "".join(json.dumps(row, separators=(",", ":")) + "\n" for row in rows).encode()
+        self.data.write_bytes(raw)
+        self.summary.write_text(json.dumps({
+            "roads": 0, "camera": 1, "sign": 1, "known_speed": 1, "unknown_speed": 1,
+            "source": rows[0]["source"], "source_updated_at": source_updated_at,
+            "license": "ODbL-1.0", "attribution": "OpenStreetMap contributors",
+            "license_url": "https://www.openstreetmap.org/copyright", "bbox": None,
+            "output_bytes": len(raw), "output_sha256": hashlib.sha256(raw).hexdigest(),
+        }), encoding="utf-8")
+
+        summary = validate_dataset(self.data, self.summary)
+        self.assertEqual("supported_hazards", summary["verified_mode"])
+        result = import_dataset(self.db, self.data, summary, self.backups, apply=True)
+        self.assertEqual(2, result["imported"])
+        self.assertEqual({"camera": 1, "sign": 1}, result["source_kind_counts"])
+        self.assertEqual(3, result["roads_after"])
+        self.assertEqual(result["roads_after"], result["index_after"])
+        self.assertFalse(result["driving_enabled"])
+
+        connection = sqlite3.connect(self.db)
+        try:
+            stored = [json.loads(row[0]) for row in connection.execute(
+                "SELECT data FROM managed_roads WHERE kind IN ('camera','sign') ORDER BY kind")]
+            self.assertEqual({"camera", "sign"}, {row["kind"] for row in stored})
+            self.assertFalse(json.loads(connection.execute(
+                "SELECT data FROM records WHERE kind='config' AND id='managed_data'").fetchone()[0])["driving_enabled"])
+        finally:
+            connection.close()
+
+    def test_hazard_dataset_rejects_unsupported_sign_types(self):
+        source_updated_at = self.rows[0]["source_updated_at"]
+        row = fixture_point("osm-node-bad", "sign", "999", source_updated_at)
+        raw = (json.dumps(row, separators=(",", ":")) + "\n").encode()
+        self.data.write_bytes(raw)
+        self.summary.write_text(json.dumps({
+            "roads": 0, "camera": 0, "sign": 1, "known_speed": 0, "unknown_speed": 1,
+            "source": row["source"], "source_updated_at": source_updated_at,
+            "license": "ODbL-1.0", "attribution": "OpenStreetMap contributors",
+            "license_url": "https://www.openstreetmap.org/copyright", "bbox": None,
+            "output_bytes": len(raw), "output_sha256": hashlib.sha256(raw).hexdigest(),
+        }), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "Unsupported traffic-sign type"):
+            validate_dataset(self.data, self.summary)
 
     def test_enabled_configuration_refuses_before_backup_or_write(self):
         connection = sqlite3.connect(self.db)

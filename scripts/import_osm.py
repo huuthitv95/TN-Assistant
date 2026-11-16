@@ -114,9 +114,13 @@ def main():
     parser.add_argument('--bbox', help='min_lon,min_lat,max_lon,max_lat; optional real-region subset')
     parser.add_argument('--known-speed-only', action='store_true',
                         help='export only road segments with an explicit, unconditional speed limit')
+    parser.add_argument('--hazards-only', action='store_true',
+                        help='export only supported speed-camera and traffic-sign points')
     parser.add_argument('--api', help='Explicit backend origin to import; omitted means conversion only')
     parser.add_argument('--token-file', help='Ignored runtime file containing only an admin access token')
     args = parser.parse_args()
+    if args.known_speed_only and args.hazards_only:
+        parser.error('--known-speed-only and --hazards-only are separate extract modes')
     source, output = inside(args.input), inside(args.output)
     metadata_path = source.with_suffix(source.suffix+'.source.json')
     if args.download:
@@ -171,7 +175,10 @@ def main():
             lat,lon=row['latitude'],row['longitude']
             if bbox and not (bbox[0]<=lon<=bbox[2] and bbox[1]<=lat<=bbox[3]):
                 return
-            if args.known_speed_only:
+            if args.hazards_only:
+                if row['kind'] not in {'camera','sign'}:
+                    return
+            elif args.known_speed_only:
                 if row['kind'] != 'road':
                     stats['omitted_non_road']+=1
                     return
@@ -205,6 +212,7 @@ def main():
                     max_speed=speed(tags.get('maxspeed')),type='701' if kind=='camera' else vn_type,
                     osm_tags=tags,osm_version=node.version))
             def way(self,way):
+                if args.hazards_only:return
                 tags=dict(way.tags)
                 if tags.get('highway') not in DRIVABLE or tags.get('access')=='no' or tags.get('motor_vehicle')=='no':return
                 points=[(n.lat,n.lon) if n.location.valid() else None for n in way.nodes]
