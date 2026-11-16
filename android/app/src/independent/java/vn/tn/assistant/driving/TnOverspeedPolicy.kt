@@ -1,9 +1,9 @@
 package vn.tn.assistant.driving
 
-/** Reference q0/c: two consecutive observations and 5 s cooldown.
- * Incomplete decompiled d2/g does not prove the full original timing behavior;
- * distinct fixes, inclusive thresholds, stale-data rejection and road transitions
- * are explicit TN rules.
+/** Reference q0/c defaults to two consecutive observations and a 5 s cooldown.
+ * Reference d2/g converts location speed to integer km/h and compares strictly
+ * greater than the speed limit plus offset. TN keeps its stale-data and road
+ * transition guards around that matching threshold behavior.
  */
 internal class TnOverspeedPolicy {
     data class Decision(val overThreshold: Boolean, val notify: Boolean)
@@ -24,7 +24,8 @@ internal class TnOverspeedPolicy {
         }
         val nextKey="${road.group}|$limit|$mode|$offset"
         if (key!=nextKey) {count=0;key=nextKey}
-        val over=fix.speedMps*3.6 >= limit+offset
+        val speedKmh=(fix.speedMps.toFloat()*3.6f).toInt()
+        val over=speedKmh > limit+offset
         if (fix.elapsedMs<=lastFix) return Decision(over,false)
         if (lastFix!=Long.MIN_VALUE && fix.elapsedMs-lastFix>10000) count=0
         lastFix=fix.elapsedMs

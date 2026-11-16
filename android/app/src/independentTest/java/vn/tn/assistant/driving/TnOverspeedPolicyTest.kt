@@ -37,13 +37,14 @@ class TnOverspeedPolicyTest {
         assertFalse(p.update(result(4000,0.0),"sound",0,4000).overThreshold)
         assertFalse(p.update(result(5000),"sound",0,16000).notify)
     }
-    @Test fun offsetsAndThresholdEqualityFollowSavedSettings() {
+    @Test fun offsetsUseOriginalIntegerKmhAndStrictThreshold() {
         for(offset in listOf(-5,0,5)) {
             val p=TnOverspeedPolicy()
             val threshold=50.0+offset
-            assertFalse(p.update(result(1000,threshold-.1),"sound",offset,1000).overThreshold)
-            assertFalse(p.update(result(2000,threshold),"sound",offset,2000).notify)
-            assertTrue(p.update(result(3000,threshold),"sound",offset,3000).notify)
+            assertFalse(p.update(result(1000,threshold),"sound",offset,1000).overThreshold)
+            assertFalse(p.update(result(2000,threshold+.99),"sound",offset,2000).overThreshold)
+            assertFalse(p.update(result(3000,threshold+1.1),"sound",offset,3000).notify)
+            assertTrue(p.update(result(4000,threshold+1.1),"sound",offset,4000).notify)
         }
     }
     @Test fun newLimitAndSessionResetRequireNewConfirmation() {
