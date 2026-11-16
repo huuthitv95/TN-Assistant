@@ -112,6 +112,8 @@ def main():
     parser.add_argument('--input', default=str(ROOT/'.runtime/managed-data/vietnam-latest.osm.pbf'))
     parser.add_argument('--output', default=str(ROOT/'.runtime/managed-data/vietnam-roads.ndjson'))
     parser.add_argument('--bbox', help='min_lon,min_lat,max_lon,max_lat; optional real-region subset')
+    parser.add_argument('--known-speed-only', action='store_true',
+                        help='export only road segments with an explicit, unconditional speed limit')
     parser.add_argument('--api', help='Explicit backend origin to import; omitted means conversion only')
     parser.add_argument('--token-file', help='Ignored runtime file containing only an admin access token')
     args = parser.parse_args()
@@ -133,6 +135,7 @@ def main():
         parser.error('Invalid bbox')
     output.parent.mkdir(parents=True, exist_ok=True)
     stats = {'roads':0,'camera':0,'sign':0,'known_speed':0,'unknown_speed':0,
+             'omitted_unknown_speed':0,'omitted_non_road':0,
              'source':extract_source,'source_updated_at':stamp,'license':'ODbL-1.0',
              'attribution':'© OpenStreetMap contributors', 'license_url':'https://www.openstreetmap.org/copyright', 'bbox':bbox}
     api_token = None
@@ -168,6 +171,13 @@ def main():
             lat,lon=row['latitude'],row['longitude']
             if bbox and not (bbox[0]<=lon<=bbox[2] and bbox[1]<=lat<=bbox[3]):
                 return
+            if args.known_speed_only:
+                if row['kind'] != 'road':
+                    stats['omitted_non_road']+=1
+                    return
+                if row['max_speed'] is None:
+                    stats['omitted_unknown_speed']+=1
+                    return
             row.update(source=extract_source,source_updated_at=stamp,license='ODbL-1.0')
             out.write(json.dumps(row,ensure_ascii=False,separators=(',',':'))+'\n')
             stats['roads' if row['kind']=='road' else row['kind']]+=1

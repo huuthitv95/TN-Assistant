@@ -55,6 +55,17 @@ class ImportOSMTests(unittest.TestCase):
             self.assertEqual(camera['type'],'701')
             self.assertTrue(all(r['license']=='ODbL-1.0' for r in rows))
 
+            filtered=Path(folder)/'known-speed.ndjson'
+            result=subprocess.run([sys.executable,str(ROOT/'scripts/import_osm.py'),'--input',str(source),
+                '--output',str(filtered),'--known-speed-only'],capture_output=True,text=True,encoding='utf-8')
+            self.assertEqual(result.returncode,0,result.stderr)
+            speed_rows=[json.loads(line) for line in filtered.read_text(encoding='utf-8').splitlines()]
+            self.assertTrue(speed_rows)
+            self.assertTrue(all(r['kind']=='road' and r['max_speed'] is not None for r in speed_rows))
+            filtered_stats=json.loads(filtered.with_suffix('.ndjson.summary.json').read_text(encoding='utf-8'))
+            self.assertEqual(filtered_stats['omitted_unknown_speed'],len(conditional))
+            self.assertEqual(filtered_stats['omitted_non_road'],1)
+
 class RoadSegmentsTest(unittest.TestCase):
     def test_source_timestamp_never_uses_copy_time(self):
         with self.assertRaises(ValueError): source_timestamp('',{})
