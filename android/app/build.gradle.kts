@@ -48,7 +48,7 @@ android {
   }
  }
  buildTypes {
-  debug { buildConfigField("String", "API_BASE_URL", "\"http://127.0.0.1:8088\"") }
+  debug { applicationIdSuffix=".debug"; buildConfigField("String", "API_BASE_URL", "\"http://127.0.0.1:8088\"") }
   release {
    isMinifyEnabled=false
    buildConfigField("String", "API_BASE_URL", "\"https://assistant.tnfastvn.com\"")
