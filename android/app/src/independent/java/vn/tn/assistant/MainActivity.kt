@@ -1736,6 +1736,11 @@ class MainActivity : Activity() {
                 val target = vn.tn.assistant.actions.TnYouTubeIntentCascade.build(this, payload)
                 target != null && startIntent(target, active)
             },
+            externalMedia = { type, payload, details ->
+                vn.tn.assistant.actions.TnExternalMediaApp.execute(this, type, payload, details) { intent ->
+                    startIntent(intent, active, foregroundOnly = true)
+                }
+            },
             volume = vn.tn.assistant.actions.TnDirectiveExecutor.androidVolume(this),
             media = vn.tn.assistant.actions.TnMediaControls(this, active)::execute,
             alarm = vn.tn.assistant.actions.TnAlarmControls(this, active) { startIntent(it, active) }::execute,

@@ -20,6 +20,7 @@ internal class TnDirectiveExecutor(
     private val calendar: ((JSONObject, JSONObject) -> String)? = null,
     private val phone: ((JSONObject, JSONObject) -> String)? = null,
     private val youtube: ((JSONObject) -> Boolean)? = null,
+    private val externalMedia: ((String, JSONObject, JSONObject) -> String)? = null,
 ) {
     internal interface Volume {
         fun maximum(): Int
@@ -72,6 +73,12 @@ internal class TnDirectiveExecutor(
                             details.put("intent_started", started)
                             success(started)
                         }
+                    }
+                    // TN has no music/radio/TV catalogue or provider account. These
+                    // directives only open the app the user selected in TN settings.
+                    "PlayMusicApp", "PlayRadioApp", "PlayTVApp" -> externalMedia?.invoke(type, payload, details) ?: run {
+                        details.put("reason", "media_app_adapter_unavailable")
+                        "unsupported"
                     }
                     "PlayerVolume" -> changeVolume(payload, details)
                     "PlayerMP3" -> media?.invoke(payload, details) ?: run {

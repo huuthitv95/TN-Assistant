@@ -301,6 +301,7 @@ class TnUserSettingsSurface(
                 2 -> appRow(section, "Ứng dụng bản đồ mặc định", "map_package", maps, "com.google.android.apps.maps")
                 3 -> {
                     toggle(section, "Cảnh báo khi mở video", "video_warning", true)
+                    appRow(section, "Ứng dụng nhạc mặc định", "music_package", music, "")
                     appRow(section, "Ứng dụng video mặc định", "video_package", videos, "")
                     appRow(section, "Ứng dụng truyền hình mặc định", "tv_package", television, "")
                     appRow(section, "Ứng dụng radio mặc định", "radio_package", radios, "")
@@ -639,7 +640,9 @@ class TnUserSettingsSurface(
     }
     private fun appRow(parent: LinearLayout, title: String, key: String, values: List<Pair<String, String>>, default: String) {
         val value = selectedValue(key, default)
-        val name = values.firstOrNull { it.second == value }?.first ?: if (value.isBlank()) "Tự động" else appName(value)
+        val name = values.firstOrNull { it.second == value }?.first ?: if (value.isBlank()) {
+            if (key in setOf("music_package", "radio_package", "tv_package")) "Chưa chọn" else "Tự động"
+        } else appName(value)
         row(parent, title, name) {
             drawer(title, values + ("Chọn ứng dụng đã cài…" to "installed-picker"), value) {
                 if (it == "installed-picker") installedApps(title, key, value) else save(key, it)
@@ -650,7 +653,8 @@ class TnUserSettingsSurface(
     private fun installedApps(title: String, key: String, current: String) {
         val query = android.content.Intent(android.content.Intent.ACTION_MAIN).addCategory(android.content.Intent.CATEGORY_LAUNCHER)
         val packages = context.packageManager.queryIntentActivities(query, 0).map { it.activityInfo.packageName }.distinct()
-        drawer(title, listOf("Tự động" to "") + packages.map { appName(it) to it }.sortedBy { it.first.lowercase() }, current) { save(key, it) }
+        val automatic = if (key in setOf("music_package", "radio_package", "tv_package")) "Chưa chọn" else "Tự động"
+        drawer(title, listOf(automatic to "") + packages.map { appName(it) to it }.sortedBy { it.first.lowercase() }, current) { save(key, it) }
     }
     private fun drawer(title: String, values: List<Pair<String, String>>, current: String, pick: (String) -> Unit) {
         drawer?.let { removeView(it) }
@@ -719,9 +723,10 @@ class TnUserSettingsSurface(
         if (width / resources.displayMetrics.density < 600f) 0 else sd(360).coerceIn(width / 4, width * 2 / 5)
     companion object {
         val maps = listOf("Google Maps" to "com.google.android.apps.maps", "Navitel" to "com.navitel", "VietMap S1" to "com.vietmap.s1OBU", "VietMap S2" to "com.vietmap.S2OBU", "VietMap Live" to "vn.vietmap.live")
+        val music = listOf("Chưa chọn" to "", "Spotify" to "com.spotify.music", "YouTube Music" to "com.google.android.apps.youtube.music")
         val videos = listOf("Tự động" to "", "YouTube" to "com.google.android.youtube")
-        val television = listOf("Tự động" to "", "VTV Go" to "vn.vtv.vtvgo", "TV360" to "com.viettel.tv360", "MyTV" to "vn.mytvnet.mobileb2c", "FPT Play" to "com.fplay.activity")
-        val radios = listOf("Tự động" to "", "Radio Việt Nam" to "com.appmind.radios.vn")
+        val television = listOf("Chưa chọn" to "", "VTV Go" to "vn.vtv.vtvgo", "TV360" to "com.viettel.tv360", "MyTV" to "vn.mytvnet.mobileb2c", "FPT Play" to "com.fplay.activity")
+        val radios = listOf("Chưa chọn" to "", "Radio Việt Nam" to "com.appmind.radios.vn")
     }
 }
 

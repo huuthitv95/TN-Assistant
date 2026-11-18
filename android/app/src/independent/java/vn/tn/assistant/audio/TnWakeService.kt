@@ -247,6 +247,9 @@ class TnWakeService : Service() {
                 val intent = vn.tn.assistant.actions.TnYouTubeIntentCascade.build(this, payload)
                 intent != null && launch(intent, turnActive)
             },
+            externalMedia = { type, payload, details ->
+                vn.tn.assistant.actions.TnExternalMediaApp.execute(this, type, payload, details) { launch(it, turnActive) }
+            },
             media = vn.tn.assistant.actions.TnMediaControls(this, turnActive)::execute,
             alarm = vn.tn.assistant.actions.TnAlarmControls(this, turnActive) { launch(it, turnActive) }::execute,
             calendar = vn.tn.assistant.actions.TnCalendarControls(this, turnActive)::execute,

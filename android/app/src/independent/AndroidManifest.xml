@@ -35,7 +35,13 @@
         </intent>
         <package android:name="com.google.android.apps.maps" />
         <package android:name="com.google.android.youtube" />
+        <package android:name="com.google.android.apps.youtube.music" />
         <package android:name="com.spotify.music" />
+        <package android:name="vn.vtv.vtvgo" />
+        <package android:name="com.viettel.tv360" />
+        <package android:name="vn.mytvnet.mobileb2c" />
+        <package android:name="com.fplay.activity" />
+        <package android:name="com.appmind.radios.vn" />
         <package android:name="com.android.chrome" />
         <intent>
             <action android:name="android.intent.action.VIEW" />

@@ -38,9 +38,10 @@ class TnDirectiveExecutorRuntimeTest {
         var active = true
         val calls = mutableListOf<String>()
         val receipts = mutableListOf<Receipt>()
-        fun executor() = TnDirectiveExecutor({ active },
+        fun executor(externalMedia: ((String, JSONObject, JSONObject) -> String)? = null) = TnDirectiveExecutor({ active },
             speech = { calls += "speech:$it"; true }, map = { calls += "map:$it"; true }, app = { calls += "app:$it"; true },
-            volume = volume, receipt = { id, result, details -> receipts += Receipt(id, result, details) })
+            volume = volume, receipt = { id, result, details -> receipts += Receipt(id, result, details) },
+            externalMedia = externalMedia)
     }
 
     @Test fun volumeUsesTheOriginalFifteenPercentStepsAndReadsBackTheActualValue() {
@@ -146,6 +147,65 @@ class TnDirectiveExecutorRuntimeTest {
         assertEquals(1, h.executor().execute(response).unsupported)
         assertEquals(listOf("unsupported", "cancelled"), h.receipts.map { it.result })
         assertEquals(0, h.volume.writes)
+    }
+
+    @Test fun externalMediaRoutesByDirectiveTypeAndPreservesDispatchOnlySemantics() {
+        val h = Harness()
+        val routed = mutableListOf<String>()
+        val result = h.executor { type, payload, details ->
+            routed += "$type:${payload.optString("query")}"
+            details.put("intent_started", true).put("completion_verified", false).put("interaction_required", true)
+            "success"
+        }.execute(batch(
+            action("PlayMusicApp", "music", JSONObject().put("query", "Hoa Hai Duong")),
+            action("PlayRadioApp", "radio", JSONObject().put("query", "VOV")),
+            action("PlayTVApp", "tv", JSONObject().put("query", "VTV1")),
+        ))
+        assertEquals(TnDirectiveExecutor.Summary(interactionRequired = 3), result)
+        assertEquals(listOf("PlayMusicApp:Hoa Hai Duong", "PlayRadioApp:VOV", "PlayTVApp:VTV1"), routed)
+        assertEquals(listOf("success", "success", "success"), h.receipts.map { it.result })
+        assertTrue(h.receipts.all { it.details.getBoolean("intent_started") })
+        assertTrue(h.receipts.all { !it.details.getBoolean("completion_verified") })
+    }
+
+    @Test fun externalMediaWithoutAnAdapterRemainsUnsupportedAndCannotUnlockPrerequisite() {
+        val h = Harness()
+        val result = h.executor().execute(batch(
+            action("PlayMusicApp", "music"),
+            action("SpeechSynthesizer", "speech", JSONObject().put("utter_text", "must not speak")
+                .put("required", JSONArray().put("music|success"))),
+        ))
+        assertEquals(1, result.unsupported)
+        assertEquals(listOf("unsupported", "cancelled"), h.receipts.map { it.result })
+        assertTrue(h.calls.isEmpty())
+    }
+
+    @Test fun externalMediaDuplicateActionIdsDispatchOnlyOnce() {
+        val h = Harness()
+        var dispatches = 0
+        val executor = h.executor { _, _, details ->
+            dispatches++
+            details.put("intent_started", true)
+            "success"
+        }
+        val summary = executor.execute(batch(
+            action("PlayMusicApp", "same-media"),
+            action("PlayMusicApp", "same-media"),
+        ))
+        assertEquals(TnDirectiveExecutor.Summary(), summary)
+        assertEquals(1, dispatches)
+        assertEquals(1, h.receipts.size)
+        assertEquals("same-media", h.receipts.single().id)
+    }
+
+    @Test fun externalMediaCanceledOwnerDoesNotInvokeLaunchAdapterOrReceipt() {
+        val h = Harness().apply { active = false }
+        var dispatches = 0
+        val summary = h.executor { _, _, _ -> dispatches++; "success" }
+            .execute(batch(action("PlayTVApp", "canceled-media")))
+        assertTrue(summary.cancelled)
+        assertEquals(0, dispatches)
+        assertTrue(h.receipts.isEmpty())
     }
 
     @Test fun receiptFailureStopsFurtherSideEffectsWithoutRetryingTheCompletedAction() {
