@@ -121,6 +121,10 @@ class MainActivity : Activity() {
     private val sessionStore by lazy { TnSessionStore.get(this) }
     private val commandRevision = java.util.concurrent.atomic.AtomicLong()
     private val welcomeRevision = java.util.concurrent.atomic.AtomicLong()
+    private var bootWelcomePermissionRevision = 0L
+    private data class PendingLocationPermission(val text: String, val operation: TnPermissionOperation)
+    private var pendingLocationPermission: PendingLocationPermission? = null
+    private var bootWelcomePermissionPending: TnPermissionOperation? = null
     private var welcomeAttempt: Pair<Long, String>? = null
     private var welcomeLaunchEligible = false
     private var actionConfirmation: android.app.Dialog? = null
@@ -138,8 +142,12 @@ class MainActivity : Activity() {
     @Volatile private var pendingReleaseInstall: TnAppRelease? = null
     private val accessToken: String? get() = sessionStore.accessToken
     private val refreshToken: String? get() = sessionStore.refreshToken
-    private var wakePermissionPending = false
-    private var wakeStartWhenResumed = false
+    // Wake enable continuations are tied to both the latest user intent and the
+    // login generation that created it. A permission result or network response
+    // from an older intent/account must never turn listening on for a new one.
+    private data class WakeOperation(val revision: Int, val owner: Long)
+    private var wakePermissionPending: WakeOperation? = null
+    private var wakeStartWhenResumed: WakeOperation? = null
     private var wakeRevision = 0
     private val wakeUi = object : TnWakeUi.Listener {
         override fun state(message: String, listening: Boolean) {
@@ -160,7 +168,6 @@ class MainActivity : Activity() {
     private var homePanelOpen = false
     private var guideSurface: vn.tn.assistant.ui.TnAssistantGuideSurface? = null
     private var userSettings: TnUserSettingsSurface? = null
-    private var pendingText: String? = null
     @Volatile private var audioRecorder: AudioRecord? = null
     private var setupStep: Int? = null
     private var setupSurface: TnOnboardingSurface? = null
@@ -170,7 +177,6 @@ class MainActivity : Activity() {
     private var permissionSettingsStep: Int? = null
     private var returnFromSettingsToHome = false
     private var returnToUserSettingsFromPermission = false
-    private var bootWelcomePermissionPending = false
     private var restoredUserSettings: Bundle? = null
     private val narrator by lazy { TnOnboardingNarrator(this) }
     @Volatile private var resumed = false
@@ -309,7 +315,27 @@ class MainActivity : Activity() {
 
     private fun acceptSession(response: JSONObject) {
         val hadSession = !accessToken.isNullOrBlank()
+        // Account replacement retires permission continuations before the new
+        // session becomes visible to any delayed Android callback.
+        commandRevision.incrementAndGet()
+        pendingLocationPermission = null
+        bootWelcomePermissionRevision++
+        bootWelcomePermissionPending = null
+        if (hadSession) {
+            // The old account's listener must be stopped before the new login
+            // generation becomes visible to queued service work. This is a
+            // runtime teardown only; the next account fetch owns its setting.
+            TnWakeService.disableRuntime(this)
+            preferences.edit().remove("wake_word_enabled").apply()
+            wakeRevision++
+            wakePermissionPending = null
+            wakeStartWhenResumed = null
+        }
         sessionStore.accept(response)
+        // A new login/account replacement must not retain the previous user's
+        // display-only plan while /v1/me for the new session is loading. This
+        // also bumps the plan generation so an older worker cannot republish it.
+        vn.tn.assistant.ui.TnFloatingAccountPlan.clear(this)
         if (!hadSession) welcomeLaunchEligible = true
     }
 
@@ -512,9 +538,19 @@ class MainActivity : Activity() {
         TnFloatingControlService.setAppForeground(this, true)
         resumed = true
         resumePendingReleaseInstall()
-        TnWakeUi.attach(wakeUi)
+        TnWakeUi.attach(wakeUi, sessionStore.actionGeneration())
         if (TnWakeService.consented(this) && !TnWakeService.microphoneAllowed(this)) TnWakeService.microphoneRevoked(this)
-        if (wakeStartWhenResumed) { wakeStartWhenResumed = false; main.post { setWakeEnabled(true) } }
+        val pendingWakeStart = wakeStartWhenResumed
+        if (pendingWakeStart != null) {
+            wakeStartWhenResumed = null
+            main.post {
+                if (pendingWakeStart.revision == wakeRevision &&
+                    sessionStore.ownsActions(pendingWakeStart.owner)
+                ) {
+                    continueWakeEnable(pendingWakeStart)
+                }
+            }
+        }
         if (!accessToken.isNullOrBlank()) TnFloatingControlService.reconcile(this)
         if (!accessToken.isNullOrBlank()) {
             val planGeneration = vn.tn.assistant.ui.TnFloatingAccountPlan.generation()
@@ -1115,7 +1151,9 @@ class MainActivity : Activity() {
         // explicitly enabled overlay here as well, once authentication is available.
         if (!accessToken.isNullOrBlank()) TnFloatingControlService.reconcile(this)
         if (!accessToken.isNullOrBlank() && preferences.getBoolean("wake_word_enabled", false) && TnWakeService.consented(this)) {
-            TnWakeService.enableFromVisibleActivity(this)
+            // An explicit consent already granted by the user may resume when
+            // reopening the app; this is not a boot receiver or silent opt-in.
+            TnWakeService.enableFromVisibleActivity(this, sessionStore.actionGeneration())
         }
         maybeStartWelcome()
     }
@@ -1250,29 +1288,48 @@ class MainActivity : Activity() {
         showHomePanel(settings)
         savedUiState?.let { settings.restoreUiState(it) }
         val planGeneration = vn.tn.assistant.ui.TnFloatingAccountPlan.generation()
+        val settingsOwner = sessionStore.actionGeneration()
+        val settingsWakeRevision = wakeRevision
         worker.execute {
             try {
                 val account = api("/v1/me", null)
+                if (!sessionStore.ownsActions(settingsOwner)) return@execute
                 vn.tn.assistant.ui.TnFloatingAccountPlan.update(this, account, planGeneration)
                 val values = api("/v1/settings", null)
-                storeUserSettings(values)
                 main.post {
-                    if (userSettings === settings) {
-                        settings.account(account)
-                        if (!values.optBoolean("wake_word_enabled")) TnWakeService.disable(this)
+                    if (isFinishing || isDestroyed || !sessionStore.ownsActions(settingsOwner)) return@post
+                    // The server setting is authoritative only for the wake
+                    // operation that was current when this refresh began. A
+                    // stale GET must not overwrite a newer toggle or stop its
+                    // runtime listener.
+                    val wakeStillCurrent = settingsWakeRevision == wakeRevision
+                    storeUserSettings(values, includeWakeWord = wakeStillCurrent)
+                    if (wakeStillCurrent && !values.optBoolean("wake_word_enabled")) {
+                        TnWakeService.disableRuntime(this)
                     }
+                    if (userSettings === settings) settings.account(account)
                 }
             } catch (error: Exception) {
-                main.post { if (userSettings === settings) settings.loadError(error.message ?: "Chưa tải được tài khoản TN.") }
+                main.post {
+                    if (userSettings === settings && sessionStore.ownsActions(settingsOwner)) {
+                        settings.loadError(error.message ?: "Chưa tải được tài khoản TN.")
+                    }
+                }
             }
         }
     }
 
-    private fun storeUserSettings(values: JSONObject) {
+    private fun storeUserSettings(
+        values: JSONObject,
+        includeWakeWord: Boolean = true,
+    ) {
         val editor = preferences.edit()
         values.keys().forEach { key ->
+            if (key == "wake_word_enabled" && !includeWakeWord) return@forEach
             when (val value = values.opt(key)) {
-                is Boolean -> editor.putBoolean(key, if (key == "wake_word_enabled") value && TnWakeService.consented(this) else value)
+                // This is the server-acknowledged account switch. Runtime consent
+                // and recorder readiness are separate state and must not mask it.
+                is Boolean -> editor.putBoolean(key, value)
                 is Number -> editor.putInt(key, value.toInt())
                 is String -> editor.putString(key, value)
             }
@@ -1284,6 +1341,10 @@ class MainActivity : Activity() {
         if (key == "wake_word_enabled") { setWakeEnabled(value == true); return }
         val settings = userSettings
         val local = setOf("floating_enabled", "floating_size", "floating_opacity", "video_warning", "record_mode", "playback_mode", TnBootWelcomeReceiver.KEY_ENABLED)
+        if (key == TnBootWelcomeReceiver.KEY_ENABLED) {
+            bootWelcomePermissionRevision++
+            bootWelcomePermissionPending = null
+        }
         if (key in local) {
             if (key == TnBootWelcomeReceiver.KEY_ENABLED && value == true && !bootWelcomeNotificationsAllowed()) {
                 if (Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(
@@ -1292,7 +1353,11 @@ class MainActivity : Activity() {
                         TnBootWelcomeReceiver.KEY_NOTIFICATION_PERMISSION_REQUESTED, false)
                     if (TnBootWelcomePolicy.shouldRequestNotificationPermission(
                             previouslyRequested, shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS))) {
-                        bootWelcomePermissionPending = true
+                        bootWelcomePermissionRevision++
+                        bootWelcomePermissionPending = TnPermissionOperation(
+                            owner = sessionStore.actionGeneration(),
+                            revision = bootWelcomePermissionRevision,
+                        )
                         preferences.edit().putBoolean(
                             TnBootWelcomeReceiver.KEY_NOTIFICATION_PERMISSION_REQUESTED, true).apply()
                         requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQUEST_BOOT_WELCOME_NOTIFICATION)
@@ -1324,54 +1389,203 @@ class MainActivity : Activity() {
             storeUserSettings(JSONObject().put(key, value)); settings?.refresh()
             return
         }
+        val settingsOwner = sessionStore.actionGeneration()
         settings?.saving(true)
         worker.execute {
             try {
                 val values = api("/v1/settings", JSONObject().put(key, value), method = "PUT")
-                storeUserSettings(values)
-                main.post { if (userSettings === settings) { settings?.saving(false); settings?.refresh() } }
+                if (!sessionStore.ownsActions(settingsOwner)) return@execute
+                main.post {
+                    if (isFinishing || isDestroyed ||
+                        !sessionStore.ownsActions(settingsOwner)
+                    ) return@post
+                    // A non-wake mutation does not own the account's wake switch.
+                    // Some server responses contain the complete settings object;
+                    // applying that field here could replay a stale wake value.
+                    storeUserSettings(values, includeWakeWord = false)
+                    if (userSettings === settings) {
+                        settings?.saving(false)
+                        settings?.refresh()
+                    }
+                }
             } catch (error: Exception) {
-                main.post { if (userSettings === settings) { settings?.saving(false); settings?.refresh(); settings?.loadError(error.message ?: "Không lưu được cài đặt.") } }
+                main.post {
+                    if (userSettings === settings &&
+                        sessionStore.ownsActions(settingsOwner)
+                    ) {
+                        settings?.saving(false)
+                        settings?.refresh()
+                        settings?.loadError(error.message ?: "Không lưu được cài đặt.")
+                    }
+                }
             }
         }
     }
 
     private fun setWakeEnabled(enabled: Boolean) {
-        if (enabled && !resumed) { wakeStartWhenResumed = true; return }
-        if (!enabled) wakeStartWhenResumed = false
-        val operation = ++wakeRevision
+        val operation = WakeOperation(++wakeRevision, sessionStore.actionGeneration())
+        wakePermissionPending = null
+        wakeStartWhenResumed = null
         val settings = userSettings
-        if (enabled && Build.VERSION.SDK_INT >= 23 && !TnWakeService.microphoneAllowed(this)) {
-            wakePermissionPending = true
+
+        if (enabled && !resumed) {
+            wakeStartWhenResumed = operation
+            return
+        }
+
+        if (!enabled) {
+            // Disable is immediate locally. A delayed permission result or server
+            // response from an older enable must not restore consent or restart the FGS.
+            TnWakeService.disableRuntime(this)
+            settings?.saving(true)
+            worker.execute {
+                try {
+                    val values = api("/v1/settings", JSONObject().put("wake_word_enabled", false), method = "PUT")
+                    main.post {
+                        if (isFinishing || isDestroyed ||
+                            operation.revision != wakeRevision ||
+                            !sessionStore.ownsActions(operation.owner)
+                        ) return@post
+                        storeUserSettings(values)
+                        preferences.edit().putBoolean("wake_word_enabled", false).apply()
+                        if (userSettings === settings) {
+                            settings?.saving(false)
+                            settings?.refresh()
+                        }
+                    }
+                } catch (error: Exception) {
+                    main.post {
+                        if (isFinishing || isDestroyed ||
+                            operation.revision != wakeRevision ||
+                            !sessionStore.ownsActions(operation.owner)
+                        ) return@post
+                        if (userSettings === settings) {
+                            settings?.saving(false)
+                            settings?.refresh()
+                            settings?.loadError(error.message ?: "Không lưu được cài đặt “TN ơi”.")
+                        }
+                    }
+                }
+            }
+            return
+        }
+
+        continueWakeEnable(operation, settings)
+    }
+
+    private fun continueWakeEnable(
+        operation: WakeOperation,
+        settings: TnUserSettingsSurface? = userSettings,
+    ) {
+        if (operation.revision != wakeRevision ||
+            isFinishing ||
+            isDestroyed ||
+            !resumed ||
+            !sessionStore.ownsActions(operation.owner)
+        ) return
+        if (TnWakeService.consented(this)) {
+            if (userSettings === settings) settings?.refresh()
+            return
+        }
+        if (Build.VERSION.SDK_INT >= 23 && !TnWakeService.microphoneAllowed(this)) {
+            wakePermissionPending = operation
             requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), REQUEST_WAKE_AUDIO)
             return
         }
-        if (enabled && Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            wakePermissionPending = true
+        if (Build.VERSION.SDK_INT >= 33 &&
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS,
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            wakePermissionPending = operation
             requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQUEST_WAKE_NOTIFICATION)
             return
         }
-        if (!enabled) TnWakeService.disable(this)
         settings?.saving(true)
         worker.execute {
             try {
-                val values = api("/v1/settings", JSONObject().put("wake_word_enabled", enabled), method = "PUT")
-                if (enabled && !values.optBoolean("wake_word_enabled")) throw IOException("Tài khoản chưa bật được quyền nghe “TN ơi”.")
-                storeUserSettings(values)
+                val values = api(
+                    "/v1/settings",
+                    JSONObject().put("wake_word_enabled", true),
+                    method = "PUT",
+                )
+                if (!values.optBoolean("wake_word_enabled")) {
+                    throw IOException("Tài khoản chưa bật được quyền nghe “TN ơi”.")
+                }
                 main.post {
-                    if (isFinishing || isDestroyed || operation != wakeRevision) return@post
-                    val started = !enabled || (resumed && TnWakeService.enableFromVisibleActivity(this))
-                    preferences.edit().putBoolean("wake_word_enabled", enabled && started && TnWakeService.isReady()).apply()
+                    if (isFinishing || isDestroyed ||
+                        operation.revision != wakeRevision ||
+                        !sessionStore.ownsActions(operation.owner)
+                    ) return@post
+                    // Persist the acknowledged account setting independently of
+                    // asynchronous recorder readiness. isReady() is status only.
+                    storeUserSettings(values)
+                    preferences.edit().putBoolean("wake_word_enabled", true).apply()
+                    val started = TnWakeService.enableFromVisibleActivity(this, operation.owner)
+                    if (!started) {
+                        // The account mutation was acknowledged, but Android rejected
+                        // the immediate runtime start. Reconcile only this operation;
+                        // a later service failure is runtime-only and must not rollback
+                        // the account setting.
+                        TnWakeService.disableRuntime(this)
+                        worker.execute {
+                            val compensation = runCatching {
+                                if (operation.revision == wakeRevision &&
+                                    sessionStore.ownsActions(operation.owner)
+                                ) {
+                                    api(
+                                        "/v1/settings",
+                                        JSONObject().put("wake_word_enabled", false),
+                                        method = "PUT",
+                                    )
+                                } else null
+                            }
+                            main.post {
+                                if (isFinishing || isDestroyed ||
+                                    operation.revision != wakeRevision ||
+                                    !sessionStore.ownsActions(operation.owner)
+                                ) return@post
+                                if (compensation.isSuccess && compensation.getOrNull() != null) {
+                                    storeUserSettings(compensation.getOrNull()!!)
+                                } else {
+                                    preferences.edit().putBoolean("wake_word_enabled", true).apply()
+                                }
+                                if (userSettings === settings) {
+                                    settings?.saving(false)
+                                    settings?.refresh()
+                                    settings?.loadError(
+                                        TnWakeService.lastError(this)
+                                            ?: "Mở TN Assistant và thử bật nghe nền lại."
+                                    )
+                                }
+                            }
+                        }
+                    }
                     if (userSettings === settings) {
-                        settings?.saving(enabled && started && !TnWakeService.isReady()); settings?.refresh()
-                        if (!started) settings?.loadError(TnWakeService.lastError(this) ?: "Mở TN Assistant và thử bật nghe nền lại.")
+                        settings?.saving(
+                            started && TnWakeService.consented(this) &&
+                                !TnWakeService.isReady()
+                        )
+                        settings?.refresh()
+                        if (!started) {
+                            settings?.loadError(
+                                TnWakeService.lastError(this)
+                                    ?: "Mở TN Assistant và thử bật nghe nền lại."
+                            )
+                        }
                     }
                 }
             } catch (error: Exception) {
-                if (enabled) TnWakeService.disable(this)
                 main.post {
+                    if (isFinishing || isDestroyed ||
+                        operation.revision != wakeRevision ||
+                        !sessionStore.ownsActions(operation.owner)
+                    ) return@post
+                    TnWakeService.disableRuntime(this)
                     if (userSettings === settings) {
-                        settings?.saving(false); settings?.refresh()
+                        settings?.saving(false)
+                        settings?.refresh()
                         settings?.loadError(error.message ?: "Không lưu được cài đặt “TN ơi”.")
                     }
                 }
@@ -1612,16 +1826,20 @@ class MainActivity : Activity() {
         }
         welcomeRevision.incrementAndGet()
         dismissActionConfirmation()
+        val revision = commandRevision.incrementAndGet()
+        pendingLocationPermission = null
         if (isWeather(command) && !hasLocationPermission()) {
-            pendingText = command
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                pendingLocationPermission = PendingLocationPermission(
+                    command,
+                    TnPermissionOperation(sessionStore.actionGeneration(), revision),
+                )
                 requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION), REQUEST_LOCATION)
             } else {
                 status("Enable location permission in Android Settings, then try again.")
             }
             return
         }
-        val revision = commandRevision.incrementAndGet()
         val owner = sessionStore.actionGeneration()
         val active = { commandRevision.get() == revision && !isFinishing && !isDestroyed && sessionStore.ownsActions(owner) }
         status(command)
@@ -2073,8 +2291,16 @@ class MainActivity : Activity() {
         when (requestCode) {
             REQUEST_BOOT_WELCOME_NOTIFICATION -> {
                 val pending = bootWelcomePermissionPending
-                bootWelcomePermissionPending = false
-                if (pending && grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED && bootWelcomeNotificationsAllowed()) {
+                bootWelcomePermissionPending = null
+                val granted = grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED
+                val current = TnPermissionCallbackPolicy.isCurrent(
+                    pending,
+                    sessionStore.actionGeneration(),
+                    bootWelcomePermissionRevision,
+                    !isFinishing && !isDestroyed,
+                )
+                if (!current) return
+                if (granted && bootWelcomeNotificationsAllowed()) {
                     saveUserSetting(TnBootWelcomeReceiver.KEY_ENABLED, true)
                 } else {
                     userSettings?.refresh()
@@ -2099,11 +2325,20 @@ class MainActivity : Activity() {
             }
             REQUEST_WAKE_AUDIO, REQUEST_WAKE_NOTIFICATION -> {
                 val pending = wakePermissionPending
-                wakePermissionPending = false
-                if (pending && grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
-                    if (resumed) main.post { setWakeEnabled(true) } else wakeStartWhenResumed = true
-                }
-                else {
+                wakePermissionPending = null
+                val granted = grantResults.isNotEmpty() &&
+                    grantResults.all { it == PackageManager.PERMISSION_GRANTED }
+                if (pending != null &&
+                    pending.revision == wakeRevision &&
+                    sessionStore.ownsActions(pending.owner) &&
+                    granted
+                ) {
+                    if (resumed) main.post { continueWakeEnable(pending) }
+                    else wakeStartWhenResumed = pending
+                } else if (pending != null &&
+                    pending.revision == wakeRevision &&
+                    sessionStore.ownsActions(pending.owner)
+                ) {
                     userSettings?.refresh()
                     userSettings?.loadError("Bạn chưa cấp quyền micro/thông báo; nghe “TN ơi” vẫn tắt.")
                 }
@@ -2118,10 +2353,27 @@ class MainActivity : Activity() {
             REQUEST_AUDIO -> if (grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) startVoice()
                 else status("Bạn chưa cấp quyền micro; TN chưa ghi âm.")
             REQUEST_LOCATION -> {
-                val pending = pendingText
-                pendingText = null
-                if (grantResults.any { it == PackageManager.PERMISSION_GRANTED } && pending != null) sendCommand(pending)
-                else status("Bạn chưa cấp quyền vị trí; TN chưa gửi tọa độ thời tiết.")
+                val pending = pendingLocationPermission
+                pendingLocationPermission = null
+                val current = TnPermissionCallbackPolicy.isCurrent(
+                    pending?.operation,
+                    sessionStore.actionGeneration(),
+                    commandRevision.get(),
+                    !isFinishing && !isDestroyed,
+                )
+                if (!current) return
+                if (TnPermissionCallbackPolicy.accepts(
+                        pending?.operation,
+                        sessionStore.actionGeneration(),
+                        commandRevision.get(),
+                        !isFinishing && !isDestroyed,
+                        grantResults.any { it == PackageManager.PERMISSION_GRANTED },
+                    ) && pending != null
+                ) {
+                    sendCommand(pending.text)
+                } else {
+                    status("Bạn chưa cấp quyền vị trí; TN chưa gửi tọa độ thời tiết.")
+                }
             }
         }
     }
@@ -2187,10 +2439,21 @@ class MainActivity : Activity() {
 
     private fun clearSession() {
         commandRevision.incrementAndGet()
+        pendingLocationPermission = null
         welcomeRevision.incrementAndGet()
+        bootWelcomePermissionRevision++
+        bootWelcomePermissionPending = null
+        wakeRevision++
+        wakePermissionPending = null
+        wakeStartWhenResumed = null
         dismissActionConfirmation()
         vn.tn.assistant.api.TnAssistantConversation.shared.retire(sessionStore.actionGeneration())
         TnWakeService.disable(this)
+        // This cache is account-scoped. Remove it locally before the new
+        // account is rendered; no server mutation is implied by logout.
+        preferences.edit()
+            .remove("wake_word_enabled")
+            .apply()
         TnFloatingControlService.disable(this)
         vn.tn.assistant.driving.TnRoadService.stop(this)
         sessionStore.clear()

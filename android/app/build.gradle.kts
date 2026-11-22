@@ -34,7 +34,7 @@ if (releaseTaskRequested && !releaseSigningConfigured) {
 
 android {
  namespace="vn.tn.assistant"; compileSdk=36
-        defaultConfig { applicationId="vn.tn.assistant"; minSdk=21; targetSdk=36; versionCode=26111396; versionName="26.11.13.196"; testInstrumentationRunner="androidx.test.runner.AndroidJUnitRunner"; ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64") } }
+        defaultConfig { applicationId="vn.tn.assistant"; minSdk=21; targetSdk=36; versionCode=26111997; versionName="26.11.19.197"; testInstrumentationRunner="androidx.test.runner.AndroidJUnitRunner"; ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64") } }
  buildFeatures { buildConfig=true }
  signingConfigs {
   if (releaseSigningConfigured) {
@@ -60,7 +60,7 @@ android {
  kotlinOptions { jvmTarget="17" }
  testOptions { unitTests.isIncludeAndroidResources=true }
  testBuildType=providers.gradleProperty("nativeTestBuildType").orElse("debug").get()
- packaging { jniLibs { useLegacyPackaging=true }; resources.excludes += "META-INF/DEPENDENCIES" }
+ packaging { jniLibs { useLegacyPackaging=false }; resources.excludes += "META-INF/DEPENDENCIES" }
  sourceSets.getByName("main") {
   java.setSrcDirs(listOf("src/independent/java"))
   manifest.srcFile("src/independent/AndroidManifest.xml")

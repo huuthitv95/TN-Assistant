@@ -68,6 +68,31 @@ func TestPremiumFeaturesFollowCatalogStartAndExpiry(t *testing.T) {
 	}
 }
 
+func TestMalformedEntitlementTimestampsNeverGrantOrAppearInMe(t *testing.T) {
+	s := testServer(t)
+	g := guest(t, s)
+	token := str(g, "access_token")
+	uid := str(g["user"].(map[string]any), "id")
+	if err := s.put("products", "malformed-premium", "", Object{"id": "malformed-premium", "features": []any{"premium"}}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.db.Exec("INSERT INTO entitlements VALUES(?,?,?,?,?,?)", "malformed-right", uid, "malformed-premium", "fixture", "0000-not-a-date", "zzzz-not-a-date"); err != nil {
+		t.Fatal(err)
+	}
+	if s.premiumFeatures(uid)["ai_assistant"] == true {
+		t.Fatal("malformed entitlement granted Premium authorization")
+	}
+	status, me := call(t, s, "GET", "/v1/me", token, nil)
+	requireStatus(t, 200, status, me)
+	features := me["premium_features"].(map[string]any)
+	if features["ai_assistant"] == true {
+		t.Fatal("malformed entitlement appeared as an active Premium feature")
+	}
+	if entitlements := me["entitlements"].([]any); len(entitlements) != 0 {
+		t.Fatalf("malformed entitlement appeared in active entitlements: %v", entitlements)
+	}
+}
+
 func TestWakeWordIsPremiumOnlyAndExpiredRightsDisableSavedSetting(t *testing.T) {
 	s := testServer(t)
 	g := guest(t, s)

@@ -73,7 +73,8 @@ class TnUserSettingsRuntimeTest {
             for (role in listOf("admin", "user")) {
                 val surface = TnUserSettingsSurface(context, prefs, "fixture-device", {}, {}, { _, _ -> })
                 surface.account(JSONObject().put("user", JSONObject().put("name", "TN UI Test").put("role", role))
-                    .put("local_premium", JSONObject().put("enabled", role == "user")))
+                    .put("local_premium", JSONObject().put("enabled", role == "user"))
+                    .put("premium_features", JSONObject().put("wake_word", true)))
                 measure(surface, 1080, 1731)
                 assertNotNull("Admin or an active local grant receives the Premium badge", descendants(surface).find { it.contentDescription == "Premium" })
                 surface.accountDetails()
@@ -86,6 +87,9 @@ class TnUserSettingsRuntimeTest {
                 surface.account(JSONObject("""{"user":{"name":"TN UI Test","role":"user"},"local_premium":{"enabled":false},"premium_features":{"wake_word":false},"entitlements":[]}"""))
                 measure(surface, 1080, 1731)
                 assertTrue("An expired grant or demoted role loses the upgrade bypass", descendants(surface).filterIsInstance<TextView>().any { it.text.toString() == "Nâng cấp TN Premium" })
+                surface.account(JSONObject("""{"user":{"name":"TN UI Test","role":"user"},"local_premium":{"enabled":true},"premium_features":{"wake_word":false},"account_plan":{"kind":"premium"},"entitlements":[]}"""))
+                measure(surface, 1080, 1731)
+                assertTrue("Wake-word UI follows its specific server feature, not a broad Premium display label", descendants(surface).filterIsInstance<TextView>().any { it.text.toString() == "Nâng cấp TN Premium" })
             }
             prefs.edit().clear().commit()
         }

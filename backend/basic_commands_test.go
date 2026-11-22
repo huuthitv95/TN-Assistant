@@ -298,11 +298,11 @@ func TestIndependentQAReachesMissingAIConfigurationInsteadOfFakeCommandSuccess(t
 	grantTestAI(t, server, account)
 	token := str(account, "access_token")
 	code, response := call(t, server, "POST", "/v1/assistant/text", token, Object{
-		"text": "Giải thích vì sao bầu trời có màu xanh", "mode": "qa", "request_id": "qa-unconfigured",
+		"text": "Giải thích vì sao bầu trời màu xanh", "mode": "qa", "request_id": "qa-unconfigured",
 	})
 	requireStatus(t, 503, code, response)
 	code, response = call(t, server, "POST", "/v1/assistant/text", token, Object{
-		"text": "Giải thích vì sao bầu trời có màu xanh", "mode": "commands", "request_id": "commands-unconfigured",
+		"text": "Giải thích vì sao bầu trời màu xanh", "mode": "commands", "request_id": "commands-unconfigured",
 	})
 	requireStatus(t, 200, code, response)
 	if len(objectDirectives(response)) != 1 || str(objectDirectives(response)[0], "type") != "SpeechSynthesizer" {

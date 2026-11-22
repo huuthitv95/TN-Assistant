@@ -266,8 +266,8 @@ func (s *Server) authenticate(token string) (*Principal, error) {
 	return &Principal{u, d, id}, nil
 }
 func (s *Server) entitlements(uid string) []Object {
-	current := now()
-	rows, e := s.db.Query("SELECT id,product_id,source,starts_at,expires_at FROM entitlements WHERE user_id=? AND starts_at<=? AND expires_at>?", uid, current, current)
+	clock := time.Now().UTC()
+	rows, e := s.db.Query("SELECT id,product_id,source,starts_at,expires_at FROM entitlements WHERE user_id=?", uid)
 	if e != nil {
 		return []Object{}
 	}
@@ -275,7 +275,16 @@ func (s *Server) entitlements(uid string) []Object {
 	out := []Object{}
 	for rows.Next() {
 		var id, product, source, start, end string
-		rows.Scan(&id, &product, &source, &start, &end)
+		if rows.Scan(&id, &product, &source, &start, &end) != nil {
+			continue
+		}
+		startsAt, startsErr := time.Parse(time.RFC3339Nano, start)
+		expiresAt, expiresErr := time.Parse(time.RFC3339Nano, end)
+		// Entitlement timestamps are authorization input. Never let SQLite's
+		// lexical comparison treat malformed dates as an active grant.
+		if startsErr != nil || expiresErr != nil || startsAt.After(clock) || !expiresAt.After(clock) {
+			continue
+		}
 		out = append(out, Object{"id": id, "product_id": product, "source": source, "starts_at": start, "expires_at": end})
 	}
 	return out

@@ -88,9 +88,11 @@ class TnUserSettingsSurface(
     private var roadDialog: TnRoadDialog? = null
     private var accountName = "Đang tải tài khoản…"
     private var premium: Boolean? = null
+    private var wakeWordAvailable = false
     private var administrator = false
     private var accountError: String? = null
     private var busy = false
+    private var wakeAccountEnabled = false
     private var statusInset = 0
     private var entered = false
     private var closing = false
@@ -150,16 +152,22 @@ class TnUserSettingsSurface(
         accountName = user.optString("name").ifBlank { user.optString("username", "Tài khoản TN") }
         administrator = user.optString("role") == "admin"
         val features = response.optJSONObject("premium_features")
-        val hasFeature = features?.keys()?.asSequence()?.any { features.optBoolean(it) } == true
-        premium = administrator || hasFeature || response.optJSONObject("local_premium")?.optBoolean("enabled") == true ||
-            response.optBoolean("local_premium") || response.optJSONObject("account_plan")?.optString("kind") == "premium"
+        wakeWordAvailable = administrator || features?.optBoolean("wake_word") == true
+        val localPremium = response.optJSONObject("local_premium")?.optBoolean("enabled") == true ||
+            response.optBoolean("local_premium")
+        // The badge represents the server's full account plan, not an arbitrary
+        // partial feature grant. Individual controls use their own feature bit.
+        premium = administrator || localPremium || response.optJSONObject("account_plan")?.optString("kind") == "premium"
+        wakeAccountEnabled = prefs.getBoolean("wake_word_enabled", false)
         accountError = null
         refresh()
     }
     fun loadError(message: String) { accountError = message; refresh() }
     fun wakeStatus() {
-        busy = vn.tn.assistant.audio.TnWakeService.consented(context) && !vn.tn.assistant.audio.TnWakeService.isReady()
-        if (vn.tn.assistant.audio.TnWakeService.isReady()) accountError = null
+        val service = vn.tn.assistant.audio.TnWakeService
+        wakeAccountEnabled = prefs.getBoolean("wake_word_enabled", false)
+        busy = service.consented(context) && !service.isReady()
+        if (service.isReady()) accountError = null
         refresh()
     }
     fun saving(value: Boolean) { busy = value }
@@ -484,8 +492,16 @@ class TnUserSettingsSurface(
     fun pauseRoadMonitor() { roadDialog?.dismiss();roadDialog=null }
     private fun wake() = sub("TN ơi") { card ->
         accountError?.let { description(card, it) }
-        description(card, vn.tn.assistant.audio.TnWakeService.status(context))
-        if (premium != true) { description(card, "Nhận diện “TN ơi” thuộc gói Premium. Câu lệnh giọng nói cơ bản vẫn dùng được trong gói Basic."); row(card, "Nâng cấp TN Premium", "") { action("premium") } }
+        val service = vn.tn.assistant.audio.TnWakeService
+        val runtimeStatus = service.status(context)
+        val runtimeUnavailable = wakeAccountEnabled && !service.consented(context)
+        description(
+            card,
+            if (runtimeUnavailable && service.lastError(context) == null) {
+                "Đã bật trong tài khoản nhưng chưa nghe trên thiết bị. Hãy bật lại để cấp quyền micro."
+            } else runtimeStatus
+        )
+        if (!wakeWordAvailable) { description(card, "Nhận diện “TN ơi” thuộc quyền Premium. Câu lệnh giọng nói cơ bản vẫn dùng được trong gói Basic."); row(card, "Nâng cấp TN Premium", "") { action("premium") } }
         else {
             toggle(card, "Kích hoạt TN bằng “TN ơi”", "wake_word_enabled", false)
             description(card, "Khi bật, TN dùng micro để nhận “ti en ơi” hoặc “tê nờ ơi” trên thiết bị. Lượt nói sau khi nhận từ đánh thức được gửi tới máy chủ TN. Có thể tắt nghe nền từ thông báo micro.")

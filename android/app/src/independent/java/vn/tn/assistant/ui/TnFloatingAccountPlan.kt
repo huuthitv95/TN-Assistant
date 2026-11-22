@@ -19,8 +19,14 @@ internal data class TnFloatingAccountPlan(val kind: String, val expires: Long?, 
         fun generation() = revision.get()
         private const val KEY = "account_plan_display"
         private fun parse(value: String): Long? = runCatching {
-            val normalized = value.replace(Regex("\\.(\\d{3})\\d+"), ".$1")
-                .replace(Regex("(T\\d{2}:\\d{2}:\\d{2})(Z|[+-]\\d{2}:\\d{2})$"), "$1.000$2")
+            val raw = value.trim()
+            val fraction = Regex("\\.(\\d+)(Z|[+-]\\d{2}:\\d{2})$").find(raw)
+            val normalized = if (fraction != null) {
+                val digits = fraction.groupValues[1].padEnd(3, '0').take(3)
+                raw.substring(0, fraction.range.first) + ".$digits" + fraction.groupValues[2]
+            } else {
+                raw.replace(Regex("(T\\d{2}:\\d{2}:\\d{2})(Z|[+-]\\d{2}:\\d{2})$"), "$1.000$2")
+            }
             val compatible = normalized.replace(Regex("Z$"), "+0000").replace(Regex("([+-]\\d{2}):(\\d{2})$"), "$1$2")
             SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US).apply { isLenient = false }.parse(compatible)?.time
         }.getOrNull()

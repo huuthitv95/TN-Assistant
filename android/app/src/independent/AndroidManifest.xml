@@ -52,8 +52,8 @@
 
     <application
         android:allowBackup="false"
-        android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher"
+        android:icon="@drawable/tn_user_app_icon"
+        android:roundIcon="@drawable/tn_user_app_icon"
         android:label="TN Assistant"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.Light.NoActionBar"

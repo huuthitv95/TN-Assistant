@@ -99,6 +99,28 @@ func TestAuthOwnershipRefreshReplayLogoutAndExpiry(t *testing.T) {
 		t.Fatal("refresh token must be hashed")
 	}
 }
+
+func TestRefreshRotatesAnExpiredAccessTokenAndRejectsAnExpiredRefresh(t *testing.T) {
+	s := testServer(t)
+	a := guest(t, s)
+	refresh := str(a, "refresh_token")
+	s.db.Exec("UPDATE sessions SET access_expires=0 WHERE access_hash=?", hash(str(a, "access_token")))
+	status, rotated := call(t, s, "POST", "/v1/auth/refresh", "", Object{"refresh_token": refresh})
+	requireStatus(t, 200, status, rotated)
+	if str(rotated, "access_token") == "" || str(rotated, "refresh_token") == "" {
+		t.Fatalf("expired access token must rotate through a live refresh token: %v", rotated)
+	}
+	status, me := call(t, s, "GET", "/v1/me", str(rotated, "access_token"), nil)
+	requireStatus(t, 200, status, me)
+
+	other := guest(t, s)
+	s.db.Exec("UPDATE sessions SET refresh_expires=0 WHERE refresh_hash=?", hash(str(other, "refresh_token")))
+	status, expired := call(t, s, "POST", "/v1/auth/refresh", "", Object{"refresh_token": str(other, "refresh_token")})
+	requireStatus(t, 401, status, expired)
+	if code := str(expired["error"].(map[string]any), "code"); code != "REFRESH_EXPIRED" {
+		t.Fatalf("expired refresh must be reported explicitly, got %s: %v", code, expired)
+	}
+}
 func TestPaymentAtomicIdempotenceActivationAndWebhook(t *testing.T) {
 	s := testServer(t)
 	g := guest(t, s)

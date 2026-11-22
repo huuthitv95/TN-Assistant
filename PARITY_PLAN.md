@@ -2,6 +2,13 @@
 
 Phạm vi: Android độc lập, đối chiếu reference hiện có trong Kiki_Auto; Basic và Premium, không thanh toán thật. Chỉ nghiệm thu Android SDK emulator theo yêu cầu chủ ứng dụng. Không suy diễn độ tương thích đầu xe thật từ emulator, không quy đổi số test thành phần trăm hoàn thành.
 
+## Production release .197 — 2026-11-19
+
+- Backend `20261119-account-plan` passed isolated staging: database snapshot isolated, health/readiness ready, external provider calls 0, and private snapshot removed. The live provider smoke refreshed ASR/TTS readiness before deploy; its temporary guest was deleted and the script retained no transcript/audio.
+- Production incremental deploy completed with rollback available. Postflight confirmed active release, `/v1/health` and `/v1/ready`, 19 dashboard files over public HTTPS, database integrity, and unchanged schema/users/sessions/provider configuration/master key. No application password reset occurred.
+- Android production `vn.tn.assistant` 26.11.19.197 (`26111997`) was built, signed and installed on API 37. `testReleaseUnitTest`, `lintRelease`, `assembleRelease` and release instrumentation passed; instrumentation 12/12. APK SHA-256: `a81b8e9f5b9dce5acb2a066a7ac1b5a4fb7e582bd1d1a9e37e182e5e8b3ad36c`.
+- Public catalog and HTTPS APK endpoint now serve `.197`; checksum sidecar matches. Release-specific 24-hour soak and rollback execution remain outstanding.
+
 ## Đợt hỗ trợ .196
 
 - Sáu mục hỗ trợ đọc cấu hình VPS: QR đúng URL, hai tài liệu WebView, thiếu cấu hình/lỗi/retry/đóng rõ ràng.
@@ -73,6 +80,12 @@ Phạm vi: Android độc lập, đối chiếu reference hiện có trong Kiki_
 
 - `TnMediaControlsRuntimeTest` đạt 10/10 trên Android SDK AVD `TNParity37`: lệnh next/previous/pause/resume/replay đi qua Android MediaSession Binder thật; kiểm tra trạng thái sau lệnh, không gửi lặp, không tự chuyển sang player khác khi action bị thiếu, lỗi player, hết session, hủy và quyền Notification Listener bị từ chối. Kiểm thử dùng MediaSession tổng hợp, không phát nhạc hay sửa dữ liệu của app media bên ngoài.
 - Guard của `TnNotificationAccessTestScope` nay nhận diện hai AVD TN cho phép (`TNNative166`, `TNParity37`) qua hardware `ranchu/goldfish`; notification-listener grant chính xác đã được so sánh trước/sau và khôi phục. Chưa nghiệm thu với từng app media thật hoặc xác nhận người dùng có thể bật quyền trong Settings trên mọi phiên bản Android.
+
+### Account plan và quyền Premium — nghiệm thu cơ sở
+
+- Ngày 19/11/2026, backend `go test -count=1 ./...` và `go vet ./...` đạt; Android `testDebugUnitTest`, `testPreviewUnitTest`, `lintDebug`, `lintPreview`, `assembleDebug` và `assemblePreview` đạt trên JDK 21.
+- `TnFloatingAccountPlanRuntimeTest` (3 ca) và `TnUserSettingsRuntimeTest` (9 ca) đạt trên Android SDK AVD `TNParity37` API 37 cho cả debug và Preview: thay tài khoản không giữ nhãn Premium cũ, timestamp RFC3339Nano được đọc đúng, entitlement hỏng/hết hạn bị từ chối, và giao diện TN ơi theo đúng quyền `wake_word` riêng.
+- APK Preview `vn.tn.assistant.preview`, version `26.11.13.196-preview`, đã cài trên AVD để kiểm tra local. Đây là nghiệm thu account-plan và quyền giao diện; chưa xác nhận toàn bộ vòng đời gói Premium, thanh toán hoặc phát hành production.
 
 ### Wake word — chưa đạt cổng âm học
 
