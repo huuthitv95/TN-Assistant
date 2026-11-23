@@ -1,4 +1,4 @@
-"""Provision the synthetic corpus or an opt-in, public CC0 negative into a Preview AVD.
+"""Provision the synthetic corpus or public CC0 non-wake recordings into a Preview AVD.
 
 The PCM files stay local and are copied only into the selected emulator's app-private test directory.
 """
@@ -13,16 +13,14 @@ import re
 import subprocess
 import tarfile
 import tempfile
+import time
 import urllib.request
 
 
 ROOT = Path(__file__).resolve().parents[1]
 CORPUS = ROOT / '.runtime/wake192-acoustic/corpus-v1'
 PACKAGE = 'vn.tn.assistant.preview'
-CC0_SOURCE = ('https://upload.wikimedia.org/wikipedia/commons/4/4a/'
-              '%22Ch%E1%BB%AF_Qu%E1%BB%91c_Ng%E1%BB%AF%22_northern_pronunciation.ogg')
-CC0_LICENSE = 'https://commons.wikimedia.org/wiki/Special:PermanentLink/1269894826'
-CC0_SHA256 = 'f9761f114906b7af710b0f7b999f55fcffb7a98f4c470f042099048dba64031b'
+CC0_SOURCES = Path(__file__).with_name('wake_cc0_negative.json')
 
 
 def digest(path):
@@ -57,26 +55,36 @@ def verified_files(corpus):
     return manifest_bytes, files
 
 
-def cc0_recording(directory):
-    request = urllib.request.Request(CC0_SOURCE, headers={
-        'User-Agent': 'TN-Assistant-WakeEval/1.0 (https://github.com/huuthitv95/TN-Assistant)'})
-    with urllib.request.urlopen(request, timeout=30) as response:
-        ogg = response.read(44290)
-    if len(ogg) != 44289 or hashlib.sha256(ogg).hexdigest() != CC0_SHA256:
-        raise RuntimeError('Public CC0 source has changed')
-    pcm = directory / 'chu-quoc-ngu.pcm'
-    subprocess.run(['ffmpeg', '-nostdin', '-hide_banner', '-loglevel', 'error', '-i', 'pipe:0',
-                    '-ar', '16000', '-ac', '1', '-f', 's16le', str(pcm)], input=ogg, check=True)
-    if pcm.stat().st_size != 67584:
-        raise RuntimeError('Expected 2.112 seconds of mono 16 kHz PCM')
+def cc0_recordings(directory):
+    sources = json.loads(CC0_SOURCES.read_text(encoding='utf-8'))
+    if not sources or len({row['file'] for row in sources}) != len(sources):
+        raise ValueError('Expected a nonempty list of unique CC0 sample names')
+    rows, files = [], []
+    for index, row in enumerate(sources):
+        name = row['file']
+        if (not re.fullmatch(r'[a-z0-9-]+\.pcm', name) or row['license'] != 'CC0-1.0'
+                or not row['source'].startswith('https://upload.wikimedia.org/wikipedia/commons/')
+                or not 0 < row['source_bytes'] <= 2_000_000):
+            raise ValueError('Invalid entry in the pinned CC0 source list')
+        if index:
+            time.sleep(3.5)  # Space anonymous requests to the Wikimedia media host.
+        request = urllib.request.Request(row['source'], headers={
+            'User-Agent': 'TN-Assistant-WakeEval/1.0 (https://github.com/huuthitv95/TN-Assistant)'})
+        with urllib.request.urlopen(request, timeout=30) as response:
+            audio = response.read(row['source_bytes'] + 1)
+        if len(audio) != row['source_bytes'] or hashlib.sha256(audio).hexdigest() != row['source_sha256']:
+            raise RuntimeError('CC0 source checksum differs: ' + name)
+        pcm = directory / name
+        subprocess.run(['ffmpeg', '-nostdin', '-hide_banner', '-loglevel', 'error', '-i', 'pipe:0',
+                        '-ar', '16000', '-ac', '1', '-f', 's16le', str(pcm)], input=audio, check=True)
+        if pcm.stat().st_size != row['pcm_bytes']:
+            raise RuntimeError('Decoded CC0 sample length differs: ' + name)
+        rows.append(dict(row, expected_wake=False, sample_rate=16000, channels=1, sample_width=2,
+                         bytes=pcm.stat().st_size, sha256=digest(pcm)))
+        files.append((name, pcm))
     manifest = directory / 'manifest.json'
-    manifest.write_text(json.dumps([{
-        'file': pcm.name, 'expected_wake': False, 'source': CC0_SOURCE,
-        'source_sha256': CC0_SHA256, 'license': 'CC0-1.0', 'license_evidence': CC0_LICENSE,
-        'sample_rate': 16000, 'channels': 1, 'sample_width': 2,
-        'bytes': pcm.stat().st_size, 'sha256': digest(pcm),
-    }]), encoding='utf-8')
-    return manifest.read_bytes(), [('manifest.json', manifest), (pcm.name, pcm)]
+    manifest.write_text(json.dumps(rows, ensure_ascii=False), encoding='utf-8')
+    return manifest.read_bytes(), [('manifest.json', manifest), *files]
 
 
 def main():
@@ -84,7 +92,7 @@ def main():
     parser.add_argument('--serial', required=True, help='Explicit Android SDK emulator serial, for example emulator-5570')
     parser.add_argument('--adb', default=str(Path(os.environ.get('LOCALAPPDATA', '')) / 'Android/Sdk/platform-tools/adb.exe'))
     parser.add_argument('--cc0-negative', action='store_true',
-                        help='Download one public Vietnamese non-wake recording; run with -e tnWakeCorpus cc0-negative')
+                        help='Download public Vietnamese non-wake recordings; run with -e tnWakeCorpus cc0-negative')
     args = parser.parse_args()
     if not re.fullmatch(r'emulator-\d+', args.serial):
         parser.error('--serial must identify an Android SDK emulator')
@@ -106,7 +114,7 @@ def main():
     uid = int(adb('shell', 'run-as', PACKAGE, 'id', '-u'))
     gid = int(adb('shell', 'run-as', PACKAGE, 'id', '-g'))
     with tempfile.TemporaryDirectory() as temporary:
-        manifest_bytes, files = cc0_recording(Path(temporary)) if args.cc0_negative else verified_files(CORPUS)
+        manifest_bytes, files = cc0_recordings(Path(temporary)) if args.cc0_negative else verified_files(CORPUS)
         archive = BytesIO()
         with tarfile.open(fileobj=archive, mode='w', format=tarfile.USTAR_FORMAT) as output:
             for name, path in files:

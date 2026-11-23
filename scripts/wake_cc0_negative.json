@@ -1,0 +1,122 @@
+[
+  {
+    "file": "chu-quoc-ngu.pcm",
+    "transcript": "Chữ Quốc Ngữ",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/4/4a/%22Ch%E1%BB%AF_Qu%E1%BB%91c_Ng%E1%BB%AF%22_northern_pronunciation.ogg",
+    "license": "CC0-1.0",
+    "license_evidence": "https://commons.wikimedia.org/wiki/Special:PermanentLink/1269894826",
+    "source_bytes": 44289,
+    "source_sha256": "f9761f114906b7af710b0f7b999f55fcffb7a98f4c470f042099048dba64031b",
+    "pcm_bytes": 67584
+  },
+  {
+    "file": "troi-oi.pcm",
+    "transcript": "trời ơi",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/c/c1/LL-Q9199_%28vie%29-Penn_Zero_MSSJ-tr%E1%BB%9Di_%C6%A1i.wav",
+    "license": "CC0-1.0",
+    "license_evidence": "https://commons.wikimedia.org/wiki/Special:PermanentLink/741845521",
+    "source_bytes": 117548,
+    "source_sha256": "0cf14fbe2672443f58f435a6d59deaa529f2cf6171afac2b5e57b3555843582e",
+    "pcm_bytes": 39168
+  },
+  {
+    "file": "ten-penn.pcm",
+    "transcript": "tên",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/7/76/LL-Q9199_%28vie%29-Penn_Zero_MSSJ-t%C3%AAn.wav",
+    "license": "CC0-1.0",
+    "license_evidence": "https://commons.wikimedia.org/wiki/Special:PermanentLink/1030290715",
+    "source_bytes": 70700,
+    "source_sha256": "ad836769ec03fe9adc724f49c90c697c4595bdbd935f61159ba772d7e97b13f3",
+    "pcm_bytes": 23552
+  },
+  {
+    "file": "xang-ti-met.pcm",
+    "transcript": "xăng-ti-mét",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/0/04/LL-Q9199_%28vie%29-Penn_Zero_MSSJ-x%C4%83ng-ti-m%C3%A9t.wav",
+    "license": "CC0-1.0",
+    "license_evidence": "https://commons.wikimedia.org/wiki/Special:PermanentLink/1210737299",
+    "source_bytes": 96812,
+    "source_sha256": "a608ff1e45edc1d968b91abcfa9084daf743e784531d7bbfcc16d29539973583",
+    "pcm_bytes": 32256
+  },
+  {
+    "file": "ten-jessica.pcm",
+    "transcript": "tên",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/a/a0/LL-Q9199_%28vie%29-Jessica_Nguyen_%28Pamputt%29-t%C3%AAn.wav",
+    "license": "CC0-1.0",
+    "license_evidence": "https://commons.wikimedia.org/wiki/Special:PermanentLink/837619138",
+    "source_bytes": 84780,
+    "source_sha256": "b5f3acb0933a4b6f2546966d7d1c36fdb6cdeb1a7262fa51e769dae710645919",
+    "pcm_bytes": 28246
+  },
+  {
+    "file": "choi.pcm",
+    "transcript": "chơi",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/3/34/LL-Q9199_%28vie%29-Jessica_Nguyen_%28Pamputt%29-ch%C6%A1i.wav",
+    "license": "CC0-1.0",
+    "license_evidence": "https://commons.wikimedia.org/wiki/Special:PermanentLink/837605126",
+    "source_bytes": 101164,
+    "source_sha256": "d4e5c29973a00db76785e0cedec9b183ea6998e4b4d3e3c19ce2d08d6e4157d6",
+    "pcm_bytes": 33706
+  },
+  {
+    "file": "noi.pcm",
+    "transcript": "nơi",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/c/c6/LL-Q9199_%28vie%29-Jessica_Nguyen_%28Pamputt%29-n%C6%A1i.wav",
+    "license": "CC0-1.0",
+    "license_evidence": "https://commons.wikimedia.org/wiki/Special:PermanentLink/901659726",
+    "source_bytes": 101164,
+    "source_sha256": "fd6d00c57288604d3be1edfd300ef364468c4bb8679dd0e70d52c858a34aaa54",
+    "pcm_bytes": 33706
+  },
+  {
+    "file": "tro-choi.pcm",
+    "transcript": "trò chơi",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/9/97/LL-Q9199_%28vie%29-Jessica_Nguyen_%28Pamputt%29-tr%C3%B2_ch%C6%A1i.wav",
+    "license": "CC0-1.0",
+    "license_evidence": "https://commons.wikimedia.org/wiki/Special:PermanentLink/837618145",
+    "source_bytes": 133932,
+    "source_sha256": "8adcbe3de40f2dc99ed755787aadcb3f03c736a00995d3d3d2d57756a14dd6a0",
+    "pcm_bytes": 44630
+  },
+  {
+    "file": "uong.pcm",
+    "transcript": "uống",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/1/1f/LL-Q9199_%28vie%29-Zoopermarkt-u%E1%BB%91ng.wav",
+    "license": "CC0-1.0",
+    "license_evidence": "https://commons.wikimedia.org/wiki/Special:PermanentLink/1210386851",
+    "source_bytes": 79916,
+    "source_sha256": "d0ab2ce6f67b53e2df939d4cb5d0d4a8ae01460edf8fbc5d567aad2dc35a14c6",
+    "pcm_bytes": 26624
+  },
+  {
+    "file": "nghieng.pcm",
+    "transcript": "nghiêng",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/d/d2/LL-Q9199_%28vie%29-Zoopermarkt-nghi%C3%AAng.wav",
+    "license": "CC0-1.0",
+    "license_evidence": "https://commons.wikimedia.org/wiki/Special:PermanentLink/1202910648",
+    "source_bytes": 61486,
+    "source_sha256": "868c30ea8a86e24d33189d92002b375f53ff32f916de8d7cef6f946a7741aeac",
+    "pcm_bytes": 20480
+  },
+  {
+    "file": "thang-hai.pcm",
+    "transcript": "tháng hai",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/c/c1/LL-Q9199_%28vie%29-Khangtran2008-th%C3%A1ng_hai.wav",
+    "license": "CC0-1.0",
+    "license_evidence": "https://commons.wikimedia.org/wiki/Special:PermanentLink/898088405",
+    "source_bytes": 132652,
+    "source_sha256": "5762f0b2050389ef883e2fb2982be3e1969667170f162f10b399f0cd25e6c1c4",
+    "pcm_bytes": 44202
+  },
+  {
+    "file": "thieu.pcm",
+    "transcript": "thiếu",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/1/11/LL-Q9199_%28vie%29-Khangtran2008-thi%E1%BA%BFu.wav",
+    "license": "CC0-1.0",
+    "license_evidence": "https://commons.wikimedia.org/wiki/Special:PermanentLink/1060248982",
+    "source_bytes": 78892,
+    "source_sha256": "2af75739f1a5c771817e2b734bfca7120f62274893731e957b6d5533cfea936b",
+    "pcm_bytes": 26282
+  }
+]
