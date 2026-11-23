@@ -11,6 +11,8 @@ Phạm vi: Android độc lập, đối chiếu reference hiện có trong Kiki_
 
 ## Đợt hỗ trợ .196
 
+- Bản sửa khôi phục trang đã qua 5 ca trên cả API 29 và API 37 (SDK emulator). Các ca bao gồm hành trình dùng cấu hình production sau khi tạo lại Activity, vòng đời QR/WebView, tải lại khi lỗi và Quay lại trước phản hồi muộn. Kiểm tra theo tên và tiền tố thiết bị của bộ test trên VPS ghi nhận 0 guest còn lại.
+
 - Ngày 23/11/2026 đã kiểm tra đường đi Cài đặt → Hướng dẫn và liên hệ hỗ trợ trên Preview với guest dùng một lần và `/v1/config` production. Ba mã QR trên ảnh màn hình giải mã đúng trang FAQ, liên hệ và micro. Hai WebView tải đúng URL và tiêu đề trang khiếu nại và hỗ trợ khách hàng dễ tổn thương; JavaScript, file access và content access đều tắt. Facebook hiển thị “Chưa cấu hình”. Guest được xóa khi kết thúc. Trên API 29, bản trước sửa mất trang khi Android tạo lại Activity sau khi đóng QR; bản sửa tải lại cấu hình và tiếp tục tới mục liên hệ. Ca Quay lại trong lúc tải xác minh phản hồi cũ không mở lại trang.
 
 - Sáu mục hỗ trợ đọc cấu hình VPS: QR đúng URL, hai tài liệu WebView, thiếu cấu hình/lỗi/retry/đóng rõ ràng.
@@ -90,6 +92,8 @@ Phạm vi: Android độc lập, đối chiếu reference hiện có trong Kiki_
 - APK Preview `vn.tn.assistant.preview`, version `26.11.13.196-preview`, đã cài trên AVD để kiểm tra local. Đây là nghiệm thu account-plan và quyền giao diện; chưa xác nhận toàn bộ vòng đời gói Premium, thanh toán hoặc phát hành production.
 
 ### Wake word — chưa đạt cổng âm học
+
+- Trên AVD API 37 trang nhớ 16 KB, sau khi QEMU dừng đột ngột, model Vosk và dấu `.complete` trong cache đều còn 0 byte. Bản trước sửa báo `Failed to create a model` ở hai lần mở. TN nay kiểm tra khả năng mở model trước khi tin dấu hoàn tất; nếu cache hỏng, app xoá và sao chép lại model từ APK, flush dữ liệu trước khi tạo marker rồi mở lại. `TnWakeAcousticRuntimeTest.damagedCacheWithMatchingMarkerRecoversFromApk` đạt trên SDK AVD API 29 và API 37 với tệp `am/final.mdl` bị làm rỗng nhưng marker vẫn còn. Cả hai ca chạy model trong APK, không gọi dịch vụ giọng nói.
 
 - Ngày 23/11/2026 đã tải ẩn danh bản ghi CC0 “Chữ Quốc Ngữ” (giọng Bắc, 2,112 giây, Ogg SHA-256 `f9761f114906b7af710b0f7b999f55fcffb7a98f4c470f042099048dba64031b`). Sau khi chuyển sang PCM mono 16 kHz, `TnWakeAcousticRuntimeTest` dùng model trong APK trên SDK API 29 ghi nhận kết thúc câu và 0 kích hoạt nhầm trên 1 mẫu. Câu này không chứa từ đánh thức. Vẫn thiếu bản ghi người thật nói “TN ơi” và dữ liệu nhiều giọng trong tiếng ồn. [Nguồn và giấy phép của bản ghi](https://commons.wikimedia.org/wiki/Special:PermanentLink/1269894826)
 

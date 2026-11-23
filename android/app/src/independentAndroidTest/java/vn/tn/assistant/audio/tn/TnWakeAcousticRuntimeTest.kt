@@ -1,6 +1,7 @@
 package vn.tn.assistant.audio.tn
 
 import androidx.test.platform.app.InstrumentationRegistry
+import android.content.ContextWrapper
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.*
@@ -10,6 +11,28 @@ import java.io.File
 
 /** Opt-in PCM fixtures are provisioned privately; actual Vosk/Silero inference, not a fake detector. */
 class TnWakeAcousticRuntimeTest {
+    @Test fun damagedCacheWithMatchingMarkerRecoversFromApk() {
+        val targetContext = InstrumentationRegistry.getInstrumentation().targetContext
+        val directory = File(targetContext.cacheDir, "wake-cache-" + java.util.UUID.randomUUID())
+        val isolated = object : ContextWrapper(targetContext) {
+            override fun getNoBackupFilesDir() = directory
+        }
+        try {
+            NativeAudio(isolated).use { it.init() }
+            val model = File(directory, "tn-models/vosk-small-vn-0.4-v1/am/final.mdl")
+            val fullSize = model.length()
+            assertTrue(fullSize > 0)
+            model.writeBytes(byteArrayOf())
+            NativeAudio(isolated).use { engine ->
+                engine.init()
+                assertFalse(engine.wake(ShortArray(512), 512))
+            }
+            assertEquals(fullSize, model.length())
+        } finally {
+            assertTrue("Remove test model cache", directory.deleteRecursively())
+        }
+    }
+
     @Test fun actualPackagedModelsRecognizeWakeAndRejectTheNegativeCorpus() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val context = instrumentation.targetContext
