@@ -118,5 +118,15 @@
     "source_bytes": 78892,
     "source_sha256": "2af75739f1a5c771817e2b734bfca7120f62274893731e957b6d5533cfea936b",
     "pcm_bytes": 26282
+  },
+  {
+    "file": "car-interior-winsford.pcm",
+    "description": "Continuous field recording inside a moving car, including road noise and a horn",
+    "source": "https://cdn.freesound.org/previews/808/808203_11459876-hq.mp3",
+    "license": "CC0-1.0",
+    "license_evidence": "https://freesound.org/people/IanGW/sounds/808203/",
+    "source_bytes": 8028753,
+    "source_sha256": "1ab2dbaa13e1106117a4cae13d037f75926b31be744225150acd5fbf456a7ef7",
+    "pcm_bytes": 11569144
   }
 ]

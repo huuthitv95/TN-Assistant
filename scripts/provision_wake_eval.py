@@ -63,11 +63,12 @@ def cc0_recordings(directory):
     for index, row in enumerate(sources):
         name = row['file']
         if (not re.fullmatch(r'[a-z0-9-]+\.pcm', name) or row['license'] != 'CC0-1.0'
-                or not row['source'].startswith('https://upload.wikimedia.org/wikipedia/commons/')
-                or not 0 < row['source_bytes'] <= 2_000_000):
+                or not row['source'].startswith(('https://upload.wikimedia.org/wikipedia/commons/',
+                                                 'https://cdn.freesound.org/previews/'))
+                or not 0 < row['source_bytes'] <= 10_000_000):
             raise ValueError('Invalid entry in the pinned CC0 source list')
         if index:
-            time.sleep(3.5)  # Space anonymous requests to the Wikimedia media host.
+            time.sleep(3.5)  # Space anonymous requests to the media hosts.
         request = urllib.request.Request(row['source'], headers={
             'User-Agent': 'TN-Assistant-WakeEval/1.0 (https://github.com/huuthitv95/TN-Assistant)'})
         with urllib.request.urlopen(request, timeout=30) as response:
@@ -92,7 +93,7 @@ def main():
     parser.add_argument('--serial', required=True, help='Explicit Android SDK emulator serial, for example emulator-5570')
     parser.add_argument('--adb', default=str(Path(os.environ.get('LOCALAPPDATA', '')) / 'Android/Sdk/platform-tools/adb.exe'))
     parser.add_argument('--cc0-negative', action='store_true',
-                        help='Download public Vietnamese non-wake recordings; run with -e tnWakeCorpus cc0-negative')
+                        help='Download CC0 Vietnamese speech and car ambience; run with -e tnWakeCorpus cc0-negative')
     args = parser.parse_args()
     if not re.fullmatch(r'emulator-\d+', args.serial):
         parser.error('--serial must identify an Android SDK emulator')
