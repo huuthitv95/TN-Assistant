@@ -89,12 +89,36 @@ class TnSupportRuntimeTest {
             val actions = mutableListOf<String>()
             try {
                 val surface = TnUserSettingsSurface(context, preferences, "fixture-device", {}, { actions += it }, { _, _ -> })
-                surface.dataPage("support", JSONObject().put("support", JSONObject().put("faq_url", "file:///private")))
+                surface.finishDataPage(surface.beginDataPage("support"),
+                    Result.success(JSONObject().put("support", JSONObject().put("faq_url", "file:///private"))))
                 assertEquals(6, descendants(surface).filterIsInstance<TextView>().count { it.text == "Chưa cấu hình" })
                 descendants(surface).single { it.contentDescription == "Vấn đề thường gặp" }.performClick()
                 descendants(surface).filterIsInstance<TextView>().single { it.text == "TẢI LẠI" }.performClick()
                 assertEquals(listOf("support"), actions)
             } finally { preferences.edit().clear().commit() }
+        }
+    }
+
+    @Test fun backAndRetryDiscardResponsesFromOlderPageRequests() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        instrumentation.runOnMainSync {
+            val context = instrumentation.targetContext
+            val actions = mutableListOf<String>()
+            val surface = TnUserSettingsSurface(context, context.getSharedPreferences("tn-support-fixture", 0),
+                "fixture-device", {}, { actions += it }, { _, _ -> })
+            val old = surface.beginDataPage("support")
+            assertTrue(surface.back())
+            val current = surface.beginDataPage("support")
+            surface.finishDataPage(old, Result.success(JSONObject()))
+            assertTrue(descendants(surface).none { it.contentDescription == "Vấn đề thường gặp" })
+            surface.finishDataPage(current, Result.failure(java.io.IOException()))
+            descendants(surface).single { it.contentDescription == "Tải lại" }.performClick()
+            assertEquals(listOf("support"), actions)
+            val retry = surface.beginDataPage("support")
+            assertTrue(surface.back())
+            surface.finishDataPage(retry, Result.failure(java.io.IOException()))
+            assertEquals("Cài đặt", surface.findViewWithTag<TextView>("tnSettingsHeading").text)
+            assertTrue(descendants(surface).none { it.contentDescription == "Tải lại" })
         }
     }
 

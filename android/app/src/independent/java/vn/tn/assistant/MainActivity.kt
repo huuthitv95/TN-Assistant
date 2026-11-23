@@ -1642,6 +1642,8 @@ class MainActivity : Activity() {
 
     private fun loadUserPage(key: String) {
         val surface = userSettings ?: return
+        val owner = sessionStore.actionGeneration()
+        val request = surface.beginDataPage(key)
         val path = when (key) {
             "devices" -> "/v1/devices"
             "history" -> "/v1/history"
@@ -1650,14 +1652,21 @@ class MainActivity : Activity() {
             else -> "/v1/config"
         }
         worker.execute {
-            try {
-                val response = if (key == "diagnostics") {
+            val result = try {
+                val data = if (key == "diagnostics") {
                     val health = api("/v1/health", null, token = null)
                     val readiness = api("/v1/ready", null, token = null)
                     JSONObject().put("health", health).put("readiness", readiness)
                 } else api(path, null)
-                main.post { if (userSettings === surface) surface.dataPage(key, response) }
-            } catch (error: Exception) { main.post { if (userSettings === surface) surface.loadError(error.message ?: "Chưa tải được dữ liệu TN.") } }
+                Result.success(data)
+            } catch (error: Exception) {
+                Result.failure(error)
+            }
+            main.post {
+                if (!isDestroyed && !isFinishing && userSettings === surface && sessionStore.ownsActions(owner)) {
+                    surface.finishDataPage(request, result)
+                }
+            }
         }
     }
 

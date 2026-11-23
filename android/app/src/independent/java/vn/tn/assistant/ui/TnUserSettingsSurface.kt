@@ -13,6 +13,7 @@ import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.core.view.OneShotPreDrawListener
 import org.json.JSONObject
 import vn.tn.assistant.BuildConfig
 import vn.tn.assistant.R
@@ -82,6 +83,8 @@ class TnUserSettingsSurface(
     private var selected = 0
     private var selectedByClick: Int? = null
     private var detail: String? = null
+    internal class DataPageRequest(val key: String, var scrollY: Int = 0)
+    private var loadingPage: DataPageRequest? = null
     private var drawer: View? = null
     private var confirmation: View? = null
     private var supportDialog: TnSupportDialog? = null
@@ -175,10 +178,16 @@ class TnUserSettingsSurface(
     fun saveUiState() = android.os.Bundle().apply {
         putInt("selected_group", selected)
         putString("detail", detail)
-        putInt("scroll_y", scroll.scrollY)
+        putInt("scroll_y", loadingPage?.scrollY ?: scroll.scrollY)
     }
     fun restoreUiState(state: android.os.Bundle) {
         selected = state.getInt("selected_group", 0).coerceIn(groups.indices)
+        val remotePage = dataPageTitles.entries.find { it.value == state.getString("detail") }
+        if (remotePage != null) {
+            action(remotePage.key)
+            loadingPage?.scrollY = state.getInt("scroll_y", 0).coerceAtLeast(0)
+            return
+        }
         when (state.getString("detail")) {
             "Tiện ích nổi" -> floating()
             "Cảnh báo giao thông" -> traffic()
@@ -285,6 +294,7 @@ class TnUserSettingsSurface(
         parent.addView(this, LinearLayout.LayoutParams(-1, -2))
     }
     private fun root(index: Int, move: Boolean) {
+        loadingPage = null
         pauseRoadMonitor()
         detail = null; heading.text = "Cài đặt"; heading.gravity = Gravity.START or Gravity.CENTER_VERTICAL
         breadcrumb.visibility = GONE; body.removeAllViews(); anchors.clear()
@@ -346,6 +356,7 @@ class TnUserSettingsSurface(
         parent.setPadding(0, 0, 0, dp(1))
     }
     private fun sub(title: String, build: (LinearLayout) -> Unit) {
+        loadingPage = null
         pauseRoadMonitor()
         detail = title; heading.text = title; heading.gravity = Gravity.CENTER
         breadcrumb.visibility = VISIBLE; body.removeAllViews()
@@ -365,8 +376,22 @@ class TnUserSettingsSurface(
                 "XOÁ TÀI KHOẢN", "ĐÓNG", onLeft = { action("delete-account") })
         }
     }
-    fun dataPage(key: String, response: JSONObject) {
-        val title = when (key) { "devices" -> "Thiết bị liên kết"; "history" -> "Lịch sử hoạt động"; "premium" -> "Thông tin gói dịch vụ"; "diagnostics" -> "Kiểm tra hệ thống"; else -> "Hướng dẫn và liên hệ hỗ trợ" }
+    internal fun beginDataPage(key: String): DataPageRequest {
+        sub(dataPageTitles.getValue(key)) { card -> description(card, "Đang tải…") }
+        return DataPageRequest(key).also { loadingPage = it }
+    }
+
+    internal fun finishDataPage(request: DataPageRequest, result: Result<JSONObject>) {
+        if (loadingPage !== request) return
+        val key = request.key
+        val title = dataPageTitles.getValue(key)
+        val response = result.getOrElse {
+            sub(title) { card ->
+                description(card, "Chưa tải được dữ liệu TN. Kiểm tra kết nối rồi thử lại.")
+                row(card, "Tải lại", "") { action(key) }
+            }
+            return
+        }
         sub(title) { card ->
             if (key == "diagnostics") {
                 val health = response.optJSONObject("health") ?: JSONObject()
@@ -412,6 +437,9 @@ class TnUserSettingsSurface(
                     val value = when (key) { "devices" -> if (item.optString("id") == deviceId || item.optString("device_id") == deviceId) "Thiết bị này" else "Đã liên kết"; "history" -> item.optString("created_at"); else -> item.optString("description") }
                     row(card, name, value) { }
                 }
+            }
+            if (request.scrollY > 0) OneShotPreDrawListener.add(card) {
+                if (card.parent === body) scroll.scrollTo(0, request.scrollY)
             }
         }
     }
@@ -738,6 +766,11 @@ class TnUserSettingsSurface(
     private fun sidebarWidth(width: Int): Int =
         if (width / resources.displayMetrics.density < 600f) 0 else sd(360).coerceIn(width / 4, width * 2 / 5)
     companion object {
+        private val dataPageTitles = mapOf(
+            "devices" to "Thiết bị liên kết", "history" to "Lịch sử hoạt động",
+            "premium" to "Thông tin gói dịch vụ", "diagnostics" to "Kiểm tra hệ thống",
+            "support" to "Hướng dẫn và liên hệ hỗ trợ",
+        )
         val maps = listOf("Google Maps" to "com.google.android.apps.maps", "Navitel" to "com.navitel", "VietMap S1" to "com.vietmap.s1OBU", "VietMap S2" to "com.vietmap.S2OBU", "VietMap Live" to "vn.vietmap.live")
         val music = listOf("Chưa chọn" to "", "Spotify" to "com.spotify.music", "YouTube Music" to "com.google.android.apps.youtube.music")
         val videos = listOf("Tự động" to "", "YouTube" to "com.google.android.youtube")

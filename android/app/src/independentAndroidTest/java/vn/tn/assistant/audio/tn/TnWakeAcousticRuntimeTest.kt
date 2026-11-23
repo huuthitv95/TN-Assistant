@@ -40,7 +40,8 @@ class TnWakeAcousticRuntimeTest {
                     .put("expected_wake", item.getBoolean("expected_wake")).put("detected", detected).put("vad_endpoint", endpoint))
             }
         }
-        File(context.cacheDir, "tn167-wake-acoustic.json").writeText(results.toString(2))
+        val report = if (folder.name == "tn-wake-cc0-negative") "tn-wake-cc0-negative.json" else "tn167-wake-acoustic.json"
+        File(context.cacheDir, report).writeText(results.toString(2))
         for (index in 0 until results.length()) {
             val item = results.getJSONObject(index)
             assertEquals("Real acoustic decision for ${item.getString("file")}", item.getBoolean("expected_wake"), item.getBoolean("detected"))
@@ -92,13 +93,18 @@ class TnWakeAcousticRuntimeTest {
                 }
             }
         }
-        File(context.cacheDir, "tn167-wake-diagnostic.json").writeText(results.toString(2))
+        val report = if (folder.name == "tn-wake-cc0-negative") "tn-wake-cc0-diagnostic.json" else "tn167-wake-diagnostic.json"
+        File(context.cacheDir, report).writeText(results.toString(2))
         val selectedCount = (0 until manifest.length()).count { split == null || manifest.getJSONObject(it).optString("split") == split }
         assertEquals(selectedCount, results.length())
     }
 
     private fun corpusFolder(context: android.content.Context): File {
-        val folder = File(context.filesDir, "tn-wake-test")
+        val folder = File(context.filesDir, when (InstrumentationRegistry.getArguments().getString("tnWakeCorpus")) {
+            null, "synthetic" -> "tn-wake-test"
+            "cc0-negative" -> "tn-wake-cc0-negative"
+            else -> error("Unknown wake corpus")
+        })
         val isComplete = runCatching {
             val entries = JSONArray(File(folder, "manifest.json").readText())
             entries.length() > 0 && (0 until entries.length()).all { index ->
