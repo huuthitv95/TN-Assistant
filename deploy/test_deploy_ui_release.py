@@ -2,7 +2,7 @@ import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import deploy_ui_release as deployment
 
@@ -92,8 +92,18 @@ class IncrementalDeploymentTest(unittest.TestCase):
                         )
             self.assertEqual(previous, active_target['path'])
             self.assertEqual(['healthy'], recoveries)
-            self.assertEqual(2, run.call_count)
+            self.assertEqual([call(['systemctl', 'restart', deployment.SERVICE])] * 2, run.call_args_list)
             self.assertEqual(2, switch.call_count)
+
+    def test_rehearsal_restarts_only_its_isolated_unit_on_failure(self):
+        unit = 'tn-stage-rollback-test.service'
+        with patch.object(deployment, 'atomic_switch'), patch.object(deployment.remote, 'run') as run:
+            def fail_postflight():
+                raise RuntimeError('rehearsal postflight')
+
+            with self.assertRaisesRegex(RuntimeError, 'previous executable restored'):
+                deployment.activate('current', 'before', 'after', fail_postflight, lambda: None, service=unit)
+        self.assertEqual([call(['systemctl', 'restart', unit])] * 2, run.call_args_list)
 
     def test_static_backup_is_complete_and_private_copy_matches_live_hashes(self):
         with tempfile.TemporaryDirectory() as temporary:

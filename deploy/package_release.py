@@ -39,6 +39,7 @@ def source_files():
     deploy_files = {
         'assistant-proxy-locations.conf', 'deploy_remote.py', 'deploy_ui_release.py', 'install_speech.py', 'migrate_config.py', 'monitor.py', 'readiness_watch.py',
         'package_release.py', 'prepare_speech.py', 'providers.assistant.example.json', 'README.md',
+        'rehearse_backend_rollback.py', 'accept_backend_staging.py', 'staging_network_probe.py',
         'publish_android_preview.py', 'publish_support.py', 'requirements-asr.lock', 'requirements-tts.lock', 'speech_worker.py',
         'tn-assistant.env.example', 'tn-assistant.service', 'tn-assistant-monitor.service',
     }

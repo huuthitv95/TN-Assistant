@@ -34,6 +34,14 @@ Original TTS requires mode `legacy_tn`, URL `https://partner-speech.lab.zalo.ai/
 
 Before any release, build and test from a clean source allowlist, run `package_release.py`, inspect both manifests, scan for secrets, verify SQLite integrity and keep a consistent backup plus its encryption key. Stage the candidate with separate database/configuration first. Do not switch the production symlink until readiness, reverse proxy, dashboard, authenticated API, worker inference and rollback have been checked.
 
+To rehearse executable rollback on the VPS, run the following from a private copy of the deployment source inside the Fly systemd environment. Supply the installed release names and the currently active release as `--current`.
+
+```sh
+python3 -B deploy/rehearse_backend_rollback.py --previous 20261113-road-radius --current 20261119-account-plan
+```
+
+The script copies both installed executables into a temporary staging directory and uses the deployment switch procedure with a private systemd unit. It creates a guest on the previous release, updates the guest's volume on the current release, deliberately fails postflight, and reads the new volume using the original session on the restored release. It checks SQLite integrity and the production PID and symlink before reporting success. The rehearsal uses a fresh database and loopback networking. Dashboard assets and Android package rollback need separate acceptance.
+
 For an already initialized independent runtime, `deploy_ui_release.py` performs an incremental release without changing the live database, environment, provider configuration, AI key or admin password. It makes a private database/config/key/dashboard backup, switches the backend with rollback, installs the packaged dashboard, verifies its files through the public HTTPS reverse proxy, and publishes the versioned APK only after those checks pass. It requires both `/v1/health` and the backend's `/v1/ready` to pass before and after switching; the dashboard fallback at `/readyz` is not a readiness check. It refuses unclassified webroot paths and restores the previous dashboard and backend if candidate verification fails. This incremental path does not replace the separate staging checks required above.
 
 After switching, verify health, readiness, user data, TLS/ACME renewal and service restart behavior. A green process health check alone is not feature acceptance. Keep unsupported automation and unverified data sources disabled; do not substitute an external web page or fixture response.

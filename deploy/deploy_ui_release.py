@@ -216,16 +216,16 @@ def wait_healthy(release, environment):
     raise RuntimeError('Backend failed health, readiness and running-executable checks')
 
 
-def activate(current, previous, candidate, verify, recover):
+def activate(current, previous, candidate, verify, recover, *, service=SERVICE):
     """Rollback only the executable symlink/service; never restore or write the live database."""
     atomic_switch(current, previous, candidate)
     try:
-        remote.run(['systemctl', 'restart', SERVICE])
+        remote.run(['systemctl', 'restart', service])
         return verify()
     except BaseException as error:
         try:
             atomic_switch(current, candidate, previous)
-            remote.run(['systemctl', 'restart', SERVICE])
+            remote.run(['systemctl', 'restart', service])
             recover()
         except BaseException as rollback_error:
             raise RuntimeError('Candidate failed; executable rollback failed (' + type(rollback_error).__name__ + '); live DB was not restored') from error
