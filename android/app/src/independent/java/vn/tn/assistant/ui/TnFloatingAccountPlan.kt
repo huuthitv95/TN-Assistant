@@ -3,8 +3,7 @@ package vn.tn.assistant.ui
 import android.content.Context
 import android.os.SystemClock
 import org.json.JSONObject
-import java.text.SimpleDateFormat
-import java.util.Locale
+import vn.tn.assistant.api.serverTimeMillis
 import kotlin.math.ceil
 
 /** Non-secret display snapshot. Never used to authorize a feature or a payment. */
@@ -18,18 +17,6 @@ internal data class TnFloatingAccountPlan(val kind: String, val expires: Long?, 
         private val revision = java.util.concurrent.atomic.AtomicLong(0)
         fun generation() = revision.get()
         private const val KEY = "account_plan_display"
-        private fun parse(value: String): Long? = runCatching {
-            val raw = value.trim()
-            val fraction = Regex("\\.(\\d+)(Z|[+-]\\d{2}:\\d{2})$").find(raw)
-            val normalized = if (fraction != null) {
-                val digits = fraction.groupValues[1].padEnd(3, '0').take(3)
-                raw.substring(0, fraction.range.first) + ".$digits" + fraction.groupValues[2]
-            } else {
-                raw.replace(Regex("(T\\d{2}:\\d{2}:\\d{2})(Z|[+-]\\d{2}:\\d{2})$"), "$1.000$2")
-            }
-            val compatible = normalized.replace(Regex("Z$"), "+0000").replace(Regex("([+-]\\d{2}):(\\d{2})$"), "$1$2")
-            SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US).apply { isLenient = false }.parse(compatible)?.time
-        }.getOrNull()
         fun read(context: Context): TnFloatingAccountPlan? = runCatching {
             val p = JSONObject(TnFloatingControlService.settings(context).getString(KEY, null) ?: return null)
             // Elapsed time belongs to this boot. Never reuse stale account display after reboot.
@@ -42,9 +29,9 @@ internal data class TnFloatingAccountPlan(val kind: String, val expires: Long?, 
             if (expectedGeneration != generation() || !vn.tn.assistant.auth.TnSessionStore.get(context).hasSession()) return
             val p = me.optJSONObject("account_plan")
             val kind = p?.optString("kind")
-            val server = p?.optString("server_time")?.let(::parse)
+            val server = p?.optString("server_time")?.let(::serverTimeMillis)
             if (kind !in setOf("basic", "premium", "admin") || server == null) { clear(context); return }
-            val expires = p.optString("expires_at").let(::parse)
+            val expires = p.optString("expires_at").let(::serverTimeMillis)
             if (kind == "premium" && expires == null) { clear(context); return }
             val saved = JSONObject().put("kind", kind).put("server", server).put("expires", expires ?: 0)
                 .put("received", SystemClock.elapsedRealtime())

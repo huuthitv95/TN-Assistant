@@ -1,6 +1,8 @@
 package main
 
 import (
+	"database/sql"
+	"errors"
 	"math"
 	"net/http"
 	"time"
@@ -59,6 +61,14 @@ func (s *Server) adminLocalPremium(w http.ResponseWriter, r *http.Request, actor
 	clock := time.Now().UTC()
 	source := "local-admin:" + uid
 	if days > 0 {
+		var sourceOwner string
+		err = tx.QueryRow("SELECT user_id FROM entitlements WHERE source=?", source).Scan(&sourceOwner)
+		if err == nil && sourceOwner != uid {
+			return problem(http.StatusConflict, "LOCAL_GRANT_OWNERSHIP_CONFLICT", "Local grant belongs to another account")
+		}
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return err
+		}
 		_, err = tx.Exec(`INSERT INTO entitlements VALUES(?,?,?,?,?,?)
 			ON CONFLICT(source) DO UPDATE SET starts_at=excluded.starts_at, expires_at=excluded.expires_at`,
 			ident(), uid, "premium-local", source, clock.Format(time.RFC3339Nano), clock.AddDate(0, 0, days).Format(time.RFC3339Nano))

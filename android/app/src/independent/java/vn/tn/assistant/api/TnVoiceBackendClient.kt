@@ -24,9 +24,10 @@ internal class TnVoiceBackendClient(context: Context) {
         .callTimeout(0, TimeUnit.MILLISECONDS).pingInterval(20, TimeUnit.SECONDS).build()
     private val base = BuildConfig.API_BASE_URL.toHttpUrl()
 
-    fun json(path: String, data: JSONObject? = null, method: String = if (data == null) "GET" else "POST"): JSONObject {
+    fun json(path: String, data: JSONObject? = null, method: String = if (data == null) "GET" else "POST",
+        entitlementRequest: Boolean = false): JSONObject {
         val body = data?.toString()?.toRequestBody("application/json; charset=utf-8".toMediaType())
-        return decode(send(path, method, body))
+        return decode(send(path, method, body, entitlementRequest))
     }
     fun pcm(bytes: ByteArray): JSONObject {
         require(bytes.isNotEmpty() && bytes.size <= 16000 * 2 * 15)
@@ -75,18 +76,22 @@ internal class TnVoiceBackendClient(context: Context) {
 
     private fun refresh(token: String): JSONObject = decode(raw("/v1/auth/refresh", "POST",
         JSONObject().put("refresh_token", token).toString().toRequestBody("application/json".toMediaType()), null))
-    private fun send(path: String, method: String, body: RequestBody?): okhttp3.Response {
+    private fun send(path: String, method: String, body: RequestBody?, entitlementRequest: Boolean = false): okhttp3.Response {
         val token = session.restore(::refresh)
-        val first = raw(path, method, body, token)
+        val first = raw(path, method, body, token, entitlementRequest)
         if (first.code != 401) { validate(first); return first }
         first.close()
         val next = session.refreshAfterUnauthorized(token, ::refresh)
-        return raw(path, method, body, next).also(::validate)
+        return raw(path, method, body, next, entitlementRequest).also(::validate)
     }
-    private fun raw(path: String, method: String, body: RequestBody?, token: String?): okhttp3.Response {
+    private fun raw(path: String, method: String, body: RequestBody?, token: String?, entitlementRequest: Boolean = false): okhttp3.Response {
         require(path.startsWith("/v1/"))
         val request = Request.Builder().url(base.toString().trimEnd('/') + path).method(method, body)
             .header("X-TN-Client-Version", BuildConfig.VERSION_NAME)
+        if (entitlementRequest && base.scheme == "http" && base.host == "127.0.0.1" && base.port == 8088 &&
+            base.username.isEmpty() && base.password.isEmpty()) {
+            request.header("X-TN-Wake-Entitlement", "1")
+        }
         if (token != null) request.header("Authorization", "Bearer $token")
         return client.newCall(request.build()).execute()
     }

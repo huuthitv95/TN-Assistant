@@ -1,7 +1,5 @@
 package main
 
-import "strings"
-
 // TN administrators have every TN Premium capability. Other accounts require
 // active, started entitlements and their catalog records. This policy does not
 // grant paid upstream services or bypass provider readiness checks.
@@ -15,7 +13,7 @@ func (s *Server) premiumFeatures(uid string) Object {
 		return features
 	}
 	for _, entitlement := range s.entitlements(uid) {
-		if strings.HasPrefix(str(entitlement, "source"), "local-admin:") {
+		if str(entitlement, "source") == "local-admin:"+uid {
 			for k := range features {
 				features[k] = true
 			}

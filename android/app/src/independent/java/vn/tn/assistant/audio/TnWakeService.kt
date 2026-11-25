@@ -25,6 +25,7 @@ import org.json.JSONObject
 import vn.tn.assistant.MainActivity
 import vn.tn.assistant.R
 import vn.tn.assistant.api.TnVoiceBackendClient
+import vn.tn.assistant.api.serverTimeMillis
 import vn.tn.assistant.auth.TnSessionStore
 import vn.tn.assistant.audio.tn.TnWakeTurnPolicy
 import vn.tn.assistant.audio.tn.WakeCommandWindow
@@ -47,14 +48,18 @@ class TnWakeService : Service() {
     private lateinit var backend: TnVoiceBackendClient
     private lateinit var prefs: android.content.SharedPreferences
     @Volatile private var recorder: AudioRecord? = null
+    @Volatile private var recorderOwner: TnWakeRunCoordinator.Run? = null
     @Volatile private var captureThread: Thread? = null
     @Volatile private var message = "Đang khởi động nghe “TN ơi”…"
     @Volatile private var listeningForCommand = false
     @Volatile private var readFrames = 0L
     @Volatile private var ready = false
     @Volatile private var loginOwner: Long? = null
+    @Volatile private var verifyByElapsed = 0L
     @Volatile private var run: TnWakeRunCoordinator.Run? = null
-    private val runs = TnWakeRunCoordinator()
+    private val runs get() = processRuns
+    private val serviceId = nextServiceId()
+    private val recorderLock = Any()
 
     override fun onBind(intent: Intent?) = null
     override fun onCreate() {
@@ -74,15 +79,13 @@ class TnWakeService : Service() {
             // fail() here would clear shared runtime consent belonging to the
             // current account, even though this intent was rejected.
             if (run == null) {
-                active.set(false)
                 stopSelfResult(startId)
             }
             return START_NOT_STICKY
         }
-        val request = runs.request(requestedOwner)
+        val request = runs.request(requestedOwner, service = serviceId)
         if (request.alreadyActive) return START_NOT_STICKY
         if (request.run == null) {
-            active.set(false)
             captureThread?.interrupt()
             return START_NOT_STICKY
         }
@@ -91,28 +94,122 @@ class TnWakeService : Service() {
     }
 
     private fun startRun(next: TnWakeRunCoordinator.Run) {
+        if (!runs.beginStart(next, serviceId)) return
+        // Initial reservations are not tracked replacements; beginStart also
+        // atomically claims a replacement and rejects duplicate/stale callbacks.
         run = next
         loginOwner = next.owner
+        verifyByElapsed = 0L
         try {
             val notification = notification(message)
             if (Build.VERSION.SDK_INT >= 30) startForeground(NOTIFICATION, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE)
             else startForeground(NOTIFICATION, notification)
         } catch (_: RuntimeException) {
-            fail("Android chưa cho phép nghe nền. Hãy mở TN Assistant và bật lại.", next)
+            // A delayed failure from an old callback must not resolve or stop a
+            // newer reservation that has since replaced this run.
+            if (!runs.isCurrent(next)) return
+            // No listener thread exists to perform the normal terminal cleanup.
+            ready = false
+            active.set(false)
+            val promoted = runs.rejectReplacement(next)
+            control(this).edit()
+                .apply {
+                    if (promoted == null) putBoolean(KEY_CONSENT, false)
+                    putString(KEY_ERROR, "Android chưa cho phép nghe nền. Hãy mở TN Assistant và bật lại.")
+                }
+                .apply()
+            update("Android chưa cho phép nghe nền. Hãy mở lại TN Assistant để bật nghe.", false, next)
+            main.post {
+                if (promoted != null) dispatchReplacement(promoted)
+                else if (runs.noWorkerRemains() && instance === this) stopSelf()
+            }
             return
         }
         active.set(true)
-        captureThread = Thread({ listen(next) }, "tn-wake-listener").also { it.start() }
+        val worker = Thread({
+            if (!runs.registerWorker(next)) {
+                if (runs.isCurrent(next)) active.set(false)
+                return@Thread
+            }
+            listen(next)
+        }, "tn-wake-listener")
+        try {
+            captureThread = worker
+            worker.start()
+        } catch (_: RuntimeException) {
+            runs.unregisterWorker(next)
+            if (!runs.isCurrent(next)) return
+            ready = false
+            active.set(false)
+            val promoted = runs.rejectReplacement(next)
+            val errorMessage = "Không khởi động được micro TN. Hãy mở lại TN Assistant để bật nghe."
+            control(this).edit().putString(KEY_ERROR, errorMessage).apply()
+            if (promoted == null) control(this).edit().putBoolean(KEY_CONSENT, false).apply()
+            update(errorMessage, false, next)
+            main.post {
+                if (promoted != null) dispatchReplacement(promoted)
+                else if (runs.noWorkerRemains() && instance === this) stopSelf()
+            }
+        }
     }
 
-    private fun verifyEntitlement() {
-        val me = backend.json("/v1/me")
-        if (me.optJSONObject("premium_features")?.optBoolean("wake_word") != true) throw IOException("Tài khoản chưa có quyền dùng “TN ơi”.")
-        val values = backend.json("/v1/settings")
-        if (!values.optBoolean("wake_word_enabled")) throw IOException("“TN ơi” đang tắt trong cài đặt tài khoản.")
+    private fun verifyEntitlement(run: TnWakeRunCoordinator.Run) {
+        if (!enabled(run)) return
+        val verificationStarted = SystemClock.elapsedRealtime()
+        val me = backend.json("/v1/me", entitlementRequest = true)
+        fun decisionFor(response: JSONObject, verificationElapsedMillis: Long): TnWakeEntitlementPolicy.Decision {
+            val entitlementValue = response.opt("entitlements")
+            val grants = when {
+                !response.has("entitlements") -> TnWakeEntitlementPolicy.Entitlements.absent()
+                entitlementValue is org.json.JSONArray -> {
+                    val parsed = mutableListOf<TnWakeEntitlementPolicy.Grant>().apply {
+                        for (i in 0 until entitlementValue.length()) {
+                            val end = entitlementValue.optJSONObject(i)?.opt("expires_at")
+                            add(TnWakeEntitlementPolicy.Grant((end as? String)?.let(::serverTimeMillis)))
+                        }
+                    }
+                    TnWakeEntitlementPolicy.Entitlements.present(parsed.toList())
+                }
+                else -> TnWakeEntitlementPolicy.Entitlements.malformed()
+            }
+            return TnWakeEntitlementPolicy.evaluate(TnWakeEntitlementPolicy.Request(
+                wakeFeature = response.optJSONObject("premium_features")?.opt("wake_word") == true,
+                role = response.optJSONObject("user")?.opt("role") as? String,
+                entitlements = grants,
+                serverTimeMillis = response.optJSONObject("account_plan")?.opt("server_time")
+                    .let { (it as? String)?.let(::serverTimeMillis) },
+                verificationElapsedMillis = verificationElapsedMillis,
+            ))
+        }
+
+        val decision = decisionFor(me, 0L)
+        if (!decision.authorized) throw IOException(wakeEntitlementMessage(decision.reason))
+
+        if (!enabled(run)) return
+        val values = backend.json("/v1/settings", entitlementRequest = true)
+        val freshMe = backend.json("/v1/me", entitlementRequest = true)
+        val verificationCompletedAt = SystemClock.elapsedRealtime()
+        val verificationElapsed = (verificationCompletedAt - verificationStarted).coerceAtLeast(0L)
+        val finalDecision = decisionFor(freshMe, verificationElapsed)
+        if (!finalDecision.authorized) throw IOException(wakeEntitlementMessage(finalDecision.reason))
+        if (values.opt("wake_word_enabled") != true) {
+            throw IOException("“TN ơi” đang tắt trong cài đặt tài khoản.")
+        }
+        if (!enabled(run)) return
         for (key in listOf("conversation_idle_timeout_ms", "command_end_silence_ms")) {
             if (values.has(key)) prefs.edit().putInt(key, values.optInt(key)).apply()
         }
+        verifyByElapsed = TnWakeEntitlementPolicy.monotonicDeadline(verificationCompletedAt, finalDecision.recheckAfterMillis)
+    }
+
+    private fun wakeEntitlementMessage(reason: TnWakeEntitlementPolicy.Decision.Reason): String = when (reason) {
+        TnWakeEntitlementPolicy.Decision.Reason.FEATURE_DENIED -> "Tài khoản chưa có quyền dùng “TN ơi”."
+        TnWakeEntitlementPolicy.Decision.Reason.ROLE_MISSING,
+        TnWakeEntitlementPolicy.Decision.Reason.MALFORMED_ENTITLEMENTS,
+        TnWakeEntitlementPolicy.Decision.Reason.SERVER_TIME_MISSING,
+        TnWakeEntitlementPolicy.Decision.Reason.EXPIRY_MISSING -> "Chưa xác minh được thời hạn dùng “TN ơi”."
+        TnWakeEntitlementPolicy.Decision.Reason.GRANT_EXPIRED -> "Quyền dùng “TN ơi” đã hết hạn. Hãy kiểm tra lại tài khoản."
+        TnWakeEntitlementPolicy.Decision.Reason.AUTHORIZED -> ""
     }
 
     private fun listen(run: TnWakeRunCoordinator.Run) {
@@ -120,7 +217,7 @@ class TnWakeService : Service() {
         var engine: NativeAudio? = null
         val window = WakeCommandWindow()
         try {
-            verifyEntitlement()
+            verifyEntitlement(run)
             if (!enabled(run)) return
             val captureDeadline = SystemClock.elapsedRealtime() + 10000
             while (enabled(run) && lease == null) {
@@ -132,25 +229,45 @@ class TnWakeService : Service() {
             engine = NativeAudio(this, prefs.getInt("command_end_silence_ms", 1000))
             engine.init()
             if (!enabled(run)) return
-            var lastVerification = SystemClock.elapsedRealtime()
             var paused = false
             val samples = ShortArray(512)
             update("Đang chờ “TN ơi”", false)
             while (enabled(run) && owned.isActive) {
                 if (!microphoneAllowed(this)) throw IOException("Quyền micro đã bị thu hồi. “TN ơi” đã dừng.")
-                if (SystemClock.elapsedRealtime() - lastVerification >= 300000) {
-                    closeRecorder()
-                    verifyEntitlement()
-                    lastVerification = SystemClock.elapsedRealtime()
-                }
                 if (outputPauses.activeCount > 0) {
-                    closeRecorder()
+                    closeRecorder(run)
                     if (!paused) { window.reset(); engine.reset(); paused = true }
                     Thread.sleep(40)
                     continue
                 }
+                if (verificationDue()) {
+                    closeRecorder(run)
+                    ready = false
+                    window.reset()
+                    engine.reset()
+                    forcedCapture.set(false)
+                    update("Đang kiểm tra quyền dùng “TN ơi”…", false)
+                    verifyEntitlement(run)
+                    continue
+                }
                 if (paused) { engine.reset(); window.reset(); paused = false }
-                if (recorder == null) recorder = openRecorder()
+                if (recorderOwner !== run && recorder != null) break
+                if (recorder == null) {
+                    try {
+                        val opened = openRecorder()
+                        synchronized(recorderLock) {
+                            if (runs.isCurrent(run)) {
+                                recorder = opened
+                                recorderOwner = run
+                            } else {
+                                runCatching { opened.stop() }; opened.release()
+                            }
+                        }
+                    } catch (error: InterruptedException) {
+                        if (enabled(run) && verificationDue()) continue
+                        throw error
+                    }
+                }
                 if (cancelCapture.compareAndSet(true, false)) {
                     forcedCapture.set(false); window.reset(); engine.reset()
                     update("Đã dừng câu lệnh. Đang chờ “TN ơi”", false)
@@ -162,10 +279,12 @@ class TnWakeService : Service() {
                 }
                 val count = recorder!!.read(samples, 0, samples.size)
                 if (!enabled(run)) break
+                if (verificationDue()) continue
                 // Admission and every consumer of the returned block are one
                 // pause boundary. A pause requested during this section is
                 // queued until it ends, rather than racing a snapshot check.
                 val admitted = outputPauses.withProcessing {
+                    if (verificationDue()) return@withProcessing
                     if (count < 0) throw IOException("Không đọc được micro. Hãy đóng ứng dụng đang chiếm micro rồi bật lại.")
                     if (count == 0) { Thread.sleep(10); return@withProcessing }
                     readFrames++
@@ -186,7 +305,7 @@ class TnWakeService : Service() {
                     if (!woke && previousPhase != WakeCommandWindow.Phase.CAPTURING && window.phase == WakeCommandWindow.Phase.CAPTURING) update("TN đang nghe…", true)
                     if (previousPhase == WakeCommandWindow.Phase.FOLLOW_UP && window.waitingForWake) update("Đang chờ “TN ơi”", false)
                     if (utterance != null) {
-                        closeRecorder() // No microphone frames or TTS echo enter another turn during network/playback.
+                        closeRecorder(run) // No microphone frames or TTS echo enter another turn during network/playback.
                         update("TN đang nhận dạng…", false)
                         var failure: String? = null
                         val continueConversation = try { process(utterance) } catch (error: Exception) {
@@ -200,7 +319,7 @@ class TnWakeService : Service() {
                     }
                 }
                 if (!admitted) {
-                    closeRecorder()
+                    closeRecorder(run)
                     if (!paused) { window.reset(); engine.reset(); paused = true }
                     continue
                 }
@@ -212,19 +331,60 @@ class TnWakeService : Service() {
                 fail(if (error is UnsatisfiedLinkError) "Thiết bị chưa nạp được mô hình giọng nói TN." else error.message?.take(220) ?: "Không khởi động được micro TN.", run)
             }
         } finally {
-            ready = false
-            closeRecorder()
+            // Release every resource before removing this worker from the process
+            // ledger. This makes the synchronized idle predicate a real teardown
+            // boundary, including for workers invalidated by a newer service.
+            if (runs.isCurrent(run)) {
+                ready = false
+                active.set(false)
+            }
+            closeRecorder(run)
             runCatching { engine?.close() }
             window.reset()
             lease?.close()
-            active.set(false)
-            val replacement = runs.complete(run)
-            if (replacement != null && consented(this) && microphoneAllowed(this) &&
-                TnSessionStore.get(this).ownsActions(replacement.owner)) {
-                main.post { if (instance === this) startRun(replacement) }
-            } else {
-                main.post { if (instance === this) stopSelf() }
+            val completion = runs.finish(run)
+            completion?.replacement?.let { replacement ->
+                main.post { dispatchReplacement(replacement) }
             }
+        }
+    }
+
+    /**
+     * Routes an exact handoff only to the currently live service with the
+     * candidate's service identity. Missing targets are resolved iteratively;
+     * the origin is never allowed to start a target-owned candidate.
+     */
+    private fun dispatchReplacement(initial: TnWakeRunCoordinator.Run) {
+        var candidate = initial
+        while (runs.isCurrent(candidate)) {
+            val target = instance?.takeIf { it.serviceId == candidate.service }
+            if (target != null) {
+                target.main.post {
+                    // Recheck at execution time: a newer request may have
+                    // superseded this callback while it was queued.
+                    if (runs.isCurrent(candidate)) target.startReplacement(candidate)
+                }
+                return
+            }
+            val outcome = runs.abandonReplacement(candidate, candidate.service)
+            if (!outcome.abandoned) return
+            candidate = outcome.promoted ?: return
+        }
+    }
+
+    private fun startReplacement(candidate: TnWakeRunCoordinator.Run) {
+        // This method is entered only by dispatchReplacement on the exact live
+        // target, but retains both identity checks for delayed callbacks.
+        if (instance !== this || candidate.service != serviceId || !runs.isCurrent(candidate)) return
+        if (consented(this) && microphoneAllowed(this) &&
+            TnSessionStore.get(this).ownsActions(candidate.owner)) {
+            startRun(candidate)
+            return
+        }
+        // A newer request may have arrived while this reservation waited for
+        // the main thread. Promote it and route it by exact service identity.
+        runs.rejectReplacement(candidate)?.let(::dispatchReplacement) ?: run {
+            if (instance === this && runs.noWorkerRemains()) stopSelf()
         }
     }
 
@@ -242,12 +402,17 @@ class TnWakeService : Service() {
                     AudioFormat.ENCODING_PCM_16BIT, maxOf(size, 8192)).also {
                     if (it.state != AudioRecord.STATE_INITIALIZED) { it.release(); throw IOException("Không mở được micro") }
                 }
-            }, begin = { it.startRecording() }, discard = { runCatching { it.stop() }; it.release() }, active = { enabled(currentRun) },
+            }, begin = { it.startRecording() }, discard = { runCatching { it.stop() }; it.release() }, active = { enabled(currentRun) && !verificationDue() },
         )
     }
-    private fun closeRecorder() {
-        val held = recorder ?: return
-        recorder = null
+    private fun closeRecorder(run: TnWakeRunCoordinator.Run) {
+        val held = synchronized(recorderLock) {
+            if (recorderOwner !== run) return
+            val value = recorder
+            recorder = null
+            recorderOwner = null
+            value
+        } ?: return
         runCatching { held.stop() }; runCatching { held.release() }
     }
 
@@ -265,9 +430,10 @@ class TnWakeService : Service() {
             }
         }
         val device = prefs.getString("device_id", null) ?: throw IOException("Thiếu định danh thiết bị TN")
-        val owner = loginOwner ?: return false
+        val owner = currentRun.owner
+		if (!canProcessTurn(currentRun)) return false
         val payload = vn.tn.assistant.api.TnAssistantConversation.shared.request(text,
-            UUID.randomUUID().toString(), device, owner, { enabled(currentRun) })
+            UUID.randomUUID().toString(), device, owner, { canProcessTurn(currentRun) })
         if (text.contains("thời tiết", true) || text.contains("nhiệt độ", true)) {
             val manager = getSystemService(LOCATION_SERVICE) as LocationManager
             val location = try { manager.getProviders(true).mapNotNull { manager.getLastKnownLocation(it) }
@@ -305,8 +471,10 @@ class TnWakeService : Service() {
             calendar = vn.tn.assistant.actions.TnCalendarControls(this, turnActive)::execute,
             phone = vn.tn.assistant.actions.TnPhoneControls(this, turnActive, launch = { launch(it, turnActive) })::execute,
             receipt = { id, result, details ->
-                backend.json("/v1/device/actions/results", JSONObject().put("request_id", response.optString("request_id"))
+                if (canProcessTurn(currentRun)) {
+				backend.json("/v1/device/actions/results", JSONObject().put("request_id", response.optString("request_id"))
                     .put("action_id", id).put("result", result).put("details", details))
+                }
             }).execute(executable)
         if (turnActive() && summary.unsupported > 0) throw IOException("Một số thao tác chưa được TN hỗ trợ trên thiết bị.")
         if (turnActive() && summary.failed > 0) throw IOException("Có thao tác chưa thực hiện được. Hãy kiểm tra quyền và ứng dụng.")
@@ -314,7 +482,7 @@ class TnWakeService : Service() {
         if (needsConfirmation) {
             val uiToken = TnWakeUi.currentToken()
             main.post {
-                if (enabled(currentRun) &&
+                if (canProcessTurn(currentRun) &&
                     !TnWakeUi.confirm(currentRun.owner, uiToken)
                 ) {
                     update("Mở TN Assistant để xem và xác nhận thao tác.", false, currentRun)
@@ -375,8 +543,10 @@ class TnWakeService : Service() {
             !Thread.currentThread().isInterrupted && loginOwner == run.owner &&
             TnSessionStore.get(this).ownsActions(run.owner)
 
+    private fun verificationDue() = SystemClock.elapsedRealtime() >= verifyByElapsed
+
     private fun canProcessTurn(run: TnWakeRunCoordinator.Run) =
-        TnWakeTurnPolicy.canProcess(enabled(run), microphoneAllowed(this))
+        !verificationDue() && TnWakeTurnPolicy.canProcess(enabled(run), microphoneAllowed(this))
 
     private fun update(text: String, listening: Boolean, currentRun: TnWakeRunCoordinator.Run? = run) {
         message = text
@@ -396,7 +566,7 @@ class TnWakeService : Service() {
         control(this).edit().putBoolean(KEY_CONSENT, false).putString(KEY_ERROR, text).apply()
         update(text, false, failedRun)
         active.set(false)
-        runs.invalidate()
+        runs.invalidate(failedRun)
         main.post { if (instance === this) stopSelf() }
     }
     private fun notification(text: String): Notification {
@@ -412,13 +582,40 @@ class TnWakeService : Service() {
     }
     override fun onDestroy() {
         active.set(false)
-        runs.invalidate()
-        backend.cancel()
-        captureThread?.interrupt()
-        // The worker owns release; stop only unblocks its read.
-        runCatching { recorder?.stop() }
+        // Make this instance unavailable before resolving any handoff. This
+        // prevents a final callback from posting work back to the instance
+        // whose callbacks are about to be removed.
         if (instance === this) instance = null
+        // Inspect reservations after draining this handler. A worker finishing
+        // later can still post its handoff to the live target.
         main.removeCallbacksAndMessages(null)
+        val localRun = run
+        // A service keeps its historical run reference after that worker has
+        // handed off to a replacement. Never invalidate the coordinator's
+        // current run merely because this instance is being destroyed. A live
+        // worker must finish its resource cleanup and perform the handoff.
+        if (localRun != null && runs.isCurrent(localRun) && !runs.hasWorker(localRun)) {
+            runs.rejectReplacement(localRun)?.let { dispatchReplacement(it) }
+        }
+        // Target teardown can remove the queued start callback before it runs.
+        // Abandon that exact reservation now, promoting any newer request so
+        // neither the current state nor a pending handoff is stranded.
+        runs.currentReplacementFor(serviceId)?.let { candidate ->
+            runs.abandonReplacement(candidate, serviceId).promoted?.let(::dispatchReplacement)
+        }
+        // Origin teardown may happen after finish() has reserved an unclaimed
+        // replacement. Resolve it by exact target identity; a missing target
+        // is abandoned or promoted by dispatchReplacement, never started here.
+        runs.currentReplacementFromOrigin(serviceId)?.let { dispatchReplacement(it) }
+        val listener = captureThread
+        backend.cancel()
+        listener?.interrupt()
+        // The worker owns release; stop only unblocks its read.
+        run?.let { currentRun ->
+            synchronized(recorderLock) {
+                if (recorderOwner === currentRun) runCatching { recorder?.stop() }
+            }
+        }
         TnWakeUi.state(
             control(this).getString(KEY_ERROR, null) ?: "Đã tắt nghe “TN ơi”.",
             false,
@@ -436,9 +633,15 @@ class TnWakeService : Service() {
         private const val CHANNEL = "tn-wake-microphone"
         private const val NOTIFICATION = 167
         @Volatile private var instance: TnWakeService? = null
+        private val processRuns = TnWakeRunCoordinator()
+        private val nextService = java.util.concurrent.atomic.AtomicLong()
+        private fun nextServiceId() = nextService.incrementAndGet()
         private fun control(context: Context) = context.getSharedPreferences("tn-wake-control-v1", Context.MODE_PRIVATE)
         fun consented(context: Context) = control(context).getBoolean(KEY_CONSENT, false)
         fun isRunning() = instance?.active?.get() == true
+        fun isListenerThreadAlive() = instance?.captureThread?.isAlive == true
+        /** True only when the coordinator has no reservation or in-flight worker. */
+        fun isWorkerComplete() = processRuns.noWorkerRemains()
         fun isRecording() = runCatching { instance?.recorder?.recordingState == AudioRecord.RECORDSTATE_RECORDING }.getOrDefault(false)
         fun capturedFrames(): Long = instance?.readFrames ?: 0L
         fun isReady(): Boolean = instance?.let { it.ready && it.active.get() && it.readFrames > 0 } == true

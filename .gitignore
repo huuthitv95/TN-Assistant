@@ -65,6 +65,8 @@ hs_err_pid*
 exports/
 
 # Editor and operating-system state
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
 .idea/
 .vscode/
 .DS_Store

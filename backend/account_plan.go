@@ -1,9 +1,6 @@
 package main
 
-import (
-	"strings"
-	"time"
-)
+import "time"
 
 // Presentation only. Authorization continues to use premiumFeatures on every request.
 func (s *Server) accountPlan(uid string) Object {
@@ -16,7 +13,7 @@ func (s *Server) accountPlan(uid string) Object {
 	}
 	var end time.Time
 	for _, e := range s.entitlements(uid) {
-		qualifies := strings.HasPrefix(str(e, "source"), "local-admin:")
+		qualifies := str(e, "source") == "local-admin:"+uid
 		if !qualifies {
 			product, err := s.record("products", str(e, "product_id"))
 			if err == nil {

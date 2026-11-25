@@ -278,6 +278,9 @@ func (s *Server) entitlements(uid string) []Object {
 		if rows.Scan(&id, &product, &source, &start, &end) != nil {
 			continue
 		}
+		if strings.HasPrefix(source, "local-admin:") && source != "local-admin:"+uid {
+			continue
+		}
 		startsAt, startsErr := time.Parse(time.RFC3339Nano, start)
 		expiresAt, expiresErr := time.Parse(time.RFC3339Nano, end)
 		// Entitlement timestamps are authorization input. Never let SQLite's
